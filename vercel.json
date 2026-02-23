@@ -5,7 +5,11 @@
     { "src": "tracking/**/*", "use": "@vercel/static" },
     { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/$1" }
+  "rewrites": [
+    { "source": "/tracking/script.js", "destination": "/tracking/script.js" },
+    { "source": "/tracking/styles.css", "destination": "/tracking/styles.css" },
+    { "source": "/tracking", "destination": "/tracking/index.html" },
+    { "source": "/favicon.svg", "destination": "/public/favicon.svg" },
+    { "source": "/(.*)", "destination": "/$1" }
   ]
 }
