@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oura API v2 Explorer</title>
+    <link rel="icon" type="image/svg+xml" href="/public/favicon.svg">
     <!-- Chart.js for Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -405,12 +406,7 @@
     </div>
 
     <script>
-        // --- CONFIG & STATE ---
-        const BASE_URL = 'https://api.ouraring.com/v2/usercollection';
-        const CORS_PROXY = 'https://corsproxy.io/?';
-
         // --- AUTH STATE ---
-        let ouaApiKey = null;
         const loginModal = document.getElementById('loginModal');
         const sitePassword = document.getElementById('sitePassword');
         const loginSubmit = document.getElementById('loginSubmit');
@@ -461,18 +457,6 @@
             return sessionStorage.getItem('oura_auth') === '1';
         }
 
-        async function getOuraKey() {
-            // Backend should read process.env.Oura_Key from Vercel
-            try {
-                const res = await fetch('/api/oura-key');
-                const j = await res.json();
-                return j.key;
-            } catch (err) {
-                console.error('Failed to fetch Oura_Key from backend:', err);
-                return null;
-            }
-        }
-
         loginSubmit.onclick = () => {
             const pw = sitePassword.value || '';
             attemptLogin(pw);
@@ -483,9 +467,8 @@
         };
 
         // Initialize on page load
-        async function initApp() {
+        function initApp() {
             if (checkAuth()) {
-                ouaApiKey = await getOuraKey();
                 hideLogin();
             } else {
                 showLogin();
@@ -521,9 +504,6 @@
 
         // --- FETCH LOGIC ---
         async function fetchData(endpoint) {
-            if (!ouaApiKey) return alert('Authenticating... please try again');
-            
-            const apiKey = ouaApiKey;
             let startDate = document.getElementById('start-date').value;
             let endDate = document.getElementById('end-date').value;
 
@@ -535,26 +515,25 @@
             statusText.textContent = 'Fetching...';
             statusText.className = '';
 
-            let realUrl = `${BASE_URL}/${endpoint}`;
-            const params = new URLSearchParams();
+            // Build URL for our server-side proxy
+            const params = new URLSearchParams({ endpoint });
 
             if (endpoint === 'heartrate') {
                 params.append('start_datetime', `${startDate}T00:00:00`);
                 params.append('end_datetime', `${endDate}T23:59:59`);
-                realUrl += `?${params.toString()}`;
             } else if (endpoint !== 'personal_info' && endpoint !== 'ring_configuration') {
                 params.append('start_date', startDate);
                 params.append('end_date', endDate);
-                realUrl += `?${params.toString()}`;
             }
 
-            document.getElementById('url-display').textContent = realUrl;
-            const fetchUrl = CORS_PROXY + encodeURIComponent(realUrl);
+            const displayUrl = `https://api.ouraring.com/v2/usercollection/${endpoint}?${params.toString()}`;
+            document.getElementById('url-display').textContent = displayUrl;
+            
+            const fetchUrl = `/api/oura?${params.toString()}`;
 
             try {
                 const response = await fetch(fetchUrl, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                    method: 'GET'
                 });
 
                 if (!response.ok) throw new Error(await response.text());
