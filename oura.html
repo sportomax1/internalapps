@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oura API v2 Explorer</title>
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #ffffff;
+            --secondary-color: #b3b3b3;
+            --accent-color: #007bff;
+            --border-color: #333;
+            --code-bg: #2d2d2d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 { margin-bottom: 20px; font-weight: 300; letter-spacing: 1px; }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        /* Sidebar */
+        .controls {
+            background-color: var(--surface-color);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: fit-content;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.85rem; color: var(--secondary-color); font-weight: 500; }
+        input, select {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--primary-color);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent-color); }
+
+        /* Button Styling */
+        button {
+            background-color: var(--surface-color);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        button:hover { background-color: var(--border-color); }
+        button.active { background-color: var(--accent-color); border-color: var(--accent-color); color: white; }
+
+        .endpoints-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; margin-top: 10px; }
+        .endpoint-category {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary-color);
+            margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;
+            position: sticky; top: 0; background-color: var(--surface-color); z-index: 1;
+        }
+
+        /* Range Buttons */
+        .range-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .range-btn {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            background-color: var(--surface-color);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+            padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
+        }
+        #status-text { color: var(--secondary-color); font-size: 0.9rem; }
+        .success { color: var(--success-color) !important; }
+        .error { color: var(--danger-color) !important; }
+
+        .url-display {
+            background-color: var(--bg-color); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);
+            font-family: "Consolas", "Monaco", monospace; font-size: 0.85rem; margin-bottom: 15px; word-break: break-all; color: var(--accent-color);
+        }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .tab-btn {
+            background: none; border: none; padding: 10px 20px; cursor: pointer; color: var(--secondary-color);
+            font-weight: 500; border-bottom: 2px solid transparent;
+        }
+        .tab-btn:hover { color: var(--primary-color); }
+        .tab-btn.active-tab { color: var(--accent-color); border-bottom-color: var(--accent-color); }
+
+        /* Metric Selector */
+        .metric-selector { margin-bottom: 15px; display: none; align-items: center; gap: 10px; }
+        .metric-selector.visible { display: flex; }
+
+        /* View Containers */
+        .view-section { display: none; flex-grow: 1; }
+        .view-section.active { display: block; }
+
+        /* Raw Data */
+        pre {
+            background-color: var(--code-bg); padding: 15px; border-radius: 4px; overflow: auto; height: 500px;
+            margin: 0; font-family: "Consolas", "Monaco", monospace; font-size: 0.85rem;
+        }
+
+        /* Graph */
+        #chart-container { position: relative; height: 500px; width: 100%; }
+
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
+        }
+        .calendar-day {
+            background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px;
+            padding: 10px; min-height: 80px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .calendar-date { font-size: 0.8rem; color: var(--secondary-color); margin-bottom: 5px; }
+        .calendar-value { font-size: 1.2rem; font-weight: bold; align-self: flex-end; }
+        .calendar-day.has-data { cursor: pointer; transition: transform 0.1s; }
+        .calendar-day.has-data:hover { transform: scale(1.02); border-color: var(--accent-color); }
+
+        /* Color scales for calendar */
+        .level-low { border-left: 4px solid var(--danger-color); }
+        .level-med { border-left: 4px solid var(--warning-color); }
+        .level-high { border-left: 4px solid var(--success-color); }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        /* Login Modal Styling */
+        .login-modal {
+            display: none !important;
+            position: fixed;
+            inset: 0;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+
+        .login-modal.active {
+            display: flex !important;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .login-card {
+            background: var(--surface-color);
+            padding: 0;
+            border-radius: 8px;
+            width: min(400px, 100%);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-icon {
+            font-size: 40px;
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .login-card h3 {
+            text-align: center;
+            margin: 10px 0 5px;
+            font-size: 1.2rem;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            margin: 0 20px 20px;
+        }
+
+        .login-card .input-group {
+            margin: 0 20px 15px;
+        }
+
+        .login-card input {
+            width: 100%;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 10px;
+            font-size: 18px;
+        }
+
+        .login-card .input-group input {
+            padding-left: 35px;
+        }
+
+        .error-message {
+            display: none;
+            color: var(--danger-color);
+            text-align: center;
+            margin: 0 20px 15px;
+            font-size: 0.9rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .button-group .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .button-group .btn-tertiary {
+            background-color: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Hide content until authenticated */
+        .container.hidden {
+            display: none;
+        }
+
+        h1.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 Oura API v2 Explorer</h1>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="login-modal">
+        <div class="modal-backdrop"></div>
+        <div class="login-card">
+            <div class="login-icon">🔐</div>
+            <h3>Welcome Back</h3>
+            <p class="login-subtitle">This site is protected. Please enter your password to continue.</p>
+            
+            <div class="input-group" style="position: relative;">
+                <div class="input-icon">🔑</div>
+                <input id="sitePassword" type="password" placeholder="Enter password" autocomplete="current-password" />
+            </div>
+            
+            <div id="loginError" class="error-message"></div>
+            
+            <div class="button-group">
+                <button id="loginSubmit" class="btn-primary">Unlock</button>
+                <button id="loginCancel" class="btn-tertiary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="controls">
+            <div class="input-group">
+                <label for="api-key">Personal Access Token</label>
+                <input type="password" id="api-key" placeholder="Enter your token">
+            </div>
+
+            <div class="input-group">
+                <label>Date Range</label>
+                <div class="range-buttons">
+                    <button class="range-btn" onclick="setDateRange(7)">7 Days</button>
+                    <button class="range-btn" onclick="setDateRange(30)">30 Days</button>
+                    <button class="range-btn" onclick="setDateRange(90)">90 Days</button>
+                    <button class="range-btn" onclick="setDateRange(365)">1 Year</button>
+                    <button class="range-btn" onclick="setDateRange('all')">All Time</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="start-date">Start Date</label>
+                <input type="date" id="start-date">
+            </div>
+
+            <div class="input-group">
+                <label for="end-date">End Date</label>
+                <input type="date" id="end-date">
+            </div>
+
+            <div class="endpoints-list">
+                <div class="endpoint-category">🧠 Profile</div>
+                <button onclick="fetchData('personal_info')">Personal Info</button>
+
+                <div class="endpoint-category">📅 Daily Summaries</div>
+                <button onclick="fetchData('daily_activity')">Daily Activity</button>
+                <button onclick="fetchData('daily_readiness')">Daily Readiness</button>
+                <button onclick="fetchData('daily_sleep')">Daily Sleep</button>
+                <button onclick="fetchData('daily_spo2')">Daily SpO2</button>
+                <button onclick="fetchData('daily_stress')">Daily Stress</button>
+                <button onclick="fetchData('daily_resilience')">Daily Resilience</button>
+                <button onclick="fetchData('daily_cardiovascular_age')">Daily Cardio Age</button>
+
+                <div class="endpoint-category">📊 Time Series / Details</div>
+                <button onclick="fetchData('sleep')">Sleep Periods</button>
+                <button onclick="fetchData('heartrate')">Heart Rate (Time Series)</button>
+                <button onclick="fetchData('workout')">Workouts</button>
+                <button onclick="fetchData('tag')">Tags</button>
+                <button onclick="fetchData('session')">Sessions</button>
+                <button onclick="fetchData('rest_mode_period')">Rest Mode Periods</button>
+
+                <div class="endpoint-category">🛠 Device / Settings</div>
+                <button onclick="fetchData('ring_configuration')">Ring Configuration</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="status-bar">
+                <strong id="current-endpoint">Select an endpoint</strong>
+                <span id="status-text">Ready</span>
+            </div>
+            
+            <div class="input-group">
+                <label>Target URL</label>
+                <div id="url-display" class="url-display">https://api.ouraring.com/v2/usercollection/...</div>
+            </div>
+
+            <!-- Visualization Controls -->
+            <div class="tabs">
+                <button class="tab-btn active-tab" onclick="switchTab('raw')">Raw JSON</button>
+                <button class="tab-btn" onclick="switchTab('graph')">Line Graph</button>
+                <button class="tab-btn" onclick="switchTab('calendar')">Calendar Grid</button>
+            </div>
+
+            <div id="metric-selector" class="metric-selector">
+                <label for="data-metric">Select Metric:</label>
+                <select id="data-metric" onchange="updateVisualizations()"></select>
+            </div>
+
+            <!-- Views -->
+            <div id="view-raw" class="view-section active">
+                <pre id="output">// JSON response will appear here...</pre>
+            </div>
+
+            <div id="view-graph" class="view-section">
+                <div id="chart-container">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+
+            <div id="view-calendar" class="view-section">
+                <div id="calendar-container" class="calendar-grid">
+                    <!-- Calendar Items injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG & STATE ---
+        const BASE_URL = 'https://api.ouraring.com/v2/usercollection';
+        const CORS_PROXY = 'https://corsproxy.io/?';
+
+        // --- AUTH STATE ---
+        let ouaApiKey = null;
+        const loginModal = document.getElementById('loginModal');
+        const sitePassword = document.getElementById('sitePassword');
+        const loginSubmit = document.getElementById('loginSubmit');
+        const loginCancel = document.getElementById('loginCancel');
+        const loginError = document.getElementById('loginError');
+
+        // Show login on page load
+        function showLogin() {
+            loginError.style.display = 'none';
+            sitePassword.value = '';
+            loginModal.classList.add('active');
+            document.querySelector('.container').classList.add('hidden');
+            document.querySelector('h1').classList.add('hidden');
+        }
+
+        function hideLogin() {
+            loginModal.classList.remove('active');
+            document.querySelector('.container').classList.remove('hidden');
+            document.querySelector('h1').classList.remove('hidden');
+        }
+
+        async function attemptLogin(pw) {
+            try {
+                const res = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pw })
+                });
+
+                if (res.ok) {
+                    sessionStorage.setItem('oura_auth', '1');
+                    hideLogin();
+                    return true;
+                }
+
+                const j = await res.json().catch(() => ({}));
+                loginError.textContent = j && j.error ? j.error : 'Incorrect password';
+                loginError.style.display = 'block';
+                return false;
+            } catch (err) {
+                loginError.textContent = 'Network error';
+                loginError.style.display = 'block';
+                return false;
+            }
+        }
+
+        function checkAuth() {
+            return sessionStorage.getItem('oura_auth') === '1';
+        }
+
+        async function getOuraKey() {
+            // Backend should read process.env.Oura_Key from Vercel
+            try {
+                const res = await fetch('/api/oura-key');
+                const j = await res.json();
+                return j.key;
+            } catch (err) {
+                console.error('Failed to fetch Oura_Key from backend:', err);
+                return null;
+            }
+        }
+
+        loginSubmit.onclick = () => {
+            const pw = sitePassword.value || '';
+            attemptLogin(pw);
+        };
+
+        loginCancel.onclick = () => {
+            sitePassword.value = '';
+        };
+
+        // Initialize on page load
+        async function initApp() {
+            if (checkAuth()) {
+                ouaApiKey = await getOuraKey();
+                if (ouaApiKey) {
+                    document.getElementById('api-key').value = ouaApiKey;
+                }
+                hideLogin();
+            } else {
+                showLogin();
+            }
+        }
+
+        initApp();
+
+        let currentData = null; // Store fetched data
+        let chartInstance = null; // Store Chart.js instance
+
+        // Helper to format date YYYY-MM-DD
+        const formatDate = (date) => date.toISOString().split('T')[0];
+
+        // --- DATE RANGE LOGIC ---
+        function setDateRange(days) {
+            const endInput = document.getElementById('end-date');
+            const startInput = document.getElementById('start-date');
+            
+            const today = new Date();
+            endInput.value = formatDate(today);
+
+            const startDate = new Date();
+            if (days === 'all') {
+                startDate.setFullYear(2018, 0, 1);
+            } else {
+                startDate.setDate(today.getDate() - days);
+            }
+            startInput.value = formatDate(startDate);
+        }
+
+        setDateRange(7);
+
+        // --- FETCH LOGIC ---
+        async function fetchData(endpoint) {
+            const apiKey = document.getElementById('api-key').value;
+            let startDate = document.getElementById('start-date').value;
+            let endDate = document.getElementById('end-date').value;
+            
+            if (!apiKey) return alert('Please enter an API Key');
+
+            document.querySelectorAll('.controls > .endpoints-list > button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('current-endpoint').textContent = endpoint.replace(/_/g, ' ').toUpperCase();
+            
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = 'Fetching...';
+            statusText.className = '';
+
+            let realUrl = `${BASE_URL}/${endpoint}`;
+            const params = new URLSearchParams();
+
+            if (endpoint === 'heartrate') {
+                params.append('start_datetime', `${startDate}T00:00:00`);
+                params.append('end_datetime', `${endDate}T23:59:59`);
+                realUrl += `?${params.toString()}`;
+            } else if (endpoint !== 'personal_info' && endpoint !== 'ring_configuration') {
+                params.append('start_date', startDate);
+                params.append('end_date', endDate);
+                realUrl += `?${params.toString()}`;
+            }
+
+            document.getElementById('url-display').textContent = realUrl;
+            const fetchUrl = CORS_PROXY + encodeURIComponent(realUrl);
+
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                const data = await response.json();
+                currentData = data; 
+
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                statusText.textContent = 'Success';
+                statusText.classList.add('success');
+
+                setupVisualizations(data);
+
+            } catch (error) {
+                document.getElementById('output').textContent = error.message;
+                statusText.textContent = 'Failed';
+                statusText.classList.add('error');
+                currentData = null;
+            }
+        }
+
+        // --- DATA PROCESSING ---
+        function setupVisualizations(data) {
+            const selector = document.getElementById('data-metric');
+            const selectorContainer = document.getElementById('metric-selector');
+            selector.innerHTML = ''; 
+
+            if (!data || !Array.isArray(data.data) || data.data.length === 0) {
+                selectorContainer.classList.remove('visible');
+                return;
+            }
+
+            const sample = data.data[0];
+            const availableKeys = [];
+
+            // 1. Recursive finder for numbers
+            function findKeys(obj, prefix = '') {
+                for (const key in obj) {
+                    const fullKey = prefix + key;
+                    if (typeof obj[key] === 'number') {
+                        availableKeys.push(fullKey);
+                    } 
+                    // Special handling for Time strings (start/end)
+                    else if (key === 'bedtime_start' || key === 'bedtime_end') {
+                        availableKeys.push(fullKey);
+                    }
+                    else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        findKeys(obj[key], fullKey + '.');
+                    }
+                }
+            }
+            findKeys(sample);
+
+            if (availableKeys.length > 0) {
+                selectorContainer.classList.add('visible');
+                
+                // Sort keys for better UX (put core metrics first)
+                availableKeys.sort();
+
+                availableKeys.forEach(key => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = key.replace(/_/g, ' ').toUpperCase();
+                    
+                    // Smart Defaults
+                    if(key === 'total_sleep_duration') option.selected = true;
+                    else if(!option.selected && key === 'score') option.selected = true;
+                    
+                    selector.appendChild(option);
+                });
+                
+                updateVisualizations();
+            } else {
+                selectorContainer.classList.remove('visible');
+            }
+        }
+
+        function updateVisualizations() {
+            if (!currentData) return;
+            const metric = document.getElementById('data-metric').value;
+            renderGraph(currentData.data, metric);
+            renderCalendar(currentData.data, metric);
+        }
+
+        // --- GRAPH LOGIC ---
+        function renderGraph(dataArray, metricKey) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            const labels = dataArray.map(item => item.day || item.timestamp.split('T')[0]);
+            
+            let values = [];
+            let yAxisLabel = 'Value';
+            let isTime = false;
+
+            // SPECIAL HANDLER: BEDTIME START/END
+            if (metricKey.includes('bedtime_start') || metricKey.includes('bedtime_end')) {
+                isTime = true;
+                yAxisLabel = 'Time of Day';
+                values = dataArray.map(item => {
+                    const val = getNestedValue(item, metricKey); // e.g., 2026-02-14T23:30:00...
+                    if (!val) return null;
+                    const date = new Date(val);
+                    let hours = date.getHours() + (date.getMinutes() / 60);
+                    
+                    // Logic: Shift late night times (0AM - 12PM) to be "next day" values (24-36)
+                    // so the graph is continuous from evening to morning.
+                    // e.g. 23:00 = 23.0, 01:30 = 25.5
+                    if (hours < 12) {
+                        hours += 24;
+                    }
+                    return hours;
+                });
+            } 
+            // SPECIAL HANDLER: DURATIONS (Seconds -> Hours)
+            else if (metricKey.includes('duration') || metricKey.includes('total')) {
+                yAxisLabel = 'Hours';
+                values = dataArray.map(item => {
+                    const val = getNestedValue(item, metricKey);
+                    return val ? (val / 3600).toFixed(2) : 0;
+                });
+            }
+            // STANDARD NUMBERS
+            else {
+                values = dataArray.map(item => getNestedValue(item, metricKey));
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: metricKey.toUpperCase().replace(/_/g, ' '),
+                        data: values,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#b3b3b3' }, grid: { color: '#333' } },
+                        y: { 
+                            title: { display: true, text: yAxisLabel, color: '#b3b3b3' },
+                            ticks: { 
+                                color: '#b3b3b3',
+                                callback: function(value) {
+                                    if(isTime) {
+                                        // Convert back 25.5 -> 01:30
+                                        let h = Math.floor(value);
+                                        let m = Math.round((value - h) * 60);
+                                        if (h >= 24) h -= 24;
+                                        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                                    }
+                                    return value;
+                                }
+                            }, 
+                            grid: { color: '#333' } 
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff' } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if(isTime) {
+                                        let value = context.raw;
+                                        let h = Math.floor(value);
+                                        let m = Math.round((value - h) * 60);
+                                        if (h >= 24) h -= 24;
+                                        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                                    }
+                                    return context.formattedValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- CALENDAR LOGIC ---
+        function renderCalendar(dataArray, metricKey) {
+            const container = document.getElementById('calendar-container');
+            container.innerHTML = '';
+
+            const dataMap = {};
+            dataArray.forEach(item => {
+                const dateKey = item.day || item.timestamp.split('T')[0];
+                let val = getNestedValue(item, metricKey);
+                
+                // Format for display
+                if (metricKey.includes('duration') || metricKey.includes('total')) {
+                    val = (val / 3600).toFixed(1) + 'h';
+                } else if (metricKey.includes('bedtime')) {
+                     if (val) {
+                        const d = new Date(val);
+                        val = `${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
+                     }
+                }
+                
+                dataMap[dateKey] = val;
+            });
+
+            const startStr = document.getElementById('start-date').value;
+            const endStr = document.getElementById('end-date').value;
+            const startDate = new Date(startStr);
+            const endDate = new Date(endStr);
+
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const isoDate = d.toISOString().split('T')[0];
+                const value = dataMap[isoDate];
+                const hasData = value !== undefined;
+
+                const card = document.createElement('div');
+                card.className = `calendar-day ${hasData ? 'has-data' : ''}`;
+                
+                if (hasData) {
+                    // Simple heuristic for coloring
+                    // If it's a number (not string like 7.5h or 22:30), use scale
+                    if (typeof value === 'number') {
+                        if (value >= 85) card.classList.add('level-high');
+                        else if (value >= 70) card.classList.add('level-med');
+                        else card.classList.add('level-low');
+                    } else {
+                        // Default for Time/Duration strings
+                        card.classList.add('level-med');
+                    }
+                }
+
+                card.innerHTML = `
+                    <div class="calendar-date">${isoDate}</div>
+                    <div class="calendar-value">${hasData ? value : '-'}</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function getNestedValue(obj, path) {
+            return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+            event.target.classList.add('active-tab');
+            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+            document.getElementById(`view-${tabName}`).classList.add('active');
+        }
+    </script>
+</body>
+</html>
