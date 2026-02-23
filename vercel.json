@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {
+      "src": "/tracking",
+      "dest": "/tracking/index.html"
+    },
+    {
+      "src": "/tracking/(.*)",
+      "dest": "/tracking/$1"
+    }
+  ]
+}
