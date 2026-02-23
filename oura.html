@@ -315,11 +315,6 @@
         <!-- Sidebar -->
         <div class="controls">
             <div class="input-group">
-                <label for="api-key">Personal Access Token <span style="color: var(--secondary-color); font-size: 0.8rem;">(from Vercel env)</span></label>
-                <input type="password" id="api-key" placeholder="Loading from Vercel..." readonly>
-            </div>
-
-            <div class="input-group">
                 <label>Date Range</label>
                 <div class="range-buttons">
                     <button class="range-btn" onclick="setDateRange(7)">7 Days</button>
@@ -491,9 +486,6 @@
         async function initApp() {
             if (checkAuth()) {
                 ouaApiKey = await getOuraKey();
-                if (ouaApiKey) {
-                    document.getElementById('api-key').value = ouaApiKey;
-                }
                 hideLogin();
             } else {
                 showLogin();
@@ -529,11 +521,11 @@
 
         // --- FETCH LOGIC ---
         async function fetchData(endpoint) {
-            const apiKey = document.getElementById('api-key').value;
+            if (!ouaApiKey) return alert('Authenticating... please try again');
+            
+            const apiKey = ouaApiKey;
             let startDate = document.getElementById('start-date').value;
             let endDate = document.getElementById('end-date').value;
-            
-            if (!apiKey) return alert('Please enter an API Key');
 
             document.querySelectorAll('.controls > .endpoints-list > button').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
