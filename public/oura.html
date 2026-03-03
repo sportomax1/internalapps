@@ -613,7 +613,7 @@
         async function attemptLogin() {
             const pw = sitePassword.value;
             try {
-                const res = await fetch('/api/auth', {
+                const res = await fetch('/api/auth/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password: pw })
@@ -660,7 +660,7 @@
             const endDate = document.getElementById('end-date').value;
             
             document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            if (event) event.target.classList.add('active');
             
             document.getElementById('current-endpoint').textContent = endpoint.replace(/_/g, ' ').toUpperCase();
             const statusText = document.getElementById('status-text');
@@ -679,7 +679,7 @@
             document.getElementById('url-display').textContent = `https://api.ouraring.com/v2/usercollection/${endpoint}?${params.toString()}`;
 
             try {
-                const response = await fetch(`/api/oura?${params.toString()}`);
+                const response = await fetch(`/api/oura/?${params.toString()}`);
                 if (!response.ok) throw new Error(await response.text());
                 const data = await response.json();
                 currentData = data;
