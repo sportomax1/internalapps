@@ -441,6 +441,52 @@
             color: var(--primary);
         }
 
+        /* Stats Styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stats-card {
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .stats-card h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        .stats-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .stats-subtext {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .day-averages-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .day-averages-table th, .day-averages-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .day-averages-table th {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
         /* Login Modal */
         .login-modal {
             display: none;
@@ -615,6 +661,7 @@
                         <button class="tab-btn" onclick="switchTab('graph')">Graph</button>
                         <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
                         <button class="tab-btn" onclick="switchTab('table')">Table</button>
+                        <button class="tab-btn" onclick="switchTab('averages')">Averages</button>
                     </div>
 
                     <div id="metric-selector" class="metric-selector">
@@ -652,6 +699,38 @@
                         </table>
                     </div>
                 </div>
+
+                <div id="view-averages" class="view-section">
+                    <div class="stats-grid">
+                        <div class="stats-card">
+                            <h4>Weeknights (Sun-Thu)</h4>
+                            <div id="avg-weeknight-total" class="stats-value">-</div>
+                            <div class="stats-subtext">Avg Sleep Duration</div>
+                            <div id="avg-weeknight-times" class="stats-subtext" style="margin-top: 8px; color: var(--primary);"></div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Weekends (Fri-Sat)</h4>
+                            <div id="avg-weekend-total" class="stats-value">-</div>
+                            <div class="stats-subtext">Avg Sleep Duration</div>
+                            <div id="avg-weekend-times" class="stats-subtext" style="margin-top: 8px; color: var(--primary);"></div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card" style="background: rgba(0,0,0,0.2); border: none; min-height: auto;">
+                        <h4 class="section-label" style="margin-bottom: 20px;">Breakdown by Day</h4>
+                        <table class="day-averages-table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Avg Start</th>
+                                    <th>Avg End</th>
+                                    <th>Avg Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="day-averages-body"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -665,16 +744,8 @@
         const mainContainer = document.getElementById('mainContainer');
 
         function checkAuth() { return sessionStorage.getItem('oura_auth') === '1'; }
-
-        function showLogin() {
-            loginModal.classList.add('active');
-            mainContainer.style.display = 'none';
-        }
-
-        function hideLogin() {
-            loginModal.classList.remove('active');
-            mainContainer.style.display = 'grid';
-        }
+        function showLogin() { loginModal.classList.add('active'); mainContainer.style.display = 'none'; }
+        function hideLogin() { loginModal.classList.remove('active'); mainContainer.style.display = 'grid'; }
 
         async function attemptLogin() {
             const pw = sitePassword.value;
@@ -707,6 +778,7 @@
         // --- APP LOGIC ---
         let currentData = null;
         let chartInstance = null;
+        let filterDayIdx = null; // null means no filter
         const formatDate = (date) => date.toISOString().split('T')[0];
 
         function setDateRange(days) {
@@ -726,7 +798,7 @@
             const endDate = document.getElementById('end-date').value;
             
             document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
-            if (event) event.target.classList.add('active');
+            if (event && event.target && event.target.classList) event.target.classList.add('active');
             
             document.getElementById('current-endpoint').textContent = endpoint.replace(/_/g, ' ').toUpperCase();
             const statusText = document.getElementById('status-text');
@@ -752,6 +824,7 @@
                 document.getElementById('output').textContent = JSON.stringify(data, null, 2);
                 statusText.textContent = 'Success: Data loaded';
                 statusText.classList.add('success');
+                filterDayIdx = null; // Reset filter on new fetch
                 setupVisualizations(data);
             } catch (error) {
                 document.getElementById('output').textContent = error.message;
@@ -803,6 +876,122 @@
             renderGraph(currentData.data, metric);
             renderCalendar(currentData.data, metric);
             renderTable(currentData.data);
+            renderAverages(currentData.data);
+        }
+
+        function filterByDay(dayIdx) {
+            filterDayIdx = dayIdx;
+            switchTab('table');
+            renderTable(currentData.data);
+        }
+
+        function clearDayFilter() {
+            filterDayIdx = null;
+            renderTable(currentData.data);
+        }
+
+        function renderAverages(dataArray) {
+            if (!dataArray || dataArray.length === 0) return;
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const stats = days.map(name => ({
+                name,
+                starts: [],
+                ends: [],
+                totals: []
+            }));
+
+            dataArray.forEach(item => {
+                const date = new Date(item.day || item.timestamp);
+                const dayIdx = date.getDay();
+                
+                const total = getNestedValue(item, 'total_sleep_duration');
+                if (total) stats[dayIdx].totals.push(total);
+
+                if (item.bedtime_start) {
+                    const d = new Date(item.bedtime_start);
+                    let h = d.getHours() + d.getMinutes()/60;
+                    if (h < 18) h += 24;
+                    stats[dayIdx].starts.push(h);
+                }
+
+                if (item.bedtime_end) {
+                    const d = new Date(item.bedtime_end);
+                    let h = d.getHours() + d.getMinutes()/60;
+                    stats[dayIdx].ends.push(h);
+                }
+            });
+
+            const formatAvgTime = (avg) => {
+                if (!avg) return '-';
+                let h = Math.floor(avg % 24);
+                let m = Math.round((avg % 1) * 60);
+                if (m === 60) { h = (h + 1) % 24; m = 0; }
+                
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12;
+                h = h ? h : 12;
+                return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
+            };
+
+            const formatAvgDuration = (avg) => {
+                if (!avg) return '-';
+                const h = Math.floor(avg / 3600);
+                const m = Math.round((avg % 3600) / 60);
+                return `${h}h ${m}m`;
+            };
+
+            const dayAverages = stats.map((s, i) => {
+                const avgTotal = s.totals.length ? s.totals.reduce((a, b) => a + b, 0) / s.totals.length : 0;
+                const avgStart = s.starts.length ? s.starts.reduce((a, b) => a + b, 0) / s.starts.length : 0;
+                const avgEnd = s.ends.length ? s.ends.reduce((a, b) => a + b, 0) / s.ends.length : 0;
+                return { name: s.name, avgTotal, avgStart, avgEnd, count: s.totals.length, idx: i };
+            });
+
+            const wn = (() => {
+                const group = stats.filter((_, i) => [1,2,3,4,5].includes(i));
+                const totals = group.flatMap(g => g.totals);
+                const starts = group.flatMap(g => g.starts);
+                const ends = group.flatMap(g => g.ends);
+                return {
+                    total: totals.length ? totals.reduce((a,b)=>a+b,0)/totals.length : 0,
+                    start: starts.length ? starts.reduce((a,b)=>a+b,0)/starts.length : 0,
+                    end: ends.length ? ends.reduce((a,b)=>a+b,0)/ends.length : 0
+                };
+            })();
+
+            const we = (() => {
+                const group = stats.filter((_, i) => [6,0].includes(i));
+                const totals = group.flatMap(g => g.totals);
+                const starts = group.flatMap(g => g.starts);
+                const ends = group.flatMap(g => g.ends);
+                return {
+                    total: totals.length ? totals.reduce((a,b)=>a+b,0)/totals.length : 0,
+                    start: starts.length ? starts.reduce((a,b)=>a+b,0)/starts.length : 0,
+                    end: ends.length ? ends.reduce((a,b)=>a+b,0)/ends.length : 0
+                };
+            })();
+
+            document.getElementById('avg-weeknight-total').textContent = formatAvgDuration(wn.total);
+            document.getElementById('avg-weeknight-times').textContent = `${formatAvgTime(wn.start)} - ${formatAvgTime(wn.end)}`;
+            
+            document.getElementById('avg-weekend-total').textContent = formatAvgDuration(we.total);
+            document.getElementById('avg-weekend-times').textContent = `${formatAvgTime(we.start)} - ${formatAvgTime(we.end)}`;
+
+            const tableBody = document.getElementById('day-averages-body');
+            tableBody.innerHTML = '';
+            dayAverages.forEach(d => {
+                const row = document.createElement('tr');
+                row.style.cursor = 'pointer';
+                row.onclick = () => filterByDay(d.idx);
+                row.innerHTML = `
+                    <td style="font-weight: 600; color: var(--primary);">${d.name} <span style="font-size: 0.7rem; color: var(--text-secondary);">🔍</span></td>
+                    <td class="time-val">${formatAvgTime(d.avgStart)}</td>
+                    <td class="time-val">${formatAvgTime(d.avgEnd)}</td>
+                    <td style="font-weight: 600;">${formatAvgDuration(d.avgTotal)} <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 400;">(${d.count} days)</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
         }
 
         function renderTable(dataArray) {
@@ -811,12 +1000,28 @@
 
             if (!dataArray || dataArray.length === 0) return;
 
-            // Find max duration for scaling
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            let filtered = dataArray.slice();
+            if (filterDayIdx !== null) {
+                filtered = filtered.filter(item => new Date(item.day || item.timestamp).getDay() === filterDayIdx);
+                const clearRow = document.createElement('tr');
+                clearRow.innerHTML = `
+                    <td colspan="4" style="text-align: center; background: rgba(0, 122, 255, 0.1); padding: 8px;">
+                        Showing only <strong>${days[filterDayIdx]}s</strong> 
+                        <button onclick="clearDayFilter()" style="margin-left: 10px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Clear Filter</button>
+                    </td>
+                `;
+                body.appendChild(clearRow);
+            }
+
             const durations = dataArray.map(d => getNestedValue(d, 'total_sleep_duration') || 0);
             const maxDuration = Math.max(...durations, 1);
 
-            dataArray.slice().sort((a,b) => new Date(b.day || b.timestamp) - new Date(a.day || a.timestamp)).forEach(item => {
-                const day = item.day || item.timestamp.split('T')[0];
+            filtered.sort((a,b) => new Date(b.day || b.timestamp) - new Date(a.day || a.timestamp)).forEach(item => {
+                const dateObj = new Date(item.day || item.timestamp);
+                const dayName = days[dateObj.getDay()];
+                const day = `${item.day || item.timestamp.split('T')[0]} (${dayName.slice(0,3)})`;
+                
                 const start = item.bedtime_start ? new Date(item.bedtime_start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
                 const end = item.bedtime_end ? new Date(item.bedtime_end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
                 const durationRaw = getNestedValue(item, 'total_sleep_duration') || 0;
@@ -901,7 +1106,9 @@
                                     if(!isTime) return ctx.formattedValue;
                                     let v = ctx.raw; if(v >= 24) v -= 24;
                                     let h = Math.floor(v), m = Math.round((v-h)*60);
-                                    return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                                    const ampm = h >= 12 ? 'PM' : 'AM';
+                                    const h12 = h % 12 || 12;
+                                    return `${h12}:${m.toString().padStart(2,'0')} ${ampm}`;
                                 }
                             }
                         }
@@ -916,7 +1123,9 @@
                                 callback: (v) => {
                                     if(!isTime) return v;
                                     let h = Math.floor(v); if(h >= 24) h -= 24;
-                                    return `${h.toString().padStart(2,'0')}:00`;
+                                    const ampm = h >= 12 ? 'PM' : 'AM';
+                                    const h12 = h % 12 || 12;
+                                    return `${h12}:00 ${ampm}`;
                                 }
                             }
                         }
@@ -935,7 +1144,11 @@
                 if (metricKey.includes('duration') || metricKey.includes('total')) v = (v/3600).toFixed(1) + 'h';
                 else if (metricKey.includes('bedtime') && v) {
                     const d = new Date(v);
-                    v = `${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
+                    const h = d.getHours();
+                    const m = d.getMinutes().toString().padStart(2,'0');
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    const h12 = h % 12 || 12;
+                    v = `${h12}:${m} ${ampm}`;
                 }
                 dataMap[dk] = v;
             });
@@ -964,7 +1177,8 @@
 
         function switchTab(t) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
-            event.target.classList.add('active-tab');
+            const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.onclick.toString().includes(`'${t}'`));
+            if (btn) btn.classList.add('active-tab');
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             document.getElementById(`view-${t}`).classList.add('active');
         }
