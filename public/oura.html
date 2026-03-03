@@ -685,10 +685,17 @@
                 </div>
 
                 <div id="view-table" class="view-section">
+                    <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+                        <span class="section-label">Table Mode:</span>
+                        <div class="tabs" style="background: rgba(255,255,255,0.05);">
+                            <button id="btn-table-all" class="tab-btn active-tab" style="padding: 4px 12px; font-size: 0.75rem;" onclick="setTableMode('all')">All Sessions</button>
+                            <button id="btn-table-combined" class="tab-btn" style="padding: 4px 12px; font-size: 0.75rem;" onclick="setTableMode('combined')">Combined Daily</button>
+                        </div>
+                    </div>
                     <div class="table-container" style="overflow-x: auto;">
                         <table class="data-table">
                             <thead>
-                                <tr>
+                                <tr id="table-header-row">
                                     <th>Date</th>
                                     <th>Bed Start</th>
                                     <th>Bed End</th>
@@ -776,10 +783,27 @@
         if (checkAuth()) hideLogin(); else showLogin();
 
         // --- APP LOGIC ---
-        let currentData = null;
+        let currentData = { raw: [], aggregated: [] };
         let chartInstance = null;
         let filterDayIdx = null; // null means no filter
+        let tableMode = 'all'; // 'all' or 'combined'
         const formatDate = (date) => date.toISOString().split('T')[0];
+
+        function setTableMode(mode) {
+            tableMode = mode;
+            document.getElementById('btn-table-all').classList.toggle('active-tab', mode === 'all');
+            document.getElementById('btn-table-combined').classList.toggle('active-tab', mode === 'combined');
+            
+            // Update Header
+            const header = document.getElementById('table-header-row');
+            if (mode === 'combined') {
+                header.innerHTML = '<th>Date</th><th>Sessions</th><th>Bed Start</th><th>Bed End</th><th>Total Sleep</th>';
+            } else {
+                header.innerHTML = '<th>Date</th><th>Bed Start</th><th>Bed End</th><th>Total Sleep</th>';
+            }
+            
+            renderTable(mode === 'combined' ? currentData.aggregated : currentData.raw);
+        }
 
         function setDateRange(days) {
             const endInput = document.getElementById('end-date');
@@ -821,19 +845,22 @@
                 if (!response.ok) throw new Error(await response.text());
                 const data = await response.json();
                 
-                // Aggregate multiple sessions per day
-                if (data && Array.isArray(data.data)) {
-                    const aggregated = {};
-                    data.data.forEach(item => {
+                const raw = Array.isArray(data.data) ? data.data : [];
+                const aggregated = [];
+
+                if (raw.length > 0) {
+                    const aggMap = {};
+                    raw.forEach(item => {
                         const day = item.day || (item.timestamp ? item.timestamp.split('T')[0] : 'unknown');
-                        if (!aggregated[day]) {
-                            aggregated[day] = JSON.parse(JSON.stringify(item));
+                        if (!aggMap[day]) {
+                            aggMap[day] = JSON.parse(JSON.stringify(item));
+                            aggMap[day]._sessionCount = 1;
                             return;
                         }
                         
-                        const existing = aggregated[day];
+                        const existing = aggMap[day];
+                        existing._sessionCount++;
                         
-                        // Sum common duration/numeric fields
                         const keysToSum = [
                             'total_sleep_duration', 'awake_duration', 'light_sleep_duration', 
                             'rem_sleep_duration', 'deep_sleep_duration', 'active_calories', 
@@ -841,56 +868,41 @@
                         ];
                         
                         keysToSum.forEach(key => {
-                            if (item[key] !== undefined) {
-                                existing[key] = (existing[key] || 0) + item[key];
-                            }
+                            if (item[key] !== undefined) existing[key] = (existing[key] || 0) + item[key];
                         });
 
-                        // Handle nested sleep durations
-                        if (item.sleep_phase_6_way_probabilities_p6) {
-                            // Complex nesting - usually simpler to sum the top-level durations
-                        }
-
-                        // Earliest Start / Latest End
                         if (item.bedtime_start && existing.bedtime_start) {
-                            if (new Date(item.bedtime_start) < new Date(existing.bedtime_start)) {
-                                existing.bedtime_start = item.bedtime_start;
-                            }
+                            if (new Date(item.bedtime_start) < new Date(existing.bedtime_start)) existing.bedtime_start = item.bedtime_start;
                         }
                         if (item.bedtime_end && existing.bedtime_end) {
-                            if (new Date(item.bedtime_end) > new Date(existing.bedtime_end)) {
-                                existing.bedtime_end = item.bedtime_end;
-                            }
+                            if (new Date(item.bedtime_end) > new Date(existing.bedtime_end)) existing.bedtime_end = item.bedtime_end;
                         }
-                        
-                        // Average scores if they exist
-                        if (item.score !== undefined && existing.score !== undefined) {
-                            existing.score = (existing.score + item.score) / 2;
-                        }
+                        if (item.score !== undefined && existing.score !== undefined) existing.score = (existing.score + item.score) / 2;
                     });
-                    data.data = Object.values(aggregated);
+                    aggregated.push(...Object.values(aggMap));
                 }
 
-                currentData = data;
+                currentData = { raw, aggregated };
                 document.getElementById('output').textContent = JSON.stringify(data, null, 2);
                 statusText.textContent = 'Success: Data loaded';
                 statusText.classList.add('success');
-                filterDayIdx = null; // Reset filter on new fetch
+                filterDayIdx = null; 
                 setupVisualizations(data);
             } catch (error) {
                 document.getElementById('output').textContent = error.message;
                 statusText.textContent = 'Error: Failed to fetch';
                 statusText.classList.add('error');
-                currentData = null;
+                currentData = { raw: [], aggregated: [] };
             }
         }
 
         function setupVisualizations(data) {
+            // Use aggregated data for Graph, Calendar, and Averages by default for cleaner views
             const selector = document.getElementById('data-metric');
             const selectorContainer = document.getElementById('metric-selector');
             selector.innerHTML = ''; 
 
-            if (!data || !Array.isArray(data.data) || data.data.length === 0) {
+            if (!currentData.aggregated || currentData.aggregated.length === 0) {
                 selectorContainer.classList.remove('visible');
                 return;
             }
@@ -899,12 +911,12 @@
             function findKeys(obj, prefix = '') {
                 for (const key in obj) {
                     const fullKey = prefix + key;
-                    if (typeof obj[key] === 'number') availableKeys.push(fullKey);
+                    if (typeof obj[key] === 'number' && !key.startsWith('_')) availableKeys.push(fullKey);
                     else if (['bedtime_start', 'bedtime_end'].includes(key)) availableKeys.push(fullKey);
                     else if (typeof obj[key] === 'object' && obj[key] !== null) findKeys(obj[key], fullKey + '.');
                 }
             }
-            findKeys(data.data[0]);
+            findKeys(currentData.aggregated[0]);
 
             if (availableKeys.length > 0) {
                 selectorContainer.classList.add('visible');
@@ -922,27 +934,29 @@
         }
 
         function updateVisualizations() {
-            if (!currentData) return;
+            if (!currentData.aggregated.length) return;
             const metric = document.getElementById('data-metric').value;
-            renderGraph(currentData.data, metric);
-            renderCalendar(currentData.data, metric);
-            renderTable(currentData.data);
-            renderAverages(currentData.data);
+            renderGraph(currentData.aggregated, metric);
+            renderCalendar(currentData.aggregated, metric);
+            renderAverages(currentData.aggregated);
+            renderTable(tableMode === 'combined' ? currentData.aggregated : currentData.raw);
         }
 
         function filterByDay(dayIdx) {
             filterDayIdx = dayIdx;
             switchTab('table');
-            renderTable(currentData.data);
+            renderTable(tableMode === 'combined' ? currentData.aggregated : currentData.raw);
         }
 
         function clearDayFilter() {
             filterDayIdx = null;
-            renderTable(currentData.data);
+            renderTable(tableMode === 'combined' ? currentData.aggregated : currentData.raw);
         }
 
         function renderAverages(dataArray) {
+            // (Same implementation using dataArray)
             if (!dataArray || dataArray.length === 0) return;
+            // ... (rest of the renderAverages implementation stays same, using dataArray parameter)
 
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const stats = days.map(name => ({
@@ -1056,8 +1070,9 @@
             if (filterDayIdx !== null) {
                 filtered = filtered.filter(item => new Date(item.day || item.timestamp).getDay() === filterDayIdx);
                 const clearRow = document.createElement('tr');
+                const colSpan = tableMode === 'combined' ? 5 : 4;
                 clearRow.innerHTML = `
-                    <td colspan="4" style="text-align: center; background: rgba(0, 122, 255, 0.1); padding: 8px;">
+                    <td colspan="${colSpan}" style="text-align: center; background: rgba(0, 122, 255, 0.1); padding: 8px;">
                         Showing only <strong>${days[filterDayIdx]}s</strong> 
                         <button onclick="clearDayFilter()" style="margin-left: 10px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Clear Filter</button>
                     </td>
@@ -1080,8 +1095,15 @@
                 const percent = (durationRaw / maxDuration) * 100;
 
                 const row = document.createElement('tr');
-                row.innerHTML = `
+                let cells = `
                     <td style="font-weight: 600;">${day}</td>
+                `;
+                
+                if (tableMode === 'combined') {
+                    cells += `<td style="text-align: center;"><span style="background: var(--glass-bg); padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">${item._sessionCount || 1}</span></td>`;
+                }
+                
+                cells += `
                     <td class="time-val">${start}</td>
                     <td class="time-val">${end}</td>
                     <td>
@@ -1093,6 +1115,7 @@
                         </div>
                     </td>
                 `;
+                row.innerHTML = cells;
                 body.appendChild(row);
             });
         }
