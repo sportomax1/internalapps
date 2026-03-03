@@ -820,6 +820,57 @@
                 const response = await fetch(`/api/oura/?${params.toString()}`);
                 if (!response.ok) throw new Error(await response.text());
                 const data = await response.json();
+                
+                // Aggregate multiple sessions per day
+                if (data && Array.isArray(data.data)) {
+                    const aggregated = {};
+                    data.data.forEach(item => {
+                        const day = item.day || (item.timestamp ? item.timestamp.split('T')[0] : 'unknown');
+                        if (!aggregated[day]) {
+                            aggregated[day] = JSON.parse(JSON.stringify(item));
+                            return;
+                        }
+                        
+                        const existing = aggregated[day];
+                        
+                        // Sum common duration/numeric fields
+                        const keysToSum = [
+                            'total_sleep_duration', 'awake_duration', 'light_sleep_duration', 
+                            'rem_sleep_duration', 'deep_sleep_duration', 'active_calories', 
+                            'steps', 'total_calories'
+                        ];
+                        
+                        keysToSum.forEach(key => {
+                            if (item[key] !== undefined) {
+                                existing[key] = (existing[key] || 0) + item[key];
+                            }
+                        });
+
+                        // Handle nested sleep durations
+                        if (item.sleep_phase_6_way_probabilities_p6) {
+                            // Complex nesting - usually simpler to sum the top-level durations
+                        }
+
+                        // Earliest Start / Latest End
+                        if (item.bedtime_start && existing.bedtime_start) {
+                            if (new Date(item.bedtime_start) < new Date(existing.bedtime_start)) {
+                                existing.bedtime_start = item.bedtime_start;
+                            }
+                        }
+                        if (item.bedtime_end && existing.bedtime_end) {
+                            if (new Date(item.bedtime_end) > new Date(existing.bedtime_end)) {
+                                existing.bedtime_end = item.bedtime_end;
+                            }
+                        }
+                        
+                        // Average scores if they exist
+                        if (item.score !== undefined && existing.score !== undefined) {
+                            existing.score = (existing.score + item.score) / 2;
+                        }
+                    });
+                    data.data = Object.values(aggregated);
+                }
+
                 currentData = data;
                 document.getElementById('output').textContent = JSON.stringify(data, null, 2);
                 statusText.textContent = 'Success: Data loaded';
