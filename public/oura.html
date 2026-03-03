@@ -874,57 +874,89 @@
             const raw = currentData.rawSource || [];
             const excludeNaps = document.getElementById('exclude-naps').checked;
             
-            // 1. Filter raw sessions if needed
-            let filteredRaw = raw;
-            if (excludeNaps) {
-                filteredRaw = raw.filter(item => {
-                    // Oura v2 'type' can be 'long_sleep' or 'base_sleep'
-                    if (item.type === 'long_sleep') return true;
-                    
-                    // Fallback to duration (e.g. > 2 hours)
-                    const duration = getNestedValue(item, 'total_sleep_duration') || 0;
-                    if (duration > 7200) return true; // 2 hours
-                    
-                    return false;
-                });
-            }
-            
-            // 2. Aggregate filtered sessions into daily buckets
-            const aggregated = [];
-            const aggMap = {};
-            
-            filteredRaw.forEach(item => {
+            // 1. Group all raw sessions by day first
+            const dayGroups = {};
+            raw.forEach(item => {
                 const day = item.day || (item.timestamp ? item.timestamp.split('T')[0] : 'unknown');
-                if (!aggMap[day]) {
-                    aggMap[day] = JSON.parse(JSON.stringify(item));
-                    aggMap[day]._sessionCount = 1;
-                    return;
-                }
-                
-                const existing = aggMap[day];
-                existing._sessionCount++;
-                
-                const keysToSum = [
-                    'total_sleep_duration', 'awake_duration', 'light_sleep_duration', 
-                    'rem_sleep_duration', 'deep_sleep_duration', 'active_calories', 
-                    'steps', 'total_calories'
-                ];
-                
-                keysToSum.forEach(key => {
-                    if (item[key] !== undefined) existing[key] = (existing[key] || 0) + item[key];
-                });
+                if (!dayGroups[day]) dayGroups[day] = [];
+                dayGroups[day].push(item);
+            });
 
-                if (item.bedtime_start && existing.bedtime_start) {
-                    if (new Date(item.bedtime_start) < new Date(existing.bedtime_start)) existing.bedtime_start = item.bedtime_start;
+            const finalRaw = [];
+            const aggregated = [];
+
+            // 2. Process each day's sessions
+            Object.keys(dayGroups).forEach(day => {
+                const sessions = dayGroups[day].sort((a,b) => new Date(a.bedtime_start) - new Date(b.bedtime_start));
+                
+                let coreSessions = [];
+                if (!excludeNaps) {
+                    coreSessions = sessions;
+                } else {
+                    // Identify the "Main" sleep (longest or long_sleep type)
+                    let mainSleep = sessions.reduce((prev, current) => {
+                        if (current.type === 'long_sleep') return current;
+                        if (prev && prev.type === 'long_sleep') return prev;
+                        return (current.total_sleep_duration > (prev ? prev.total_sleep_duration : 0)) ? current : prev;
+                    }, null);
+
+                    if (mainSleep) {
+                        coreSessions.push(mainSleep);
+                        
+                        // Contiguity logic: find sessions within 2 hours of the current core cluster
+                        let expanded = true;
+                        while (expanded) {
+                            expanded = false;
+                            const clusterStart = Math.min(...coreSessions.map(s => new Date(s.bedtime_start).getTime()));
+                            const clusterEnd = Math.max(...coreSessions.map(s => new Date(s.bedtime_end).getTime()));
+                            
+                            sessions.forEach(s => {
+                                if (coreSessions.includes(s)) return;
+                                
+                                const sStart = new Date(s.bedtime_start).getTime();
+                                const sEnd = new Date(s.bedtime_end).getTime();
+                                const buffer = 2 * 60 * 60 * 1000; // 2 hours
+
+                                // If this session ends shortly before the cluster starts, or starts shortly after it ends
+                                if ((sEnd >= clusterStart - buffer && sEnd <= clusterStart) || 
+                                    (sStart <= clusterEnd + buffer && sStart >= clusterEnd)) {
+                                    coreSessions.push(s);
+                                    expanded = true;
+                                }
+                            });
+                        }
+                    }
                 }
-                if (item.bedtime_end && existing.bedtime_end) {
-                    if (new Date(item.bedtime_end) > new Date(existing.bedtime_end)) existing.bedtime_end = item.bedtime_end;
+
+                // Sort core sessions by time for aggregation
+                coreSessions.sort((a,b) => new Date(a.bedtime_start) - new Date(b.bedtime_start));
+                finalRaw.push(...coreSessions);
+
+                if (coreSessions.length > 0) {
+                    const agg = JSON.parse(JSON.stringify(coreSessions[0]));
+                    agg._sessionCount = coreSessions.length;
+                    
+                    if (coreSessions.length > 1) {
+                        // Sum metrics for the rest
+                        for (let i = 1; i < coreSessions.length; i++) {
+                            const s = coreSessions[i];
+                            const keysToSum = ['total_sleep_duration', 'awake_duration', 'light_sleep_duration', 'rem_sleep_duration', 'deep_sleep_duration', 'active_calories', 'steps', 'total_calories'];
+                            keysToSum.forEach(k => { if(s[k] !== undefined) agg[k] = (agg[k] || 0) + s[k]; });
+                            
+                            // Update start/end to span the whole cluster
+                            if (new Date(s.bedtime_start) < new Date(agg.bedtime_start)) agg.bedtime_start = s.bedtime_start;
+                            if (new Date(s.bedtime_end) > new Date(agg.bedtime_end)) agg.bedtime_end = s.bedtime_end;
+                            
+                            // Average score
+                            if (s.score !== undefined) agg.score = (agg.score + s.score) / 2;
+                        }
+                    }
+                    aggregated.push(agg);
                 }
-                if (item.score !== undefined && existing.score !== undefined) existing.score = (existing.score + item.score) / 2;
             });
             
-            currentData.raw = filteredRaw;
-            currentData.aggregated = Object.values(aggMap);
+            currentData.raw = finalRaw.sort((a,b) => new Date(b.bedtime_start) - new Date(a.bedtime_start));
+            currentData.aggregated = aggregated.sort((a,b) => new Date(b.day || b.bedtime_start) - new Date(a.day || a.bedtime_start));
         }
 
         function setupVisualizations(data) {
