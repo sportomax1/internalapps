@@ -3,432 +3,615 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oura API v2 Explorer</title>
+    <title>Oura Explorer | Secure Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <!-- Chart.js for Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
         :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --primary-color: #ffffff;
-            --secondary-color: #b3b3b3;
-            --accent-color: #007bff;
-            --border-color: #333;
-            --code-bg: #2d2d2d;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
+            --primary: #007aff;
+            --primary-glow: rgba(0, 122, 255, 0.3);
+            --bg: #0a0a0a;
+            --surface: rgba(25, 25, 25, 0.6);
+            --surface-solid: #1a1a1a;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-secondary: #a1a1a1;
+            --accent-gradient: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #34c759;
+            --danger: #ff3b30;
+            --warning: #ffcc00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--primary-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        h1 { margin-bottom: 20px; font-weight: 300; letter-spacing: 1px; }
+        /* Animated Background */
+        .bg-blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(100px);
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-1 { width: 500px; height: 500px; background: var(--primary); top: -100px; left: -100px; }
+        .blob-2 { width: 400px; height: 400px; background: #5856d6; bottom: -100px; right: -100px; animation-delay: -5s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(30px, 60px) scale(1.1); }
+        }
+
+        header {
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: var(--text); }
+
+        .app-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-gradient);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
 
         .container {
-            width: 100%;
-            max-width: 1400px;
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            padding: 24px 40px;
+            max-width: 1800px;
+            margin: 0 auto;
         }
 
         /* Sidebar */
         .controls {
-            background-color: var(--surface-color);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            height: fit-content;
+            gap: 24px;
+            height: calc(100vh - 120px);
+            position: sticky;
+            top: 104px;
         }
 
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.85rem; color: var(--secondary-color); font-weight: 500; }
-        input, select {
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--primary-color);
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        input[type="date"] {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
             padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
+            border-radius: 12px;
+            font-family: inherit;
+            width: 100%;
         }
-        input:focus, select:focus { outline: none; border-color: var(--accent-color); }
 
-        /* Button Styling */
-        button {
-            background-color: var(--surface-color);
-            color: var(--primary-color);
-            border: 1px solid var(--border-color);
-            padding: 10px 15px;
-            border-radius: 4px;
+        .range-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .range-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
+        }
+
+        .range-btn:hover {
+            background: var(--glass-border);
+            color: var(--text);
+        }
+
+        .endpoints-list {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 4px;
+        }
+
+        .endpoints-list::-webkit-scrollbar { width: 4px; }
+        .endpoints-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .endpoint-category {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+            margin: 20px 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .endpoint-category::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .endpoint-btn {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 12px;
+            border-radius: 10px;
             text-align: left;
             font-size: 0.9rem;
-        }
-        button:hover { background-color: var(--border-color); }
-        button.active { background-color: var(--accent-color); border-color: var(--accent-color); color: white; }
-
-        .endpoints-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; margin-top: 10px; }
-        .endpoint-category {
-            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary-color);
-            margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;
-            position: sticky; top: 0; background-color: var(--surface-color); z-index: 1;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 2px;
         }
 
-        /* Range Buttons */
-        .range-buttons {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+        .endpoint-btn:hover {
+            background: var(--glass-bg);
+            color: var(--text);
         }
-        .range-btn {
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            text-align: center;
-            flex-grow: 1;
+
+        .endpoint-btn.active {
+            background: var(--accent-gradient);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px var(--primary-glow);
         }
 
         /* Main Content */
         .main-content {
-            background-color: var(--surface-color);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .status-card {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .endpoint-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        #current-endpoint {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        #status-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        #status-text.success { color: var(--success); }
+        #status-text.error { color: var(--danger); }
+
+        .url-display {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            word-break: break-all;
+        }
+
+        .dashboard-card {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
             min-height: 600px;
             display: flex;
             flex-direction: column;
+            gap: 24px;
         }
 
-        .status-bar {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
-            padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
-        }
-        #status-text { color: var(--secondary-color); font-size: 0.9rem; }
-        .success { color: var(--success-color) !important; }
-        .error { color: var(--danger-color) !important; }
-
-        .url-display {
-            background-color: var(--bg-color); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);
-            font-family: "Consolas", "Monaco", monospace; font-size: 0.85rem; margin-bottom: 15px; word-break: break-all; color: var(--accent-color);
+        .tabs {
+            display: flex;
+            background: var(--glass-bg);
+            padding: 4px;
+            border-radius: 14px;
+            width: fit-content;
         }
 
-        /* Tabs */
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         .tab-btn {
-            background: none; border: none; padding: 10px 20px; cursor: pointer; color: var(--secondary-color);
-            font-weight: 500; border-bottom: 2px solid transparent;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .tab-btn:hover { color: var(--primary-color); }
-        .tab-btn.active-tab { color: var(--accent-color); border-bottom-color: var(--accent-color); }
 
-        /* Metric Selector */
-        .metric-selector { margin-bottom: 15px; display: none; align-items: center; gap: 10px; }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active-tab {
+            background: var(--surface-solid);
+            color: var(--text);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .metric-selector {
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
         .metric-selector.visible { display: flex; }
 
-        /* View Containers */
-        .view-section { display: none; flex-grow: 1; }
+        select {
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .view-section { display: none; flex: 1; }
         .view-section.active { display: block; }
 
-        /* Raw Data */
         pre {
-            background-color: var(--code-bg); padding: 15px; border-radius: 4px; overflow: auto; height: 500px;
-            margin: 0; font-family: "Consolas", "Monaco", monospace; font-size: 0.85rem;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 16px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            overflow: auto;
+            max-height: 600px;
+            border: 1px solid var(--border);
         }
 
-        /* Graph */
-        #chart-container { position: relative; height: 500px; width: 100%; }
+        #chart-container {
+            height: 500px;
+            width: 100%;
+            position: relative;
+        }
 
-        /* Calendar Grid */
         .calendar-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
         }
+
         .calendar-day {
-            background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px;
-            padding: 10px; min-height: 80px; display: flex; flex-direction: column; justify-content: space-between;
+            background: var(--glass-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
         }
-        .calendar-date { font-size: 0.8rem; color: var(--secondary-color); margin-bottom: 5px; }
-        .calendar-value { font-size: 1.2rem; font-weight: bold; align-self: flex-end; }
-        .calendar-day.has-data { cursor: pointer; transition: transform 0.1s; }
-        .calendar-day.has-data:hover { transform: scale(1.02); border-color: var(--accent-color); }
 
-        /* Color scales for calendar */
-        .level-low { border-left: 4px solid var(--danger-color); }
-        .level-med { border-left: 4px solid var(--warning-color); }
-        .level-high { border-left: 4px solid var(--success-color); }
+        .calendar-day.has-data:hover {
+            transform: scale(1.05);
+            background: var(--glass-border);
+        }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-color); }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .calendar-date { font-size: 0.7rem; color: var(--text-secondary); }
+        .calendar-value { font-size: 1.1rem; font-weight: 700; align-self: flex-end; }
 
-        /* Login Modal Styling */
+        .level-low { border-right: 4px solid var(--danger); }
+        .level-med { border-right: 4px solid var(--warning); }
+        .level-high { border-right: 4px solid var(--success); }
+
+        /* Login Modal */
         .login-modal {
-            display: none !important;
+            display: none;
             position: fixed;
             inset: 0;
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
-            padding: 16px;
+            padding: 20px;
         }
 
-        .login-modal.active {
-            display: flex !important;
-        }
+        .login-modal.active { display: flex; }
 
         .modal-backdrop {
             position: absolute;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
         }
 
         .login-card {
-            background: var(--surface-color);
-            padding: 0;
-            border-radius: 8px;
-            width: min(400px, 100%);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-color);
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
             position: relative;
             z-index: 1;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
         }
 
         .login-icon {
-            font-size: 40px;
+            font-size: 48px;
             text-align: center;
-            padding-top: 20px;
+            margin-bottom: 24px;
         }
 
-        .login-card h3 {
-            text-align: center;
-            margin: 10px 0 5px;
-            font-size: 1.2rem;
-        }
+        .login-card h3 { text-align: center; margin-bottom: 8px; font-size: 1.5rem; }
+        .login-subtitle { text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 32px; }
 
-        .login-subtitle {
-            text-align: center;
-            color: var(--secondary-color);
-            font-size: 0.9rem;
-            margin: 0 20px 20px;
-        }
-
-        .login-card .input-group {
-            margin: 0 20px 15px;
-        }
-
+        .input-group { margin-bottom: 24px; position: relative; }
+        .input-icon { position: absolute; left: 14px; top: 12px; font-size: 20px; }
         .login-card input {
             width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 14px 14px 14px 44px;
+            border-radius: 14px;
+            font-size: 1rem;
         }
 
-        .input-icon {
-            position: absolute;
-            left: 10px;
-            font-size: 18px;
-        }
-
-        .login-card .input-group input {
-            padding-left: 35px;
-        }
-
-        .error-message {
-            display: none;
-            color: var(--danger-color);
-            text-align: center;
-            margin: 0 20px 15px;
-            font-size: 0.9rem;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin: 20px;
-        }
-
-        .button-group button {
-            flex: 1;
-        }
-
-        .button-group .btn-primary {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
+        .btn-primary {
+            width: 100%;
+            background: var(--accent-gradient);
             color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 20px var(--primary-glow);
+            transition: transform 0.2s;
         }
 
-        .button-group .btn-tertiary {
-            background-color: transparent;
-            color: var(--accent-color);
-            border: 1px solid var(--border-color);
-        }
+        .btn-primary:hover { transform: translateY(-2px); }
 
-        /* Hide content until authenticated */
-        .container.hidden {
-            display: none;
-        }
-
-        h1.hidden {
-            display: none;
+        @media (max-width: 1024px) {
+            .container { grid-template-columns: 1fr; }
+            .controls { height: auto; position: static; }
         }
     </style>
 </head>
 <body>
-
-    <h1>🚀 Oura API v2 Explorer</h1>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
 
     <!-- Login Modal -->
     <div id="loginModal" class="login-modal">
         <div class="modal-backdrop"></div>
         <div class="login-card">
             <div class="login-icon">🔐</div>
-            <h3>Welcome Back</h3>
-            <p class="login-subtitle">This site is protected. Please enter your password to continue.</p>
+            <h3>Oura Explorer</h3>
+            <p class="login-subtitle">Please enter your portal password to access health analytics.</p>
             
-            <div class="input-group" style="position: relative;">
+            <div class="input-group">
                 <div class="input-icon">🔑</div>
-                <input id="sitePassword" type="password" placeholder="Enter password" autocomplete="current-password" />
+                <input id="sitePassword" type="password" placeholder="Dashboard password" autocomplete="current-password" />
             </div>
             
-            <div id="loginError" class="error-message"></div>
+            <div id="loginError" style="color: var(--danger); text-align: center; margin-bottom: 16px; font-size: 0.85rem; display: none;"></div>
             
-            <div class="button-group">
-                <button id="loginSubmit" class="btn-primary">Unlock</button>
-                <button id="loginCancel" class="btn-tertiary">Cancel</button>
-            </div>
+            <button id="loginSubmit" class="btn-primary">Unlock Dashboard</button>
         </div>
     </div>
 
-    <div class="container">
+    <header>
+        <div class="header-left">
+            <a href="/" class="back-link">←</a>
+            <div class="app-title">
+                <div class="app-logo">🚀</div>
+                Oura Explorer
+            </div>
+        </div>
+        <div class="status-tag" style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+            <div style="width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success);"></div>
+            API v2 Connected
+        </div>
+    </header>
+
+    <div class="container" id="mainContainer" style="display: none;">
         <!-- Sidebar -->
-        <div class="controls">
-            <div class="input-group">
-                <label>Date Range</label>
+        <aside class="controls">
+            <div class="sidebar-section">
+                <span class="section-label">Date Range</span>
                 <div class="range-buttons">
-                    <button class="range-btn" onclick="setDateRange(7)">7 Days</button>
-                    <button class="range-btn" onclick="setDateRange(30)">30 Days</button>
-                    <button class="range-btn" onclick="setDateRange(90)">90 Days</button>
-                    <button class="range-btn" onclick="setDateRange(365)">1 Year</button>
-                    <button class="range-btn" onclick="setDateRange('all')">All Time</button>
+                    <button class="range-btn" onclick="setDateRange(7)">7D</button>
+                    <button class="range-btn" onclick="setDateRange(30)">30D</button>
+                    <button class="range-btn" onclick="setDateRange(90)">90D</button>
+                    <button class="range-btn" onclick="setDateRange(365)">1Y</button>
+                    <button class="range-btn" style="grid-column: span 2;" onclick="setDateRange('all')">All Time</button>
                 </div>
             </div>
 
-            <div class="input-group">
-                <label for="start-date">Start Date</label>
+            <div class="sidebar-section">
+                <span class="section-label">From</span>
                 <input type="date" id="start-date">
-            </div>
-
-            <div class="input-group">
-                <label for="end-date">End Date</label>
+                <span class="section-label" style="margin-top: 4px;">To</span>
                 <input type="date" id="end-date">
             </div>
 
             <div class="endpoints-list">
-                <div class="endpoint-category">🧠 Profile</div>
-                <button onclick="fetchData('personal_info')">Personal Info</button>
+                <div class="endpoint-category">Profile</div>
+                <button class="endpoint-btn" onclick="fetchData('personal_info')">Personal Info</button>
 
-                <div class="endpoint-category">📅 Daily Summaries</div>
-                <button onclick="fetchData('daily_activity')">Daily Activity</button>
-                <button onclick="fetchData('daily_readiness')">Daily Readiness</button>
-                <button onclick="fetchData('daily_sleep')">Daily Sleep</button>
-                <button onclick="fetchData('daily_spo2')">Daily SpO2</button>
-                <button onclick="fetchData('daily_stress')">Daily Stress</button>
-                <button onclick="fetchData('daily_resilience')">Daily Resilience</button>
-                <button onclick="fetchData('daily_cardiovascular_age')">Daily Cardio Age</button>
+                <div class="endpoint-category">Summaries</div>
+                <button class="endpoint-btn" onclick="fetchData('daily_activity')">Daily Activity</button>
+                <button class="endpoint-btn" onclick="fetchData('daily_readiness')">Daily Readiness</button>
+                <button class="endpoint-btn" onclick="fetchData('daily_sleep')">Daily Sleep</button>
+                <button class="endpoint-btn" onclick="fetchData('daily_spo2')">Daily SpO2</button>
+                <button class="endpoint-btn" onclick="fetchData('daily_stress')">Daily Stress</button>
+                <button class="endpoint-btn" onclick="fetchData('daily_resilience')">Daily Resilience</button>
 
-                <div class="endpoint-category">📊 Time Series / Details</div>
-                <button onclick="fetchData('sleep')">Sleep Periods</button>
-                <button onclick="fetchData('heartrate')">Heart Rate (Time Series)</button>
-                <button onclick="fetchData('workout')">Workouts</button>
-                <button onclick="fetchData('tag')">Tags</button>
-                <button onclick="fetchData('session')">Sessions</button>
-                <button onclick="fetchData('rest_mode_period')">Rest Mode Periods</button>
+                <div class="endpoint-category">Time Series</div>
+                <button class="endpoint-btn" onclick="fetchData('sleep')">Sleep Periods</button>
+                <button class="endpoint-btn" onclick="fetchData('heartrate')">Heart Rate</button>
+                <button class="endpoint-btn" onclick="fetchData('workout')">Workouts</button>
+                <button class="endpoint-btn" onclick="fetchData('tag')">Tags</button>
 
-                <div class="endpoint-category">🛠 Device / Settings</div>
-                <button onclick="fetchData('ring_configuration')">Ring Configuration</button>
+                <div class="endpoint-category">Device</div>
+                <button class="endpoint-btn" onclick="fetchData('ring_configuration')">Ring Config</button>
             </div>
-        </div>
+        </aside>
 
         <!-- Main Content -->
-        <div class="main-content">
-            <div class="status-bar">
-                <strong id="current-endpoint">Select an endpoint</strong>
-                <span id="status-text">Ready</span>
-            </div>
-            
-            <div class="input-group">
-                <label>Target URL</label>
-                <div id="url-display" class="url-display">https://api.ouraring.com/v2/usercollection/...</div>
+        <main class="main-content">
+            <div class="status-card">
+                <div class="endpoint-info">
+                    <div id="current-endpoint">Select an Endpoint</div>
+                    <div id="status-text">Ready to fetch data</div>
+                </div>
+                <div id="url-display" class="url-display">https://api.ouraring.com/v2/...</div>
             </div>
 
-            <!-- Visualization Controls -->
-            <div class="tabs">
-                <button class="tab-btn active-tab" onclick="switchTab('raw')">Raw JSON</button>
-                <button class="tab-btn" onclick="switchTab('graph')">Line Graph</button>
-                <button class="tab-btn" onclick="switchTab('calendar')">Calendar Grid</button>
-            </div>
+            <div class="dashboard-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div class="tabs">
+                        <button class="tab-btn active-tab" onclick="switchTab('raw')">JSON</button>
+                        <button class="tab-btn" onclick="switchTab('graph')">Graph</button>
+                        <button class="tab-btn" onclick="switchTab('calendar')">Calendar</button>
+                    </div>
 
-            <div id="metric-selector" class="metric-selector">
-                <label for="data-metric">Select Metric:</label>
-                <select id="data-metric" onchange="updateVisualizations()"></select>
-            </div>
+                    <div id="metric-selector" class="metric-selector">
+                        <span class="section-label" style="margin: 0;">Metric</span>
+                        <select id="data-metric" onchange="updateVisualizations()"></select>
+                    </div>
+                </div>
 
-            <!-- Views -->
-            <div id="view-raw" class="view-section active">
-                <pre id="output">// JSON response will appear here...</pre>
-            </div>
+                <div id="view-raw" class="view-section active">
+                    <pre id="output">// Results will appear here...</pre>
+                </div>
 
-            <div id="view-graph" class="view-section">
-                <div id="chart-container">
-                    <canvas id="myChart"></canvas>
+                <div id="view-graph" class="view-section">
+                    <div id="chart-container">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </div>
+
+                <div id="view-calendar" class="view-section">
+                    <div id="calendar-container" class="calendar-grid"></div>
                 </div>
             </div>
-
-            <div id="view-calendar" class="view-section">
-                <div id="calendar-container" class="calendar-grid">
-                    <!-- Calendar Items injected here -->
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        // --- AUTH STATE ---
+        // --- AUTH ---
         const loginModal = document.getElementById('loginModal');
         const sitePassword = document.getElementById('sitePassword');
         const loginSubmit = document.getElementById('loginSubmit');
-        const loginCancel = document.getElementById('loginCancel');
         const loginError = document.getElementById('loginError');
+        const mainContainer = document.getElementById('mainContainer');
 
-        // Show login on page load
+        function checkAuth() { return sessionStorage.getItem('oura_auth') === '1'; }
+
         function showLogin() {
-            loginError.style.display = 'none';
-            sitePassword.value = '';
             loginModal.classList.add('active');
-            document.querySelector('.container').classList.add('hidden');
-            document.querySelector('h1').classList.add('hidden');
+            mainContainer.style.display = 'none';
         }
 
         function hideLogin() {
             loginModal.classList.remove('active');
-            document.querySelector('.container').classList.remove('hidden');
-            document.querySelector('h1').classList.remove('hidden');
+            mainContainer.style.display = 'grid';
         }
 
-        async function attemptLogin(pw) {
+        async function attemptLogin() {
+            const pw = sitePassword.value;
             try {
                 const res = await fetch('/api/auth', {
                     method: 'POST',
@@ -439,123 +622,79 @@
                 if (res.ok) {
                     sessionStorage.setItem('oura_auth', '1');
                     hideLogin();
-                    return true;
+                } else {
+                    const j = await res.json();
+                    loginError.textContent = j.error || 'Invalid password';
+                    loginError.style.display = 'block';
                 }
-
-                const j = await res.json().catch(() => ({}));
-                loginError.textContent = j && j.error ? j.error : 'Incorrect password';
-                loginError.style.display = 'block';
-                return false;
             } catch (err) {
                 loginError.textContent = 'Network error';
                 loginError.style.display = 'block';
-                return false;
             }
         }
 
-        function checkAuth() {
-            return sessionStorage.getItem('oura_auth') === '1';
-        }
+        loginSubmit.onclick = attemptLogin;
+        sitePassword.onkeydown = (e) => { if(e.key === 'Enter') attemptLogin(); };
 
-        loginSubmit.onclick = () => {
-            const pw = sitePassword.value || '';
-            attemptLogin(pw);
-        };
+        if (checkAuth()) hideLogin(); else showLogin();
 
-        loginCancel.onclick = () => {
-            sitePassword.value = '';
-        };
-
-        // Initialize on page load
-        function initApp() {
-            if (checkAuth()) {
-                hideLogin();
-            } else {
-                showLogin();
-            }
-        }
-
-        initApp();
-
-        let currentData = null; // Store fetched data
-        let chartInstance = null; // Store Chart.js instance
-
-        // Helper to format date YYYY-MM-DD
+        // --- APP LOGIC ---
+        let currentData = null;
+        let chartInstance = null;
         const formatDate = (date) => date.toISOString().split('T')[0];
 
-        // --- DATE RANGE LOGIC ---
         function setDateRange(days) {
             const endInput = document.getElementById('end-date');
             const startInput = document.getElementById('start-date');
-            
             const today = new Date();
             endInput.value = formatDate(today);
-
             const startDate = new Date();
-            if (days === 'all') {
-                startDate.setFullYear(2018, 0, 1);
-            } else {
-                startDate.setDate(today.getDate() - days);
-            }
+            if (days === 'all') startDate.setFullYear(2018, 0, 1);
+            else startDate.setDate(today.getDate() - days);
             startInput.value = formatDate(startDate);
         }
-
         setDateRange(7);
 
-        // --- FETCH LOGIC ---
         async function fetchData(endpoint) {
-            let startDate = document.getElementById('start-date').value;
-            let endDate = document.getElementById('end-date').value;
-
-            document.querySelectorAll('.controls > .endpoints-list > button').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('current-endpoint').textContent = endpoint.replace(/_/g, ' ').toUpperCase();
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
             
+            document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('current-endpoint').textContent = endpoint.replace(/_/g, ' ').toUpperCase();
             const statusText = document.getElementById('status-text');
-            statusText.textContent = 'Fetching...';
+            statusText.textContent = 'Fetching data...';
             statusText.className = '';
 
-            // Build URL for our server-side proxy
             const params = new URLSearchParams({ endpoint });
-
             if (endpoint === 'heartrate') {
                 params.append('start_datetime', `${startDate}T00:00:00`);
                 params.append('end_datetime', `${endDate}T23:59:59`);
-            } else if (endpoint !== 'personal_info' && endpoint !== 'ring_configuration') {
+            } else if (!['personal_info', 'ring_configuration'].includes(endpoint)) {
                 params.append('start_date', startDate);
                 params.append('end_date', endDate);
             }
 
-            const displayUrl = `https://api.ouraring.com/v2/usercollection/${endpoint}?${params.toString()}`;
-            document.getElementById('url-display').textContent = displayUrl;
-            
-            const fetchUrl = `/api/oura?${params.toString()}`;
+            document.getElementById('url-display').textContent = `https://api.ouraring.com/v2/usercollection/${endpoint}?${params.toString()}`;
 
             try {
-                const response = await fetch(fetchUrl, {
-                    method: 'GET'
-                });
-
+                const response = await fetch(`/api/oura?${params.toString()}`);
                 if (!response.ok) throw new Error(await response.text());
-
                 const data = await response.json();
-                currentData = data; 
-
+                currentData = data;
                 document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-                statusText.textContent = 'Success';
+                statusText.textContent = 'Success: Data loaded';
                 statusText.classList.add('success');
-
                 setupVisualizations(data);
-
             } catch (error) {
                 document.getElementById('output').textContent = error.message;
-                statusText.textContent = 'Failed';
+                statusText.textContent = 'Error: Failed to fetch';
                 statusText.classList.add('error');
                 currentData = null;
             }
         }
 
-        // --- DATA PROCESSING ---
         function setupVisualizations(data) {
             const selector = document.getElementById('data-metric');
             const selectorContainer = document.getElementById('metric-selector');
@@ -566,45 +705,26 @@
                 return;
             }
 
-            const sample = data.data[0];
             const availableKeys = [];
-
-            // 1. Recursive finder for numbers
             function findKeys(obj, prefix = '') {
                 for (const key in obj) {
                     const fullKey = prefix + key;
-                    if (typeof obj[key] === 'number') {
-                        availableKeys.push(fullKey);
-                    } 
-                    // Special handling for Time strings (start/end)
-                    else if (key === 'bedtime_start' || key === 'bedtime_end') {
-                        availableKeys.push(fullKey);
-                    }
-                    else if (typeof obj[key] === 'object' && obj[key] !== null) {
-                        findKeys(obj[key], fullKey + '.');
-                    }
+                    if (typeof obj[key] === 'number') availableKeys.push(fullKey);
+                    else if (['bedtime_start', 'bedtime_end'].includes(key)) availableKeys.push(fullKey);
+                    else if (typeof obj[key] === 'object' && obj[key] !== null) findKeys(obj[key], fullKey + '.');
                 }
             }
-            findKeys(sample);
+            findKeys(data.data[0]);
 
             if (availableKeys.length > 0) {
                 selectorContainer.classList.add('visible');
-                
-                // Sort keys for better UX (put core metrics first)
-                availableKeys.sort();
-
-                availableKeys.forEach(key => {
-                    const option = document.createElement('option');
-                    option.value = key;
-                    option.textContent = key.replace(/_/g, ' ').toUpperCase();
-                    
-                    // Smart Defaults
-                    if(key === 'total_sleep_duration') option.selected = true;
-                    else if(!option.selected && key === 'score') option.selected = true;
-                    
-                    selector.appendChild(option);
+                availableKeys.sort().forEach(key => {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = key.replace(/_/g, ' ').toUpperCase();
+                    if (key === 'score' || key === 'total_sleep_duration') opt.selected = true;
+                    selector.appendChild(opt);
                 });
-                
                 updateVisualizations();
             } else {
                 selectorContainer.classList.remove('visible');
@@ -618,99 +738,82 @@
             renderCalendar(currentData.data, metric);
         }
 
-        // --- GRAPH LOGIC ---
         function renderGraph(dataArray, metricKey) {
             const ctx = document.getElementById('myChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
 
             const labels = dataArray.map(item => item.day || item.timestamp.split('T')[0]);
-            
             let values = [];
-            let yAxisLabel = 'Value';
+            let yLabel = 'Value';
             let isTime = false;
 
-            // SPECIAL HANDLER: BEDTIME START/END
-            if (metricKey.includes('bedtime_start') || metricKey.includes('bedtime_end')) {
+            if (metricKey.includes('bedtime')) {
                 isTime = true;
-                yAxisLabel = 'Time of Day';
-                values = dataArray.map(item => {
-                    const val = getNestedValue(item, metricKey); // e.g., 2026-02-14T23:30:00...
-                    if (!val) return null;
-                    const date = new Date(val);
-                    let hours = date.getHours() + (date.getMinutes() / 60);
-                    
-                    // Logic: Shift late night times (0AM - 12PM) to be "next day" values (24-36)
-                    // so the graph is continuous from evening to morning.
-                    // e.g. 23:00 = 23.0, 01:30 = 25.5
-                    if (hours < 12) {
-                        hours += 24;
-                    }
-                    return hours;
-                });
-            } 
-            // SPECIAL HANDLER: DURATIONS (Seconds -> Hours)
-            else if (metricKey.includes('duration') || metricKey.includes('total')) {
-                yAxisLabel = 'Hours';
+                yLabel = 'Time (24h)';
                 values = dataArray.map(item => {
                     const val = getNestedValue(item, metricKey);
-                    return val ? (val / 3600).toFixed(2) : 0;
+                    if (!val) return null;
+                    const d = new Date(val);
+                    let h = d.getHours() + d.getMinutes()/60;
+                    return h < 12 ? h + 24 : h;
                 });
-            }
-            // STANDARD NUMBERS
-            else {
+            } else if (metricKey.includes('duration') || metricKey.includes('total')) {
+                yLabel = 'Hours';
+                values = dataArray.map(item => (getNestedValue(item, metricKey) / 3600).toFixed(2));
+            } else {
                 values = dataArray.map(item => getNestedValue(item, metricKey));
             }
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
                         label: metricKey.toUpperCase().replace(/_/g, ' '),
                         data: values,
-                        borderColor: '#007bff',
-                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
+                        borderColor: '#007aff',
+                        backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#007aff',
+                        pointRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: '#b3b3b3' }, grid: { color: '#333' } },
-                        y: { 
-                            title: { display: true, text: yAxisLabel, color: '#b3b3b3' },
-                            ticks: { 
-                                color: '#b3b3b3',
-                                callback: function(value) {
-                                    if(isTime) {
-                                        // Convert back 25.5 -> 01:30
-                                        let h = Math.floor(value);
-                                        let m = Math.round((value - h) * 60);
-                                        if (h >= 24) h -= 24;
-                                        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-                                    }
-                                    return value;
+                    plugins: {
+                        legend: { labels: { color: '#a1a1a1', font: { family: 'Inter', size: 12 } } },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: (ctx) => {
+                                    if(!isTime) return ctx.formattedValue;
+                                    let v = ctx.raw; if(v >= 24) v -= 24;
+                                    let h = Math.floor(v), m = Math.round((v-h)*60);
+                                    return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
                                 }
-                            }, 
-                            grid: { color: '#333' } 
+                            }
                         }
                     },
-                    plugins: {
-                        legend: { labels: { color: '#fff' } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    if(isTime) {
-                                        let value = context.raw;
-                                        let h = Math.floor(value);
-                                        let m = Math.round((value - h) * 60);
-                                        if (h >= 24) h -= 24;
-                                        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-                                    }
-                                    return context.formattedValue;
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#666' } },
+                        y: {
+                            title: { display: true, text: yLabel, color: '#666' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: {
+                                color: '#666',
+                                callback: (v) => {
+                                    if(!isTime) return v;
+                                    let h = Math.floor(v); if(h >= 24) h -= 24;
+                                    return `${h.toString().padStart(2,'0')}:00`;
                                 }
                             }
                         }
@@ -719,72 +822,48 @@
             });
         }
 
-        // --- CALENDAR LOGIC ---
         function renderCalendar(dataArray, metricKey) {
             const container = document.getElementById('calendar-container');
             container.innerHTML = '';
-
             const dataMap = {};
             dataArray.forEach(item => {
-                const dateKey = item.day || item.timestamp.split('T')[0];
-                let val = getNestedValue(item, metricKey);
-                
-                // Format for display
-                if (metricKey.includes('duration') || metricKey.includes('total')) {
-                    val = (val / 3600).toFixed(1) + 'h';
-                } else if (metricKey.includes('bedtime')) {
-                     if (val) {
-                        const d = new Date(val);
-                        val = `${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
-                     }
+                const dk = item.day || item.timestamp.split('T')[0];
+                let v = getNestedValue(item, metricKey);
+                if (metricKey.includes('duration') || metricKey.includes('total')) v = (v/3600).toFixed(1) + 'h';
+                else if (metricKey.includes('bedtime') && v) {
+                    const d = new Date(v);
+                    v = `${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
                 }
-                
-                dataMap[dateKey] = val;
+                dataMap[dk] = v;
             });
 
-            const startStr = document.getElementById('start-date').value;
-            const endStr = document.getElementById('end-date').value;
-            const startDate = new Date(startStr);
-            const endDate = new Date(endStr);
+            const start = new Date(document.getElementById('start-date').value);
+            const end = new Date(document.getElementById('end-date').value);
 
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const isoDate = d.toISOString().split('T')[0];
-                const value = dataMap[isoDate];
-                const hasData = value !== undefined;
-
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const iso = d.toISOString().split('T')[0];
+                const val = dataMap[iso];
+                const has = val !== undefined;
                 const card = document.createElement('div');
-                card.className = `calendar-day ${hasData ? 'has-data' : ''}`;
-                
-                if (hasData) {
-                    // Simple heuristic for coloring
-                    // If it's a number (not string like 7.5h or 22:30), use scale
-                    if (typeof value === 'number') {
-                        if (value >= 85) card.classList.add('level-high');
-                        else if (value >= 70) card.classList.add('level-med');
-                        else card.classList.add('level-low');
-                    } else {
-                        // Default for Time/Duration strings
-                        card.classList.add('level-med');
-                    }
-                }
+                card.className = `calendar-day ${has ? 'has-data' : ''}`;
+                if (has && typeof val === 'number') {
+                    if (val >= 85) card.classList.add('level-high');
+                    else if (val >= 70) card.classList.add('level-med');
+                    else card.classList.add('level-low');
+                } else if(has) card.classList.add('level-med');
 
-                card.innerHTML = `
-                    <div class="calendar-date">${isoDate}</div>
-                    <div class="calendar-value">${hasData ? value : '-'}</div>
-                `;
+                card.innerHTML = `<div class="calendar-date">${iso.slice(5)}</div><div class="calendar-value">${has ? val : '-'}</div>`;
                 container.appendChild(card);
             }
         }
 
-        function getNestedValue(obj, path) {
-            return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-        }
+        function getNestedValue(o, p) { return p.split('.').reduce((a, c) => a && a[c], o); }
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+        function switchTab(t) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
             event.target.classList.add('active-tab');
-            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
-            document.getElementById(`view-${tabName}`).classList.add('active');
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${t}`).classList.add('active');
         }
     </script>
 </body>

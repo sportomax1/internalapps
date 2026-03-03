@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Internal Apps</title>
+    <title>Internal Apps | Secure Portal</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
         :root {
             --primary: #007aff;
-            --bg: #121212;
-            --surface: #1e1e1e;
+            --primary-glow: rgba(0, 122, 255, 0.3);
+            --bg: #0a0a0a;
+            --surface: rgba(25, 25, 25, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
             --text: #ffffff;
-            --text-secondary: #b3b3b3;
+            --text-secondary: #a1a1a1;
+            --accent-gradient: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
         }
 
         * {
@@ -21,123 +28,354 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(100px);
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.15;
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: #007aff;
+            top: -100px;
+            left: -100px;
+            animation-duration: 25s;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: #5856d6;
+            bottom: -150px;
+            right: -100px;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: #ff2d55;
+            top: 40%;
+            left: 60%;
+            animation-duration: 20s;
+            animation-delay: -10s;
+        }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(50px, 100px) scale(1.1); }
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--accent-gradient);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 10px 40px var(--primary-glow);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+            background: linear-gradient(to bottom, #ffffff, #a1a1a1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
-        p {
-            text-align: center;
+        .subtitle {
+            font-size: 1.1rem;
             color: var(--text-secondary);
-            margin-bottom: 3rem;
+            font-weight: 400;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
         }
 
         .apps-grid {
             display: grid;
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
         .app-card {
+            position: relative;
             background: var(--surface);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 30px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
             text-decoration: none;
             color: var(--text);
-            transition: all 0.2s;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 20px;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
         }
 
         .app-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--primary);
-            box-shadow: 0 8px 32px rgba(0, 122, 255, 0.2);
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(0, 122, 255, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
+                        0 0 20px var(--primary-glow);
         }
 
-        .app-icon {
-            font-size: 3rem;
-            width: 70px;
-            height: 70px;
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        .app-icon-wrapper {
+            width: 64px;
+            height: 64px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, var(--primary) 0%, #5856d6 100%);
-            border-radius: 16px;
-            flex-shrink: 0;
+            font-size: 32px;
+            transition: all 0.4s;
         }
 
-        .app-info {
+        .app-card:hover .app-icon-wrapper {
+            transform: rotate(-5deg) scale(1.1);
+            background: var(--accent-gradient);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .app-content {
             flex: 1;
         }
 
         .app-name {
             font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .app-desc {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
-        .arrow {
-            font-size: 1.5rem;
-            color: var(--primary);
-            transition: transform 0.2s;
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
         }
 
-        .app-card:hover .arrow {
-            transform: translateX(5px);
+        .status-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #34c759;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #34c759;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #34c759;
+            animation: pulse 2s infinite;
+        }
+
+        .arrow-link {
+            width: 36px;
+            height: 36px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: all 0.4s;
+        }
+
+        .app-card:hover .arrow-link {
+            background: #ffffff;
+            color: #000000;
+            transform: translateX(4px);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: auto;
+            animation: fadeIn 1s ease-out 0.5s backwards;
+        }
+
+        .status-bar {
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 100px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .apps-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
     <div class="container">
-        <h1>🔐 Internal Apps</h1>
-        <p>Secure access to your personal data tools</p>
+        <header>
+            <div class="logo-container">🔐</div>
+            <h1>Internal Apps</h1>
+            <p class="subtitle">A secure environment for personal data processing and visualization tools.</p>
+        </header>
 
         <div class="apps-grid">
             <a href="tracking/" class="app-card">
-                <div class="app-icon">📍</div>
-                <div class="app-info">
+                <div class="app-icon-wrapper">📍</div>
+                <div class="app-content">
                     <div class="app-name">Activity Tracker</div>
-                    <div class="app-desc">View location history and activity patterns</div>
+                    <div class="app-desc">High-fidelity location history and movement patterns. Heatmaps and path playback included.</div>
                 </div>
-                <span class="arrow">→</span>
+                <div class="card-footer">
+                    <div class="status-tag">
+                        <div class="status-dot"></div>
+                        Live
+                    </div>
+                    <div class="arrow-link">→</div>
+                </div>
             </a>
 
             <a href="oura.html" class="app-card">
-                <div class="app-icon">🚀</div>
-                <div class="app-info">
-                    <div class="app-name">OURA API Explorer</div>
-                    <div class="app-desc">Analyze health and sleep data from your OURA ring</div>
+                <div class="app-icon-wrapper">🚀</div>
+                <div class="app-content">
+                    <div class="app-name">Oura Explorer</div>
+                    <div class="app-desc">In-depth health analytics for sleep, readiness, and activity via the Oura API v2.</div>
                 </div>
-                <span class="arrow">→</span>
+                <div class="card-footer">
+                    <div class="status-tag">
+                        <div class="status-dot"></div>
+                        Synced
+                    </div>
+                    <div class="arrow-link">→</div>
+                </div>
             </a>
         </div>
+
+        <footer>
+            <div class="status-bar">
+                <span class="status-tag" style="color: #a1a1a1;">
+                    <div class="status-dot" style="background: #a1a1a1; box-shadow: none;"></div>
+                    System v1.2.4
+                </span>
+                <span>•</span>
+                <span>Secure Tunnel Active</span>
+            </div>
+            <p>&copy; 2026 Private Infrastructure</p>
+        </footer>
     </div>
 </body>
 </html>
