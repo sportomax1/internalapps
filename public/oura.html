@@ -621,6 +621,14 @@
                 <input type="date" id="end-date">
             </div>
 
+            <div class="sidebar-section">
+                <span class="section-label">Settings</span>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" id="exclude-naps" onchange="updateVisualizations()" checked>
+                    Exclude Naps (< 2h)
+                </label>
+            </div>
+
             <div class="endpoints-list">
                 <div class="endpoint-category">Profile</div>
                 <button class="endpoint-btn" onclick="fetchData('personal_info')">Personal Info</button>
@@ -845,64 +853,86 @@
                 if (!response.ok) throw new Error(await response.text());
                 const data = await response.json();
                 
-                const raw = Array.isArray(data.data) ? data.data : [];
-                const aggregated = [];
-
-                if (raw.length > 0) {
-                    const aggMap = {};
-                    raw.forEach(item => {
-                        const day = item.day || (item.timestamp ? item.timestamp.split('T')[0] : 'unknown');
-                        if (!aggMap[day]) {
-                            aggMap[day] = JSON.parse(JSON.stringify(item));
-                            aggMap[day]._sessionCount = 1;
-                            return;
-                        }
-                        
-                        const existing = aggMap[day];
-                        existing._sessionCount++;
-                        
-                        const keysToSum = [
-                            'total_sleep_duration', 'awake_duration', 'light_sleep_duration', 
-                            'rem_sleep_duration', 'deep_sleep_duration', 'active_calories', 
-                            'steps', 'total_calories'
-                        ];
-                        
-                        keysToSum.forEach(key => {
-                            if (item[key] !== undefined) existing[key] = (existing[key] || 0) + item[key];
-                        });
-
-                        if (item.bedtime_start && existing.bedtime_start) {
-                            if (new Date(item.bedtime_start) < new Date(existing.bedtime_start)) existing.bedtime_start = item.bedtime_start;
-                        }
-                        if (item.bedtime_end && existing.bedtime_end) {
-                            if (new Date(item.bedtime_end) > new Date(existing.bedtime_end)) existing.bedtime_end = item.bedtime_end;
-                        }
-                        if (item.score !== undefined && existing.score !== undefined) existing.score = (existing.score + item.score) / 2;
-                    });
-                    aggregated.push(...Object.values(aggMap));
-                }
-
-                currentData = { raw, aggregated };
+                // Store the original raw data
+                currentData.rawSource = Array.isArray(data.data) ? data.data : [];
+                
                 document.getElementById('output').textContent = JSON.stringify(data, null, 2);
                 statusText.textContent = 'Success: Data loaded';
                 statusText.classList.add('success');
                 filterDayIdx = null; 
-                setupVisualizations(data);
+                updateVisualizations();
             } catch (error) {
                 document.getElementById('output').textContent = error.message;
                 statusText.textContent = 'Error: Failed to fetch';
                 statusText.classList.add('error');
-                currentData = { raw: [], aggregated: [] };
+                currentData.rawSource = [];
+                updateVisualizations();
             }
         }
 
+        function processData() {
+            const raw = currentData.rawSource || [];
+            const excludeNaps = document.getElementById('exclude-naps').checked;
+            
+            // 1. Filter raw sessions if needed
+            let filteredRaw = raw;
+            if (excludeNaps) {
+                filteredRaw = raw.filter(item => {
+                    // Oura v2 'type' can be 'long_sleep' or 'base_sleep'
+                    if (item.type === 'long_sleep') return true;
+                    
+                    // Fallback to duration (e.g. > 2 hours)
+                    const duration = getNestedValue(item, 'total_sleep_duration') || 0;
+                    if (duration > 7200) return true; // 2 hours
+                    
+                    return false;
+                });
+            }
+            
+            // 2. Aggregate filtered sessions into daily buckets
+            const aggregated = [];
+            const aggMap = {};
+            
+            filteredRaw.forEach(item => {
+                const day = item.day || (item.timestamp ? item.timestamp.split('T')[0] : 'unknown');
+                if (!aggMap[day]) {
+                    aggMap[day] = JSON.parse(JSON.stringify(item));
+                    aggMap[day]._sessionCount = 1;
+                    return;
+                }
+                
+                const existing = aggMap[day];
+                existing._sessionCount++;
+                
+                const keysToSum = [
+                    'total_sleep_duration', 'awake_duration', 'light_sleep_duration', 
+                    'rem_sleep_duration', 'deep_sleep_duration', 'active_calories', 
+                    'steps', 'total_calories'
+                ];
+                
+                keysToSum.forEach(key => {
+                    if (item[key] !== undefined) existing[key] = (existing[key] || 0) + item[key];
+                });
+
+                if (item.bedtime_start && existing.bedtime_start) {
+                    if (new Date(item.bedtime_start) < new Date(existing.bedtime_start)) existing.bedtime_start = item.bedtime_start;
+                }
+                if (item.bedtime_end && existing.bedtime_end) {
+                    if (new Date(item.bedtime_end) > new Date(existing.bedtime_end)) existing.bedtime_end = item.bedtime_end;
+                }
+                if (item.score !== undefined && existing.score !== undefined) existing.score = (existing.score + item.score) / 2;
+            });
+            
+            currentData.raw = filteredRaw;
+            currentData.aggregated = Object.values(aggMap);
+        }
+
         function setupVisualizations(data) {
-            // Use aggregated data for Graph, Calendar, and Averages by default for cleaner views
             const selector = document.getElementById('data-metric');
             const selectorContainer = document.getElementById('metric-selector');
             selector.innerHTML = ''; 
 
-            if (!currentData.aggregated || currentData.aggregated.length === 0) {
+            if (!currentData.aggregated.length) {
                 selectorContainer.classList.remove('visible');
                 return;
             }
@@ -927,15 +957,22 @@
                     if (key === 'score' || key === 'total_sleep_duration') opt.selected = true;
                     selector.appendChild(opt);
                 });
-                updateVisualizations();
             } else {
                 selectorContainer.classList.remove('visible');
             }
         }
 
         function updateVisualizations() {
+            processData();
+            
+            // Re-setup selector if we just fetched or if it's empty
+            if (document.getElementById('data-metric').options.length === 0 && currentData.aggregated.length > 0) {
+                setupVisualizations();
+            }
+            
             if (!currentData.aggregated.length) return;
-            const metric = document.getElementById('data-metric').value;
+            const metric = document.getElementById('data-metric').value || 'total_sleep_duration';
+            
             renderGraph(currentData.aggregated, metric);
             renderCalendar(currentData.aggregated, metric);
             renderAverages(currentData.aggregated);
