@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Retro Screensaver Collection</title>
+    <style>
+        :root {
+            --bg-color: #000;
+            --text-color: #fff;
+            --accent-color: #0f0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            cursor: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            user-select: none;
+            z-index: 100;
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+
+        body:hover #ui {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            cursor: default;
+        }
+
+        .hint {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .mode-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 220px;
+        }
+
+        .mode-index {
+            font-size: 0.6rem;
+            color: var(--accent-color);
+            margin-bottom: 2px;
+        }
+
+        .mode-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.7rem;
+            opacity: 0.4;
+            text-align: right;
+            pointer-events: none;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="screen"></canvas>
+    
+    <div id="ui">
+        <span class="hint">◀ PREV</span>
+        <div class="mode-info">
+            <span id="modeIndex" class="mode-index">1 / 20</span>
+            <span id="modeName" class="mode-name">Bouncing Balls</span>
+        </div>
+        <span class="hint">NEXT ▶</span>
+    </div>
+
+    <div class="controls">
+        [F] FULLSCREEN | [ARROWS] SWITCH | [SPACE] RESET
+    </div>
+
+    <script>
+        const canvas = document.getElementById('screen');
+        const ctx = canvas.getContext('2d');
+        const modeDisplay = document.getElementById('modeName');
+        const indexDisplay = document.getElementById('modeIndex');
+        
+        let width, height;
+        let currentMode = 0;
+        let animationId;
+        let state = {};
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initMode();
+        }
+
+        window.addEventListener('resize', resize);
+
+        const random = (min, max) => Math.random() * (max - min) + min;
+        const randomInt = (min, max) => Math.floor(random(min, max + 1));
+        const randomColor = () => `hsl(${random(0, 360)}, 70%, 60%)`;
+
+        const modes = [
+            {
+                name: "Bouncing Balls",
+                init: () => {
+                    state.balls = Array.from({ length: 15 }, () => ({
+                        x: random(50, width - 50),
+                        y: random(50, height - 50),
+                        vx: random(-5, 5),
+                        vy: random(-5, 5),
+                        radius: random(15, 45),
+                        color: randomColor()
+                    }));
+                },
+                update: () => {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, width, height);
+                    state.balls.forEach(b => {
+                        b.x += b.vx; b.y += b.vy;
+                        if (b.x + b.radius > width || b.x - b.radius < 0) b.vx *= -1;
+                        if (b.y + b.radius > height || b.y - b.radius < 0) b.vy *= -1;
+                        ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = b.color; ctx.shadowBlur = 20; ctx.shadowColor = b.color;
+                        ctx.fill(); ctx.closePath();
+                    });
+                    ctx.shadowBlur = 0;
+                }
+            },
+            {
+                name: "3D Pipes",
+                init: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    state.pipes = [];
+                    state.spawnPipe = () => ({
+                        x: Math.round(random(0, width)/25)*25, y: Math.round(random(0, height)/25)*25,
+                        dir: randomInt(0, 3), color: randomColor(), width: 14
+                    });
+                    for(let i=0; i<4; i++) state.pipes.push(state.spawnPipe());
+                },
+                update: () => {
+                    state.pipes.forEach((p, i) => {
+                        ctx.strokeStyle = p.color; ctx.lineWidth = p.width; ctx.lineCap = 'round';
+                        ctx.beginPath(); ctx.moveTo(p.x, p.y);
+                        if (Math.random() < 0.08) p.dir = (p.dir + (Math.random() > 0.5 ? 1 : 3)) % 4;
+                        if (p.dir === 0) p.x += 4; if (p.dir === 1) p.y += 4; if (p.dir === 2) p.x -= 4; if (p.dir === 3) p.y -= 4;
+                        ctx.lineTo(p.x, p.y); ctx.stroke();
+                        if (p.x < -20 || p.x > width + 20 || p.y < -20 || p.y > height + 20) state.pipes[i] = state.spawnPipe();
+                    });
+                }
+            },
+            {
+                name: "Starfield",
+                init: () => {
+                    state.stars = Array.from({ length: 500 }, () => ({
+                        x: random(-width, width), y: random(-height, height), z: random(0, width), pz: 0
+                    }));
+                },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    ctx.save(); ctx.translate(width / 2, height / 2);
+                    state.stars.forEach(s => {
+                        s.z -= 10;
+                        if (s.z <= 0) { s.z = width; s.x = random(-width, width); s.y = random(-height, height); s.pz = s.z; }
+                        const sx = (s.x / s.z) * width; const sy = (s.y / s.z) * height;
+                        const r = Math.max(0.1, (1 - s.z / width) * 4);
+                        ctx.beginPath(); ctx.fillStyle = 'white'; ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+                        if (s.pz > 0) {
+                            const psx = (s.x / s.pz) * width; const psy = (s.y / s.pz) * height;
+                            ctx.strokeStyle = `rgba(255,255,255,${(1 - s.z/width) * 0.5})`;
+                            ctx.lineWidth = r; ctx.beginPath(); ctx.moveTo(psx, psy); ctx.lineTo(sx, sy); ctx.stroke();
+                        }
+                        s.pz = s.z;
+                    });
+                    ctx.restore();
+                }
+            },
+            {
+                name: "Mystify",
+                init: () => {
+                    state.polygons = Array.from({ length: 2 }, () => ({
+                        points: Array.from({ length: 4 }, () => ({ x: random(0, width), y: random(0, height), vx: random(-4, 4), vy: random(-4, 4) })),
+                        history: [], color: randomColor()
+                    }));
+                },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    state.polygons.forEach(poly => {
+                        poly.points.forEach(p => {
+                            p.x += p.vx; p.y += p.vy;
+                            if (p.x < 0 || p.x > width) p.vx *= -1; if (p.y < 0 || p.y > height) p.vy *= -1;
+                        });
+                        poly.history.push(poly.points.map(p => ({ x: p.x, y: p.y })));
+                        if (poly.history.length > 20) poly.history.shift();
+                        poly.history.forEach((pts, i) => {
+                            ctx.beginPath(); ctx.strokeStyle = poly.color; ctx.lineWidth = 1.5;
+                            ctx.globalAlpha = i / poly.history.length;
+                            ctx.moveTo(pts[0].x, pts[0].y);
+                            for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y);
+                            ctx.lineTo(pts[0].x, pts[0].y); ctx.stroke();
+                        });
+                        ctx.globalAlpha = 1;
+                    });
+                }
+            },
+            {
+                name: "Matrix Rain",
+                init: () => {
+                    state.fontSize = 18; state.columns = Math.floor(width / state.fontSize);
+                    state.drops = Array(state.columns).fill(1);
+                    state.chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~".split("");
+                },
+                update: () => {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)'; ctx.fillRect(0, 0, width, height);
+                    ctx.fillStyle = '#0F0'; ctx.font = 'bold ' + state.fontSize + 'px monospace';
+                    for (let i = 0; i < state.drops.length; i++) {
+                        const text = state.chars[Math.floor(Math.random() * state.chars.length)];
+                        ctx.fillText(text, i * state.fontSize, state.drops[i] * state.fontSize);
+                        if (state.drops[i] * state.fontSize > height && Math.random() > 0.975) state.drops[i] = 0;
+                        state.drops[i]++;
+                    }
+                }
+            },
+            {
+                name: "Sports Emojis",
+                init: () => {
+                    const emojis = ["🏀", "⚽", "🏈", "⚾", "🎾", "🏐", "🏉", "🎱", "🎳", "⛳"];
+                    state.items = Array.from({ length: 12 }, () => ({
+                        x: random(50, width - 50), y: random(50, height - 50),
+                        vx: random(-5, 5), vy: random(-5, 5),
+                        char: emojis[randomInt(0, emojis.length - 1)],
+                        size: random(30, 60)
+                    }));
+                },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    ctx.font = '40px Arial';
+                    state.items.forEach(i => {
+                        i.x += i.vx; i.y += i.vy;
+                        if (i.x < 0 || i.x > width - i.size) i.vx *= -1;
+                        if (i.y < i.size || i.y > height) i.vy *= -1;
+                        ctx.font = i.size + 'px Arial';
+                        ctx.fillText(i.char, i.x, i.y);
+                    });
+                }
+            },
+            {
+                name: "DNA Helix",
+                init: () => { state.angle = 0; },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    const cx = width / 2; state.angle += 0.02;
+                    for (let i = 0; i < 40; i++) {
+                        const y = (height / 40) * i; const off = (i * 0.2) + state.angle;
+                        const x1 = cx + Math.sin(off) * (width * 0.2); const x2 = cx + Math.sin(off + Math.PI) * (width * 0.2);
+                        const z1 = Math.cos(off); const z2 = Math.cos(off + Math.PI);
+                        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+                        ctx.fillStyle = `hsl(200, 80%, ${50 + z1*20}%)`; ctx.beginPath(); ctx.arc(x1, y, 8+z1*4, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = `hsl(340, 80%, ${50 + z2*20}%)`; ctx.beginPath(); ctx.arc(x2, y, 8+z2*4, 0, Math.PI*2); ctx.fill();
+                    }
+                }
+            },
+            {
+                name: "DVD Bounce",
+                init: () => {
+                    state.box = { w: 120, h: 60, x: width/2, y: height/2, vx: 3, vy: 3, color: randomColor(), hits: 0 };
+                },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    const b = state.box; b.x += b.vx; b.y += b.vy;
+                    let hit = false;
+                    if (b.x <= 0 || b.x + b.w >= width) { b.vx *= -1; hit = true; }
+                    if (b.y <= 0 || b.y + b.h >= height) { b.vy *= -1; hit = true; }
+                    if (hit) { b.color = randomColor(); b.hits++; }
+                    ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, b.w, b.h);
+                    ctx.fillStyle = 'white'; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillText('DVD', b.x + b.w/2, b.y + b.h/1.5);
+                    ctx.font = '12px sans-serif'; ctx.fillText(`HITS: ${b.hits}`, b.x + b.w/2, b.y + b.h - 5);
+                }
+            },
+            {
+                name: "Snowfall",
+                init: () => {
+                    state.flakes = Array.from({ length: 200 }, () => ({
+                        x: random(0, width), y: random(0, height), r: random(1, 4), d: random(1, 3), a: random(0, Math.PI*2)
+                    }));
+                },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    ctx.fillStyle = 'white';
+                    state.flakes.forEach(f => {
+                        f.y += f.d; f.a += 0.02; f.x += Math.sin(f.a);
+                        if (f.y > height) { f.y = -10; f.x = random(0, width); }
+                        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
+                    });
+                }
+            },
+            {
+                name: "Electric Storm",
+                init: () => { state.timer = 0; },
+                update: () => {
+                    ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(0, 0, width, height);
+                    if (Math.random() < 0.05) {
+                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath();
+                        let x = random(0, width); let y = 0; ctx.moveTo(x, y);
+                        while (y < height) { x += random(-30, 30); y += random(10, 40); ctx.lineTo(x, y); }
+                        ctx.shadowBlur = 15; ctx.shadowColor = '#4df'; ctx.stroke(); ctx.shadowBlur = 0;
+                    }
+                }
+            },
+            {
+                name: "Plasma Waves",
+                init: () => { state.tick = 0; },
+                update: () => {
+                    state.tick += 2;
+                    for (let x = 0; x < width; x += 6) {
+                        for (let y = 0; y < height; y += 6) {
+                            const v = (Math.sin(x/50 + state.tick/50) + Math.sin(y/60) + Math.sin((x+y+state.tick)/100) + 3) / 6;
+                            ctx.fillStyle = `hsl(${(v*360 + state.tick)%360}, 70%, 50%)`;
+                            ctx.fillRect(x, y, 6, 6);
+                        }
+                    }
+                }
+            },
+            {
+                name: "Circuitry",
+                init: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    state.heads = Array.from({ length: 5 }, () => ({
+                        x: Math.round(width/2/20)*20, y: Math.round(height/2/20)*20,
+                        vx: 0, vy: 0, color: randomColor()
+                    }));
+                },
+                update: () => {
+                    state.heads.forEach(h => {
+                        if (Math.random() < 0.1 || (h.vx === 0 && h.vy === 0)) {
+                            const r = Math.random();
+                            if (r < 0.25) { h.vx = 20; h.vy = 0; } else if (r < 0.5) { h.vx = -20; h.vy = 0; }
+                            else if (r < 0.75) { h.vx = 0; h.vy = 20; } else { h.vx = 0; h.vy = -20; }
+                        }
+                        ctx.strokeStyle = h.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h.x, h.y);
+                        h.x += h.vx; h.y += h.vy; ctx.lineTo(h.x, h.y); ctx.stroke();
+                        if (h.x < 0 || h.x > width || h.y < 0 || h.y > height) { h.x = width/2; h.y = height/2; }
+                    });
+                }
+            },
+            {
+                name: "Floating Bubbles",
+                init: () => {
+                    state.bubbles = Array.from({ length: 30 }, () => ({
+                        x: random(0, width), y: height + 50, r: random(5, 25), s: random(1, 3), o: random(0.1, 0.5)
+                    }));
+                },
+                update: () => {
+                    ctx.fillStyle = '#001'; ctx.fillRect(0, 0, width, height);
+                    state.bubbles.forEach(b => {
+                        b.y -= b.s; b.x += Math.sin(b.y/50);
+                        if (b.y < -50) { b.y = height + 50; b.x = random(0, width); }
+                        ctx.strokeStyle = `rgba(255,255,255,${b.o})`; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.stroke();
+                        ctx.fillStyle = `rgba(255,255,255,${b.o*0.5})`; ctx.beginPath(); ctx.arc(b.x-b.r/3, b.y-b.r/3, b.r/4, 0, Math.PI*2); ctx.fill();
+                    });
+                }
+            },
+            {
+                name: "Fire",
+                init: () => { state.particles = []; },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    for(let i=0; i<5; i++) state.particles.push({ x: random(0, width), y: height, vx: random(-1, 1), vy: random(-2, -5), life: 1, s: random(5, 15) });
+                    state.particles.forEach((p, i) => {
+                        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+                        if (p.life <= 0) state.particles.splice(i, 1);
+                        ctx.fillStyle = `hsla(${p.life*60}, 100%, 50%, ${p.life})`;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, p.s*p.life, 0, Math.PI*2); ctx.fill();
+                    });
+                }
+            },
+            {
+                name: "Kaleidoscope",
+                init: () => { state.angle = 0; ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height); },
+                update: () => {
+                    ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0, 0, width, height);
+                    state.angle += 0.01; ctx.save(); ctx.translate(width/2, height/2);
+                    for(let i=0; i<8; i++) {
+                        ctx.rotate(Math.PI/4); ctx.strokeStyle = randomColor(); ctx.beginPath();
+                        ctx.moveTo(Math.sin(state.angle)*100, Math.cos(state.angle)*100);
+                        ctx.lineTo(Math.cos(state.angle*2)*200, Math.sin(state.angle*2)*200); ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+            },
+            {
+                name: "Rain Ripples",
+                init: () => { state.ripples = []; },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    if (Math.random() < 0.1) state.ripples.push({ x: random(0, width), y: random(0, height), r: 0, a: 1 });
+                    state.ripples.forEach((r, i) => {
+                        r.r += 2; r.a -= 0.02;
+                        if (r.a <= 0) state.ripples.splice(i, 1);
+                        ctx.strokeStyle = `rgba(150,200,255,${r.a})`; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI*2); ctx.stroke();
+                    });
+                }
+            },
+            {
+                name: "Warp Speed",
+                init: () => {
+                    state.stars = Array.from({ length: 200 }, () => ({ x: random(-width, width), y: random(-height, height), z: random(0, width) }));
+                },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    ctx.save(); ctx.translate(width/2, height/2);
+                    state.stars.forEach(s => {
+                        s.z -= 15; if (s.z <= 0) s.z = width;
+                        const x = (s.x / s.z) * width; const y = (s.y / s.z) * height;
+                        const px = (s.x / (s.z + 50)) * width; const py = (s.y / (s.z + 50)) * height;
+                        ctx.strokeStyle = `hsl(${(s.z)%360}, 80%, 70%)`; ctx.lineWidth = 3;
+                        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(px, py); ctx.stroke();
+                    });
+                    ctx.restore();
+                }
+            },
+            {
+                name: "Marquee",
+                init: () => { state.x = width; state.text = "WELCOME TO THE RETRO SCREENSAVER COLLECTION... ENJOY THE NOSTALGIA..."; },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    ctx.fillStyle = '#0f0'; ctx.font = '60px monospace';
+                    state.x -= 5; if (state.x < -ctx.measureText(state.text).width) state.x = width;
+                    ctx.fillText(state.text, state.x, height/2);
+                }
+            },
+            {
+                name: "Floating Logos",
+                init: () => {
+                    state.logos = Array.from({ length: 6 }, () => ({ x: random(0, width), y: random(0, height), vx: 2, vy: 2, s: 60, c: randomColor() }));
+                },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    state.logos.forEach(l => {
+                        l.x += l.vx; l.y += l.vy;
+                        if (l.x < 0 || l.x + l.s > width) l.vx *= -1; if (l.y < 0 || l.y + l.s > height) l.vy *= -1;
+                        ctx.fillStyle = l.c; ctx.fillRect(l.x, l.y, l.s/2-2, l.s/2-2); ctx.fillRect(l.x+l.s/2, l.y, l.s/2-2, l.s/2-2);
+                        ctx.fillRect(l.x, l.y+l.s/2, l.s/2-2, l.s/2-2); ctx.fillRect(l.x+l.s/2, l.y+l.s/2, l.s/2-2, l.s/2-2);
+                    });
+                }
+            },
+            {
+                name: "Retro Clock",
+                init: () => { state.x = width/2; state.y = height/2; state.vx = 2; state.vy = 2; },
+                update: () => {
+                    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, width, height);
+                    const time = new Date().toLocaleTimeString(); ctx.font = 'bold 80px monospace';
+                    const w = ctx.measureText(time).width; state.x += state.vx; state.y += state.vy;
+                    if (state.x < 0 || state.x + w > width) state.vx *= -1; if (state.y < 80 || state.y > height) state.vy *= -1;
+                    ctx.fillStyle = '#0f0'; ctx.shadowBlur = 20; ctx.shadowColor = '#0f0';
+                    ctx.fillText(time, state.x, state.y); ctx.shadowBlur = 0;
+                }
+            }
+        ];
+
+        function initMode() {
+            state = {}; modes[currentMode].init();
+            modeDisplay.innerText = modes[currentMode].name;
+            indexDisplay.innerText = `${currentMode + 1} / ${modes.length}`;
+        }
+
+        function loop() { modes[currentMode].update(); animationId = requestAnimationFrame(loop); }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') { currentMode = (currentMode + 1) % modes.length; initMode(); }
+            else if (e.key === 'ArrowLeft') { currentMode = (currentMode - 1 + modes.length) % modes.length; initMode(); }
+            else if (e.key === 'f') { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+            else if (e.key === ' ') initMode();
+        });
+
+        resize(); loop();
+    </script>
+</body>
+</html>
