@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font 100 Index | Internal Apps</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        /* Categorized Imports for Performance and Reliability */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Poppins:wght@400;700&family=Open+Sans:wght@400;700&family=Roboto:wght@400;700&family=Lato:wght@400;700&family=Oswald:wght@400;700&family=Raleway:wght@400;700&family=Nunito:wght@400;700&family=Ubuntu:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:wght@300;400;700;900&family=PT+Serif:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:wght@400;700&family=Noto+Serif:wght@400;700&family=Crimson+Text:wght@400;600;700&family=Domine:wght@400;700&family=Cormorant+Garamond:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Space+Mono:wght@400;700&family=Source+Code+Pro:wght@400;700&family=Courier+Prime:wght@400;700&family=Inconsolata:wght@400;700&family=Roboto+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Anonymous+Pro:wght@400;700&family=Ubuntu+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Righteous&family=Bungee&family=Abril+Fatface&family=Cinzel:wght@400;700;900&family=Fredoka:wght@400;700&family=Lobster&family=Pacifico&family=Dancing+Script:wght@400;700&family=Caveat:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&family=Permanent+Marker&family=Kalam:wght@400;700&family=Satisfy&family=Great+Vibes&family=Courgette&family=Cookie&family=Sacramento&family=Yellowtail&family=Amatic+SC:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;700&family=Quicksand:wght@400;700&family=Archivo:wght@400;700&family=DM+Sans:wght@400;700&family=Work+Sans:wght@400;700&family=Manrope:wght@400;700&family=Syne:wght@400;700;800&family=Space+Grotesk:wght@400;700&family=Lexend:wght@400;700&family=Cabin:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Michroma&family=Press+Start+2P&family=Silkscreen&family=DotGothic16&family=VT323&family=Share+Tech+Mono&family=Major+Mono+Display&family=UnifrakturMaguntia&family=MedievalSharp&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=Creepster&family=Nosifer&family=Metal+Mania&family=Special+Elite&family=Fredericka+the+Great&family=Rye&family=Sancreek&family=Faster+One&family=Monoton&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Megrim&family=Glass+Antiqua&family=Pinyon+Script&family=Tangerine:wght@400;700&family=Parisienne&family=Alex+Brush&family=Allura&family=Arizonia&family=Rochester&family=Clicker+Script&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Stalemate&family=Ruthie&family=Mrs+Saint+Delafield&family=Monsieur+La+Doulaise&family=Herr+Von+Muellerhoff&family=Titillium+Web:wght@400;700&family=Exo+2:wght@400;700&family=Hind:wght@400;700&family=Mukta:wght@400;700&family=Kanit:wght@400;700&display=swap');
+
+        :root {
+            --primary: #007aff;
+            --bg: #000000;
+            --header-bg: #0a0a0a;
+            --border: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #555555;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 20px;
+        }
+
+        .container { max-width: 1600px; margin: 0 auto; }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-links a:hover { color: white; }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 5px;
+            background: #111;
+            padding: 5px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 800;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .input-box {
+            flex: 1;
+            background: #111;
+            border: 1px solid var(--border);
+            padding: 12px 18px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-box:focus { border-color: var(--primary); }
+
+        .size-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #111;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .size-box label {
+            font-size: 0.6rem;
+            font-weight: 800;
+            color: var(--text-muted);
+        }
+
+        /* The List */
+        .font-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #080808;
+            transition: background 0.1s;
+        }
+
+        .font-row:hover { background: #050505; }
+
+        .font-index {
+            width: 40px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #333;
+            text-align: right;
+            margin-right: 25px;
+        }
+
+        .font-meta {
+            width: 220px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-right: 30px;
+        }
+
+        .font-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .font-cat {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            opacity: 0.5;
+        }
+
+        .font-preview {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 900px) {
+            .font-meta { width: 140px; margin-right: 15px; }
+            .font-index { width: 30px; margin-right: 10px; }
+        }
+
+        @media (max-width: 600px) {
+            .font-row { flex-direction: column; align-items: flex-start; padding: 20px; }
+            .font-meta { width: 100%; margin-bottom: 10px; }
+            .font-index { position: absolute; right: 20px; top: 20px; }
+            .controls { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="top-row">
+                <div class="nav-links"><a href="index.html">← DASHBOARD</a></div>
+                <div style="font-size: 0.7rem; letter-spacing: 0.3em; color: var(--text-muted); font-weight: 900;">100+ FONT INDEX</div>
+                <input type="text" id="search" placeholder="Search fonts..." style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; text-align:right; outline:none;">
+            </div>
+            <div class="controls">
+                <input type="text" id="textInput" class="input-box" value="What do you think about this font?" placeholder="Preview text...">
+                
+                <div class="toggle-group">
+                    <button id="boldToggle" class="toggle-btn">B</button>
+                    <button id="italicToggle" class="toggle-btn">I</button>
+                </div>
+
+                <div class="size-box">
+                    <label>SIZE: <span id="sizeVal">40</span>PX</label>
+                    <input type="range" id="sizeInput" min="12" max="150" value="40" style="accent-color: var(--primary);">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="list"></div>
+
+    <script>
+        const fontData = [
+            // SANS
+            { n: 'Inter', c: 'Sans' }, { n: 'Montserrat', c: 'Sans' }, { n: 'Poppins', c: 'Sans' }, { n: 'Open Sans', c: 'Sans' }, { n: 'Roboto', c: 'Sans' },
+            { n: 'Lato', c: 'Sans' }, { n: 'Oswald', c: 'Sans' }, { n: 'Raleway', c: 'Sans' }, { n: 'Nunito', c: 'Sans' }, { n: 'Ubuntu', c: 'Sans' },
+            { n: 'Josefin Sans', c: 'Sans' }, { n: 'Quicksand', c: 'Sans' }, { n: 'Archivo', c: 'Sans' }, { n: 'DM Sans', c: 'Sans' }, { n: 'Work Sans', c: 'Sans' },
+            { n: 'Manrope', c: 'Sans' }, { n: 'Syne', c: 'Sans' }, { n: 'Space Grotesk', c: 'Sans' }, { n: 'Lexend', c: 'Sans' }, { n: 'Cabin', c: 'Sans' },
+            { n: 'Hind', c: 'Sans' }, { n: 'Mukta', c: 'Sans' }, { n: 'Kanit', c: 'Sans' }, { n: 'Titillium Web', c: 'Sans' }, { n: 'Exo 2', c: 'Sans' },
+            // SERIF
+            { n: 'Playfair Display', c: 'Serif' }, { n: 'Lora', c: 'Serif' }, { n: 'Merriweather', c: 'Serif' }, { n: 'PT Serif', c: 'Serif' }, { n: 'EB Garamond', c: 'Serif' },
+            { n: 'Libre Baskerville', c: 'Serif' }, { n: 'Noto Serif', c: 'Serif' }, { n: 'Crimson Text', c: 'Serif' }, { n: 'Domine', c: 'Serif' }, { n: 'Cormorant Garamond', c: 'Serif' },
+            { n: 'Roboto Slab', c: 'Slab' }, { n: 'Cinzel', c: 'Serif' }, { n: 'Abril Fatface', c: 'Display' },
+            // MONO
+            { n: 'Fira Code', c: 'Mono' }, { n: 'JetBrains Mono', c: 'Mono' }, { n: 'Space Mono', c: 'Mono' }, { n: 'Source Code Pro', c: 'Mono' }, { n: 'Courier Prime', c: 'Mono' },
+            { n: 'Inconsolata', c: 'Mono' }, { n: 'Roboto Mono', c: 'Mono' }, { n: 'IBM Plex Mono', c: 'Mono' }, { n: 'Anonymous Pro', c: 'Mono' }, { n: 'Ubuntu Mono', c: 'Mono' },
+            { n: 'Share Tech Mono', c: 'Mono' }, { n: 'Major Mono Display', c: 'Mono' }, { n: 'VT323', c: 'Retro' },
+            // DISPLAY & SPECIAL
+            { n: 'Bebas Neue', c: 'Display' }, { n: 'Righteous', c: 'Display' }, { n: 'Bungee', c: 'Display' }, { n: 'Fredoka', c: 'Display' }, { n: 'Lobster', c: 'Display' },
+            { n: 'Pacifico', c: 'Script' }, { n: 'Dancing Script', c: 'Script' }, { n: 'Caveat', c: 'Script' }, { n: 'Shadows Into Light', c: 'Hand' }, { n: 'Permanent Marker', c: 'Marker' },
+            { n: 'Kalam', c: 'Hand' }, { n: 'Satisfy', c: 'Script' }, { n: 'Great Vibes', c: 'Formal' }, { n: 'Courgette', c: 'Script' }, { n: 'Cookie', c: 'Script' },
+            { n: 'Sacramento', c: 'Script' }, { n: 'Yellowtail', c: 'Script' }, { n: 'Amatic SC', c: 'Display' }, { n: 'Orbitron', c: 'Sci-Fi' }, { n: 'Michroma', c: 'Sci-Fi' },
+            { n: 'Press Start 2P', c: 'Pixel' }, { n: 'Silkscreen', c: 'Pixel' }, { n: 'DotGothic16', c: 'Pixel' }, { n: 'UnifrakturMaguntia', c: 'Blackletter' }, { n: 'MedievalSharp', c: 'Gothic' },
+            { n: 'Pirata One', c: 'Gothic' }, { n: 'Creepster', c: 'Horror' }, { n: 'Nosifer', c: 'Horror' }, { n: 'Metal Mania', c: 'Metal' }, { n: 'Special Elite', c: 'Typewriter' },
+            { n: 'Fredericka the Great', c: 'Sketch' }, { n: 'Rye', c: 'Western' }, { n: 'Sancreek', c: 'Western' }, { n: 'Faster One', c: 'Display' }, { n: 'Monoton', c: 'Display' },
+            { n: 'Megrim', c: 'Modern' }, { n: 'Glass Antiqua', c: 'Retro' }, { n: 'Pinyon Script', c: 'Script' }, { n: 'Tangerine', c: 'Script' }, { n: 'Parisienne', c: 'Script' },
+            { n: 'Alex Brush', c: 'Script' }, { n: 'Allura', c: 'Script' }, { n: 'Arizonia', c: 'Script' }, { n: 'Rochester', c: 'Script' }, { n: 'Clicker Script', c: 'Script' },
+            { n: 'Stalemate', c: 'Script' }, { n: 'Ruthie', c: 'Script' }, { n: 'Mrs Saint Delafield', c: 'Script' }, { n: 'Monsieur La Doulaise', c: 'Script' }, { n: 'Herr Von Muellerhoff', c: 'Script' }
+        ];
+
+        const list = document.getElementById('list');
+        const textInput = document.getElementById('textInput');
+        const sizeInput = document.getElementById('sizeInput');
+        const searchInput = document.getElementById('search');
+        const sizeVal = document.getElementById('sizeVal');
+        const boldToggle = document.getElementById('boldToggle');
+        const italicToggle = document.getElementById('italicToggle');
+
+        let isBold = false;
+        let isItalic = false;
+
+        boldToggle.addEventListener('click', () => {
+            isBold = !isBold;
+            boldToggle.classList.toggle('active', isBold);
+            render();
+        });
+
+        italicToggle.addEventListener('click', () => {
+            isItalic = !isItalic;
+            italicToggle.classList.toggle('active', isItalic);
+            render();
+        });
+
+        function render() {
+            const text = textInput.value || "What do you think about this font?";
+            const size = sizeInput.value;
+            const term = searchInput.value.toLowerCase();
+            sizeVal.textContent = size;
+
+            const fontWeight = isBold ? 'bold' : 'normal';
+            const fontStyle = isItalic ? 'italic' : 'normal';
+
+            list.innerHTML = fontData
+                .map((f, i) => ({ ...f, index: i + 1 }))
+                .filter(f => f.n.toLowerCase().includes(term) || f.c.toLowerCase().includes(term))
+                .map(f => `
+                    <div class="font-row">
+                        <div class="font-index">${f.index}</div>
+                        <div class="font-meta">
+                            <span class="font-name">${f.n}</span>
+                            <span class="font-cat">${f.c}</span>
+                        </div>
+                        <div class="font-preview" style="font-family: '${f.n}', sans-serif; font-size: ${size}px; font-weight: ${fontWeight}; font-style: ${fontStyle};">
+                            ${text}
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        [textInput, sizeInput, searchInput].forEach(el => el.addEventListener('input', render));
+        render();
+    </script>
+</body>
+</html>
