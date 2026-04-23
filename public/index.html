@@ -94,55 +94,52 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             width: 100%;
             z-index: 1;
         }
 
         header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 32px;
             animation: fadeInDown 0.8s ease-out;
         }
 
         .logo-container {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 24px;
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 12px;
             background: var(--accent-gradient);
-            border-radius: 20px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 28px;
             box-shadow: 0 10px 40px var(--primary-glow);
             border: 1px solid rgba(255,255,255,0.2);
         }
 
         h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 12px;
-            background: linear-gradient(to bottom, #ffffff, #a1a1a1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
         }
 
         .subtitle {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
             font-weight: 400;
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .apps-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 24px;
-            margin-bottom: 60px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
             animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
@@ -152,15 +149,18 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 32px;
+            border-radius: 16px;
+            padding: 16px;
             text-decoration: none;
             color: var(--text);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .app-card::before {
@@ -172,14 +172,15 @@
             height: 100%;
             background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent);
             opacity: 0;
-            transition: opacity 0.4s;
+            transition: opacity 0.3s;
+            pointer-events: none;
         }
 
         .app-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: rgba(0, 122, 255, 0.4);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
-                        0 0 20px var(--primary-glow);
+            transform: translateY(-4px) scale(1.05);
+            border-color: rgba(0, 122, 255, 0.5);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 
+                        0 0 15px var(--primary-glow);
         }
 
         .app-card:hover::before {
@@ -187,89 +188,64 @@
         }
 
         .app-icon-wrapper {
-            width: 64px;
-            height: 64px;
+            width: 48px;
+            height: 48px;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 18px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            transition: all 0.4s;
+            font-size: 24px;
+            transition: all 0.3s;
         }
 
         .app-card:hover .app-icon-wrapper {
-            transform: rotate(-5deg) scale(1.1);
+            transform: scale(1.12);
             background: var(--accent-gradient);
             border-color: rgba(255,255,255,0.2);
         }
 
-        .app-content {
-            flex: 1;
-        }
-
         .app-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1.2;
+            min-height: 32px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
         }
 
         .app-desc {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.5;
+            display: none;
         }
 
         .card-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: auto;
-            padding-top: 20px;
-            border-top: 1px solid var(--glass-border);
+            display: none;
         }
 
         .status-tag {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: #34c759;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #34c759;
             border-radius: 50%;
-            box-shadow: 0 0 10px #34c759;
+            box-shadow: 0 0 8px #34c759;
             animation: pulse 2s infinite;
         }
 
         .arrow-link {
-            width: 36px;
-            height: 36px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text);
-            transition: all 0.4s;
-        }
-
-        .app-card:hover .arrow-link {
-            background: #ffffff;
-            color: #000000;
-            transform: translateX(4px);
+            display: none;
         }
 
         @keyframes pulse {
@@ -281,21 +257,13 @@
         footer {
             text-align: center;
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             margin-top: auto;
             animation: fadeIn 1s ease-out 0.5s backwards;
         }
 
         .status-bar {
-            background: var(--surface);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            padding: 8px 16px;
-            border-radius: 100px;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
+            display: none;
         }
 
         @keyframes fadeInDown {
@@ -314,8 +282,10 @@
         }
 
         @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .apps-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 1.5rem; }
+            .apps-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+            .app-icon-wrapper { width: 40px; height: 40px; font-size: 20px; }
+            .app-name { font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -330,66 +300,53 @@
         <header>
             <div class="logo-container">🔐</div>
             <h1>Internal Apps</h1>
-            <p class="subtitle">A secure environment for personal data processing and visualization tools.</p>
+            <p class="subtitle">Quick access to your tools.</p>
         </header>
 
         <div class="apps-grid">
             <a href="tracking/" class="app-card">
                 <div class="app-icon-wrapper">📍</div>
-                <div class="app-content">
-                    <div class="app-name">Activity Tracker</div>
-                    <div class="app-desc">High-fidelity location history and movement patterns. Heatmaps and path playback included.</div>
-                </div>
-                <div class="card-footer">
-                    <div class="status-tag">
-                        <div class="status-dot"></div>
-                        Live
-                    </div>
-                    <div class="arrow-link">→</div>
-                </div>
+                <div class="app-name">Activity Tracker</div>
             </a>
 
             <a href="oura.html" class="app-card">
                 <div class="app-icon-wrapper">🚀</div>
-                <div class="app-content">
-                    <div class="app-name">Oura Explorer</div>
-                    <div class="app-desc">In-depth health analytics for sleep, readiness, and activity via the Oura API v2.</div>
-                </div>
-                <div class="card-footer">
-                    <div class="status-tag">
-                        <div class="status-dot"></div>
-                        Synced
-                    </div>
-                    <div class="arrow-link">→</div>
-                </div>
+                <div class="app-name">Oura Explorer</div>
             </a>
 
             <a href="font.html" class="app-card">
                 <div class="app-icon-wrapper">🔡</div>
-                <div class="app-content">
-                    <div class="app-name">Typography System</div>
-                    <div class="app-desc">Visual showcase of font families, type scales, and text styles used across the platform.</div>
-                </div>
-                <div class="card-footer">
-                    <div class="status-tag">
-                        <div class="status-dot"></div>
-                        Ready
-                    </div>
-                    <div class="arrow-link">→</div>
-                </div>
+                <div class="app-name">Typography</div>
+            </a>
+
+            <a href="iphone.html" class="app-card">
+                <div class="app-icon-wrapper">📱</div>
+                <div class="app-name">iOS Sim</div>
+            </a>
+
+            <a href="desktop.html" class="app-card">
+                <div class="app-icon-wrapper">🖥️</div>
+                <div class="app-name">Desktop Sim</div>
+            </a>
+
+            <a href="screensavers.html" class="app-card">
+                <div class="app-icon-wrapper">✨</div>
+                <div class="app-name">Screensavers</div>
+            </a>
+
+            <a href="sweet16.html" class="app-card">
+                <div class="app-icon-wrapper">🎮</div>
+                <div class="app-name">Sweet 16</div>
+            </a>
+
+            <a href="redo.html" class="app-card">
+                <div class="app-icon-wrapper">🔄</div>
+                <div class="app-name">Redo</div>
             </a>
         </div>
 
         <footer>
-            <div class="status-bar">
-                <span class="status-tag" style="color: #a1a1a1;">
-                    <div class="status-dot" style="background: #a1a1a1; box-shadow: none;"></div>
-                    System v1.2.4
-                </span>
-                <span>•</span>
-                <span>Secure Tunnel Active</span>
-            </div>
-            <p>&copy; 2026 Private Infrastructure</p>
+            <p>&copy; 2026 Internal Apps</p>
         </footer>
     </div>
 </body>

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iPhone Simulator | Internal Apps</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --ios-blue: #007aff;
+            --ios-green: #34c759;
+            --ios-red: #ff3b30;
+            --ios-orange: #ff9500;
+            --ios-gray: #8e8e93;
+            --ios-bg: #000000;
+            --ios-surface: rgba(255, 255, 255, 0.1);
+            --bezel-color: #1a1a1a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", sans-serif;
+            background: #111;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* Hardware Frame */
+        .iphone-frame {
+            position: relative;
+            width: 390px;
+            height: 844px;
+            background: var(--bezel-color);
+            border-radius: 60px;
+            padding: 12px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5), inset 0 0 2px 2px rgba(255,255,255,0.1);
+            border: 4px solid #333;
+        }
+
+        .screen {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 48px;
+            overflow: hidden;
+            background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80');
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease;
+        }
+
+        /* Dynamic Island */
+        .dynamic-island {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 35px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 2000;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 32px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1900;
+        }
+
+        .status-right {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        /* Lock Screen */
+        #lock-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1800;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 100px;
+            backdrop-filter: blur(0px);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);
+        }
+
+        .lock-time {
+            font-size: 80px;
+            font-weight: 700;
+            letter-spacing: -2px;
+        }
+
+        .lock-date {
+            font-size: 20px;
+            font-weight: 500;
+            margin-top: -10px;
+        }
+
+        .lock-bottom {
+            position: absolute;
+            bottom: 60px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+        }
+
+        .lock-tool {
+            width: 50px;
+            height: 50px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .unlock-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 5px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* Home Screen */
+        #home-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 60px 24px 24px;
+            opacity: 0;
+            transform: scale(1.1);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 20px;
+        }
+
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .app-icon:active .icon-box {
+            transform: scale(0.9);
+        }
+
+        .app-label {
+            font-size: 12px;
+            font-weight: 500;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        .dock {
+            position: absolute;
+            bottom: 24px;
+            left: 20px;
+            right: 20px;
+            height: 90px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(30px);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 0 10px;
+        }
+
+        /* App Windows */
+        .app-window {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1100;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-window.active {
+            transform: translateY(0);
+        }
+
+        .app-header {
+            padding: 60px 24px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-content {
+            flex: 1;
+            padding: 0 24px;
+            overflow-y: auto;
+        }
+
+        .close-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 5px;
+            background: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            z-index: 3000;
+        }
+
+        /* List System (Settings, etc) */
+        .ios-list {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .ios-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+        }
+
+        .ios-item:last-child { border-bottom: none; }
+        .ios-item:active { background: rgba(255,255,255,0.1); }
+
+        .ios-item-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* Messages App */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 80px;
+        }
+
+        .bubble {
+            max-width: 75%;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .bubble-sent {
+            align-self: flex-end;
+            background: var(--ios-blue);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bubble-received {
+            align-self: flex-start;
+            background: #333;
+            color: white;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-bar {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 20px;
+            padding: 8px 15px;
+            color: white;
+            outline: none;
+        }
+
+        /* Safari */
+        .safari-toolbar {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .url-bar {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--ios-gray);
+        }
+
+        /* Notes App */
+        .note-card {
+            background: #1c1c1e;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        /* Helpers */
+        .unlocked #lock-screen {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .unlocked #home-screen {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .btn-side {
+            position: absolute;
+            right: -6px;
+            top: 200px;
+            width: 6px;
+            height: 90px;
+            background: #222;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="iphone-frame">
+    <div class="btn-side" onclick="togglePower()"></div>
+
+    <div class="screen" id="main-screen">
+        <div class="dynamic-island"></div>
+        
+        <div class="status-bar">
+            <span id="status-time">9:41</span>
+            <div class="status-right">
+                <span>📶</span>
+                <span>LTE</span>
+                <span>🔋</span>
+            </div>
+        </div>
+
+        <!-- Lock Screen -->
+        <div id="lock-screen" onclick="unlock()">
+            <div class="lock-date" id="lock-date">Tuesday, March 19</div>
+            <div class="lock-time" id="lock-time">09:41</div>
+            
+            <div class="lock-bottom">
+                <div class="lock-tool" onclick="event.stopPropagation()">🔦</div>
+                <div class="lock-tool" onclick="event.stopPropagation()">📷</div>
+            </div>
+            <div class="unlock-bar"></div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="home-screen">
+            <div class="app-icon" onclick="openApp('weather')">
+                <div class="icon-box" style="background: linear-gradient(#53aef1, #2b84d2)">🌤️</div>
+                <span class="app-label">Weather</span>
+            </div>
+            <div class="app-icon" onclick="openApp('calc')">
+                <div class="icon-box" style="background: #f19a37">➗</div>
+                <span class="app-label">Calculator</span>
+            </div>
+            <div class="app-icon" onclick="openApp('clock')">
+                <div class="icon-box" style="background: #000; border: 1px solid #333">⏰</div>
+                <span class="app-label">Clock</span>
+            </div>
+            <div class="app-icon" onclick="openApp('settings')">
+                <div class="icon-box" style="background: #8e8e93">⚙️</div>
+                <span class="app-label">Settings</span>
+            </div>
+            <div class="app-icon" onclick="openApp('notes')">
+                <div class="icon-box" style="background: #fff; color: #f19a37">📝</div>
+                <span class="app-label">Notes</span>
+            </div>
+            <div class="app-icon" onclick="openApp('photos')">
+                <div class="icon-box" style="background: #fff">🖼️</div>
+                <span class="app-label">Photos</span>
+            </div>
+            
+            <div class="dock">
+                <div class="app-icon" onclick="openApp('phone')">
+                    <div class="icon-box" style="background: #34c759">📞</div>
+                </div>
+                <div class="app-icon" onclick="openApp('safari')">
+                    <div class="icon-box" style="background: #fff">🌐</div>
+                </div>
+                <div class="app-icon" onclick="openApp('messages')">
+                    <div class="icon-box" style="background: #34c759">💬</div>
+                </div>
+                <div class="app-icon" onclick="openApp('music')">
+                    <div class="icon-box" style="background: linear-gradient(#ff5e62, #ff9966)">🎶</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apps -->
+        <div id="app-calc" class="app-window">
+            <div class="app-content">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-grid">
+                    <div class="calc-btn calc-spec" onclick="calcClear()">AC</div>
+                    <div class="calc-btn calc-spec">+/-</div>
+                    <div class="calc-btn calc-spec">%</div>
+                    <div class="calc-btn calc-op" onclick="calcOp('/')">÷</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(7)">7</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(8)">8</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(9)">9</div>
+                    <div class="calc-btn calc-op" onclick="calcOp('*')">×</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(4)">4</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(5)">5</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(6)">6</div>
+                    <div class="calc-btn calc-op" onclick="calcOp('-')">-</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(1)">1</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(2)">2</div>
+                    <div class="calc-btn calc-num" onclick="calcNum(3)">3</div>
+                    <div class="calc-btn calc-op" onclick="calcOp('+')">+</div>
+                    <div class="calc-btn calc-num calc-zero" onclick="calcNum(0)">0</div>
+                    <div class="calc-btn calc-num">.</div>
+                    <div class="calc-btn calc-op" onclick="calcEqual()">=</div>
+                </div>
+            </div>
+            <div class="close-bar" onclick="closeApp()"></div>
+        </div>
+
+        <div id="app-settings" class="app-window">
+            <div class="app-header"><h2>Settings</h2></div>
+            <div class="app-content">
+                <div class="ios-list">
+                    <div class="ios-item">
+                        <div class="ios-item-icon" style="background: #ff9500">✈️</div>
+                        <span>Airplane Mode</span>
+                    </div>
+                    <div class="ios-item">
+                        <div class="ios-item-icon" style="background: #007aff">📶</div>
+                        <span>Wi-Fi</span>
+                    </div>
+                </div>
+                <div class="ios-list">
+                    <div class="ios-item" onclick="changeWallpaper('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?auto=format&fit=crop&w=800&q=80')">
+                        <div class="ios-item-icon" style="background: #5856d6">🌄</div>
+                        <span>Dark Mountain Wallpaper</span>
+                    </div>
+                    <div class="ios-item" onclick="changeWallpaper('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80')">
+                        <div class="ios-item-icon" style="background: #af52de">🌌</div>
+                        <span>Default Abstract Wallpaper</span>
+                    </div>
+                </div>
+            </div>
+            <div class="close-bar" onclick="closeApp()"></div>
+        </div>
+
+        <div id="app-messages" class="app-window">
+            <div class="app-header">
+                <span style="color: var(--ios-blue)">Back</span>
+                <h3>Internal Chat</h3>
+                <span>📝</span>
+            </div>
+            <div class="app-content chat-container" id="chat-messages">
+                <div class="bubble bubble-received">Hey! How is the simulator coming along?</div>
+                <div class="bubble bubble-sent">It's going great. Just added Messages and Settings!</div>
+                <div class="bubble bubble-received">Awesome. Can you add Notes too?</div>
+            </div>
+            <div class="chat-input-bar">
+                <input type="text" class="chat-input" id="chat-input" placeholder="iMessage">
+                <button onclick="sendMessage()" style="background: var(--ios-blue); border: none; width: 30px; height: 30px; border-radius: 50%; color: white;">↑</button>
+            </div>
+            <div class="close-bar" onclick="closeApp()"></div>
+        </div>
+
+        <div id="app-safari" class="app-window">
+            <div class="app-content" style="padding: 0; background: #fff; color: #000;">
+                <div class="safari-toolbar" style="background: #f8f8f8; padding-top: 60px;">
+                    <div class="url-bar">internalapps.portal</div>
+                </div>
+                <div style="padding: 40px 20px;">
+                    <h1>Welcome</h1>
+                    <p style="margin-top: 20px; color: #666;">This is a simulated browser environment. All traffic is routed through the secure tunnel.</p>
+                </div>
+            </div>
+            <div class="close-bar" onclick="closeApp()" style="background: #000"></div>
+        </div>
+
+        <div id="app-notes" class="app-window" style="background: #000">
+            <div class="app-header"><h2>Notes</h2></div>
+            <div class="app-content">
+                <div class="note-card">
+                    <h4 style="color: #fff">Grocery List</h4>
+                    <p style="color: var(--ios-gray); font-size: 14px;">Apples, Bread, Milk, Simulation Fuel</p>
+                </div>
+                <div class="note-card">
+                    <h4 style="color: #fff">Dev Tasks</h4>
+                    <p style="color: var(--ios-gray); font-size: 14px;">Fix dynamic island animation, add wallpaper switcher.</p>
+                </div>
+            </div>
+            <div class="close-bar" onclick="closeApp()"></div>
+        </div>
+
+        <!-- Previous Apps (Weather, Clock) -->
+        <div id="app-weather" class="app-window">
+            <div class="app-header"><h2>Weather</h2></div>
+            <div class="app-content">
+                <div class="weather-card">
+                    <h3>San Francisco</h3>
+                    <div style="font-size: 48px; margin: 10px 0;">68°</div>
+                    <p>Mostly Sunny</p>
+                </div>
+            </div>
+            <div class="close-bar" onclick="closeApp()"></div>
+        </div>
+
+        <div id="app-clock" class="app-window">
+            <div class="app-header"><h2>Stopwatch</h2></div>
+            <div class="app-content" style="text-align: center;">
+                <div id="stopwatch-display" style="font-size: 60px; margin: 40px 0;">00:00.00</div>
+                <div style="display: flex; justify-content: space-around;">
+                    <div class="calc-btn calc-num" onclick="resetStopwatch()">Reset</div>
+                    <div class="calc-btn calc-op" id="stopwatch-btn" onclick="toggleStopwatch()">Start</div>
+                </div>
+            </div>
+            <div class="close-bar" onclick="closeApp()"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // System Time
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        document.getElementById('status-time').textContent = timeStr;
+        document.getElementById('lock-time').textContent = timeStr;
+        document.getElementById('lock-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Power & Lock
+    let isLocked = true;
+    function unlock() {
+        if (isLocked) { document.body.classList.add('unlocked'); isLocked = false; }
+    }
+    function togglePower() {
+        const screen = document.getElementById('main-screen');
+        if (screen.style.opacity === '0') {
+            screen.style.opacity = '1';
+        } else {
+            screen.style.opacity = '0';
+            document.body.classList.remove('unlocked');
+            isLocked = true;
+            closeApp();
+        }
+    }
+
+    // App Navigation
+    function openApp(appId) {
+        const win = document.getElementById(`app-${appId}`);
+        if (win) {
+            win.classList.add('active');
+            document.querySelector('.dynamic-island').style.width = '200px';
+        }
+    }
+    function closeApp() {
+        document.querySelectorAll('.app-window').forEach(win => win.classList.remove('active'));
+        document.querySelector('.dynamic-island').style.width = '120px';
+    }
+
+    // Settings
+    function changeWallpaper(url) {
+        document.getElementById('main-screen').style.backgroundImage = `url('${url}')`;
+    }
+
+    // Messages
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (text) {
+            const container = document.getElementById('chat-messages');
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble bubble-sent';
+            bubble.textContent = text;
+            container.appendChild(bubble);
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    // Calculator & Stopwatch (same as before)
+    let calcVal = '0', calcBuffer = null, calcOpChar = null;
+    function updateCalc() { document.getElementById('calc-display').textContent = calcVal; }
+    function calcNum(n) { calcVal = calcVal === '0' ? String(n) : calcVal + String(n); updateCalc(); }
+    function calcOp(op) { calcBuffer = parseFloat(calcVal); calcVal = '0'; calcOpChar = op; }
+    function calcEqual() {
+        const curr = parseFloat(calcVal);
+        let res = 0;
+        if (calcOpChar === '+') res = calcBuffer + curr;
+        if (calcOpChar === '-') res = calcBuffer - curr;
+        if (calcOpChar === '*') res = calcBuffer * curr;
+        if (calcOpChar === '/') res = calcBuffer / curr;
+        calcVal = String(res); updateCalc();
+    }
+    function calcClear() { calcVal = '0'; calcBuffer = null; calcOpChar = null; updateCalc(); }
+
+    let swInterval = null, swTime = 0;
+    function toggleStopwatch() {
+        const btn = document.getElementById('stopwatch-btn');
+        if (swInterval) {
+            clearInterval(swInterval); swInterval = null;
+            btn.textContent = 'Start'; btn.style.background = '#1a4d2e';
+        } else {
+            swInterval = setInterval(() => {
+                swTime += 10;
+                const ms = String(Math.floor((swTime % 1000) / 10)).padStart(2, '0');
+                const s = String(Math.floor((swTime / 1000) % 60)).padStart(2, '0');
+                const m = String(Math.floor((swTime / 60000) % 60)).padStart(2, '0');
+                document.getElementById('stopwatch-display').textContent = `${m}:${s}.${ms}`;
+            }, 10);
+            btn.textContent = 'Stop'; btn.style.background = '#4d1a1a';
+        }
+    }
+    function resetStopwatch() { swTime = 0; document.getElementById('stopwatch-display').textContent = '00:00.00'; }
+</script>
+
+</body>
+</html>

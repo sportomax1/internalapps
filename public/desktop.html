@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop Simulator | Internal Apps</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+        :root {
+            --accent: #007aff;
+            --taskbar-bg: rgba(20, 20, 20, 0.7);
+            --window-bg: rgba(30, 30, 30, 0.85);
+            --window-border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+            --text-dim: #a1a1a1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000 url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text);
+            transition: background 0.5s ease;
+        }
+
+        /* Desktop Grid */
+        .desktop {
+            height: calc(100vh - 48px);
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 100px);
+            grid-template-rows: repeat(auto-fill, 100px);
+            grid-auto-flow: column;
+            gap: 10px;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .icon-img { font-size: 32px; }
+        .icon-label { font-size: 12px; text-align: center; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 48px;
+            background: var(--taskbar-bg); backdrop-filter: blur(20px);
+            display: flex; align-items: center; padding: 0 10px; z-index: 10000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .start-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .start-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .taskbar-items { display: flex; gap: 4px; margin-left: 10px; }
+        .taskbar-app { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 22px; border-radius: 6px; cursor: pointer; position: relative; transition: background 0.2s; }
+        .taskbar-app:hover { background: rgba(255, 255, 255, 0.1); }
+        .taskbar-app.active::after { content: ''; position: absolute; bottom: 4px; width: 6px; height: 2px; background: var(--accent); border-radius: 2px; }
+
+        .taskbar-tray { margin-left: auto; display: flex; align-items: center; gap: 15px; padding: 0 15px; font-size: 13px; color: var(--text-dim); }
+
+        /* Windows */
+        .window {
+            position: absolute; min-width: 300px; min-height: 200px;
+            background: var(--window-bg); backdrop-filter: blur(25px);
+            border: 1px solid var(--window-border); border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            display: flex; flex-direction: column; overflow: hidden; z-index: 100;
+            transition: width 0.3s, height 0.3s, top 0.3s, left 0.3s;
+        }
+
+        .window.maximized { width: 100% !important; height: calc(100vh - 48px) !important; top: 0 !important; left: 0 !important; border-radius: 0; }
+
+        .window-titlebar { height: 40px; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; padding: 0 15px; cursor: move; }
+        .window-title { font-size: 13px; font-weight: 500; flex: 1; }
+        .window-controls { display: flex; gap: 8px; }
+        .control { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+        .control-close { background: #ff5f57; }
+        .control-min { background: #ffbd2e; }
+        .control-max { background: #28c940; }
+
+        .window-content { flex: 1; overflow: auto; position: relative; }
+
+        /* Terminal App */
+        .terminal { font-family: 'Fira Code', monospace; background: #0c0c0c; height: 100%; padding: 15px; font-size: 13px; color: #00ff00; overflow-y: auto; }
+        .terminal-input-row { display: flex; gap: 8px; }
+        .terminal-input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; outline: none; flex: 1; }
+
+        /* File Explorer */
+        .explorer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 20px; padding: 20px; }
+        .file-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px; border-radius: 8px; cursor: pointer; }
+        .file-item:hover { background: rgba(255,255,255,0.05); }
+        .file-icon { font-size: 40px; }
+        .file-name { font-size: 12px; text-align: center; }
+
+        /* Music Player */
+        .player-container { padding: 20px; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: center; text-align: center; }
+        .album-art { width: 150px; height: 150px; background: linear-gradient(45deg, #007aff, #5856d6); border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .player-controls { display: flex; gap: 30px; font-size: 24px; margin-top: 20px; }
+        .player-btn { cursor: pointer; transition: transform 0.2s; }
+        .player-btn:hover { transform: scale(1.2); color: var(--accent); }
+
+        /* Start Menu */
+        .start-menu {
+            position: fixed; bottom: 56px; left: 8px; width: 320px;
+            background: var(--window-bg); backdrop-filter: blur(30px);
+            border: 1px solid var(--window-border); border-radius: 12px;
+            padding: 15px; display: none; z-index: 10001; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .start-menu.active { display: block; }
+        .start-search { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--window-border); border-radius: 6px; padding: 8px 12px; color: white; margin-bottom: 15px; outline: none; }
+
+        /* Calculator */
+        .calc-window { height: 100%; display: flex; flex-direction: column; padding: 10px; }
+        .calc-screen { height: 60px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: flex-end; padding: 0 15px; font-size: 24px; font-family: 'Fira Code', monospace; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; flex: 1; }
+        .calc-btn { background: rgba(255,255,255,0.05); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+        .calc-btn:hover { background: rgba(255,255,255,0.1); }
+        .calc-btn.op { color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+    <div class="desktop" id="desktop" onclick="hideStartMenu()">
+        <div class="desktop-icon" onclick="openWindow('explorer')">
+            <div class="icon-img">📁</div>
+            <div class="icon-label">Files</div>
+        </div>
+        <div class="desktop-icon" onclick="openWindow('notepad')">
+            <div class="icon-img">📝</div>
+            <div class="icon-label">Notepad</div>
+        </div>
+        <div class="desktop-icon" onclick="openWindow('terminal')">
+            <div class="icon-img">🐚</div>
+            <div class="icon-label">Terminal</div>
+        </div>
+        <div class="desktop-icon" onclick="openWindow('calc')">
+            <div class="icon-img">🧮</div>
+            <div class="icon-label">Calculator</div>
+        </div>
+        <div class="desktop-icon" onclick="openWindow('player')">
+            <div class="icon-img">🎵</div>
+            <div class="icon-label">Music</div>
+        </div>
+    </div>
+
+    <div class="taskbar">
+        <div class="start-btn" onclick="toggleStartMenu(event)">💠</div>
+        <div class="taskbar-items" id="taskbar-items"></div>
+        <div class="taskbar-tray">
+            <span id="tray-time">12:00 PM</span>
+        </div>
+    </div>
+
+    <div class="start-menu" id="start-menu">
+        <input type="text" class="start-search" placeholder="Search apps, files, and web">
+        <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">All Apps</div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <div class="desktop-icon" onclick="openWindow('explorer')"><div class="icon-img">📁</div><div class="icon-label">Files</div></div>
+            <div class="desktop-icon" onclick="openWindow('notepad')"><div class="icon-img">📝</div><div class="icon-label">Notes</div></div>
+            <div class="desktop-icon" onclick="openWindow('terminal')"><div class="icon-img">🐚</div><div class="icon-label">Term</div></div>
+            <div class="desktop-icon" onclick="openWindow('calc')"><div class="icon-img">🧮</div><div class="icon-label">Calc</div></div>
+            <div class="desktop-icon" onclick="openWindow('player')"><div class="icon-img">🎵</div><div class="icon-label">Music</div></div>
+            <div class="desktop-icon" onclick="changeWallpaper()"><div class="icon-img">🎨</div><div class="icon-label">Theme</div></div>
+        </div>
+    </div>
+
+    <script>
+        // System Time
+        function updateTime() {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('tray-time').textContent = time;
+        }
+        setInterval(updateTime, 1000); updateTime();
+
+        // Start Menu
+        function toggleStartMenu(e) { e.stopPropagation(); document.getElementById('start-menu').classList.toggle('active'); }
+        function hideStartMenu() { document.getElementById('start-menu').classList.remove('active'); }
+
+        // Window Management
+        let zIndex = 100;
+        const windows = {};
+
+        const appTemplates = {
+            explorer: { title: 'File Explorer', icon: '📁', width: 600, height: 400, content: `
+                <div class="explorer-grid">
+                    <div class="file-item"><div class="file-icon">📁</div><div class="file-name">Documents</div></div>
+                    <div class="file-item"><div class="file-icon">📁</div><div class="file-name">Downloads</div></div>
+                    <div class="file-item"><div class="file-icon">📁</div><div class="file-name">Pictures</div></div>
+                    <div class="file-item"><div class="file-icon">📄</div><div class="file-name">secrets.txt</div></div>
+                    <div class="file-item"><div class="file-icon">🎬</div><div class="file-name">intro.mp4</div></div>
+                </div>
+            `},
+            notepad: { title: 'Notepad', icon: '📝', width: 500, height: 400, content: `<textarea style="width:100%;height:100%;background:transparent;border:none;color:white;padding:15px;resize:none;outline:none;font-size:14px;" placeholder="Start writing..."></textarea>`},
+            terminal: { title: 'Terminal', icon: '🐚', width: 600, height: 400, content: `
+                <div class="terminal" id="term-container">
+                    <div id="term-output">Internal OS [v1.2.4]<br>Type 'help' for commands.<br><br></div>
+                    <div class="terminal-input-row">
+                        <span>user@simulator:~$</span>
+                        <input type="text" class="terminal-input" id="term-input" autofocus>
+                    </div>
+                </div>
+            `},
+            calc: { title: 'Calculator', icon: '🧮', width: 300, height: 400, content: `
+                <div class="calc-window">
+                    <div class="calc-screen" id="calc-res">0</div>
+                    <div class="calc-grid">
+                        <div class="calc-btn">7</div><div class="calc-btn">8</div><div class="calc-btn">9</div><div class="calc-btn op">/</div>
+                        <div class="calc-btn">4</div><div class="calc-btn">5</div><div class="calc-btn">6</div><div class="calc-btn op">*</div>
+                        <div class="calc-btn">1</div><div class="calc-btn">2</div><div class="calc-btn">3</div><div class="calc-btn op">-</div>
+                        <div class="calc-btn">0</div><div class="calc-btn">C</div><div class="calc-btn op">=</div><div class="calc-btn op">+</div>
+                    </div>
+                </div>
+            `},
+            player: { title: 'Music Player', icon: '🎵', width: 400, height: 500, content: `
+                <div class="player-container">
+                    <div class="album-art">🎧</div>
+                    <h3>Simulation Lo-Fi</h3>
+                    <p style="color:var(--text-dim)">Internal Radio v2</p>
+                    <div class="player-controls">
+                        <span class="player-btn">⏮</span>
+                        <span class="player-btn" onclick="this.textContent = this.textContent === '▶' ? '⏸' : '▶'">⏸</span>
+                        <span class="player-btn">⏭</span>
+                    </div>
+                </div>
+            `}
+        };
+
+        function openWindow(appId) {
+            hideStartMenu();
+            if (windows[appId]) { focusWindow(appId); return; }
+
+            const template = appTemplates[appId];
+            const win = document.createElement('div');
+            win.className = 'window';
+            win.id = `win-${appId}`;
+            win.style.width = template.width + 'px';
+            win.style.height = template.height + 'px';
+            win.style.left = (50 + Object.keys(windows).length * 30) + 'px';
+            win.style.top = (50 + Object.keys(windows).length * 30) + 'px';
+            win.style.zIndex = ++zIndex;
+
+            win.innerHTML = `
+                <div class="window-titlebar" onmousedown="startDrag(event, '${appId}')" ondblclick="toggleMaximize('${appId}')">
+                    <div class="window-title">${template.icon} ${template.title}</div>
+                    <div class="window-controls">
+                        <div class="control control-min" onclick="minimizeWindow('${appId}')"></div>
+                        <div class="control control-max" onclick="toggleMaximize('${appId}')"></div>
+                        <div class="control control-close" onclick="closeWindow('${appId}')"></div>
+                    </div>
+                </div>
+                <div class="window-content" onmousedown="focusWindow('${appId}')">${template.content}</div>
+            `;
+
+            document.body.appendChild(win);
+            windows[appId] = win;
+            updateTaskbar();
+            if (appId === 'terminal') setupTerminal();
+            if (appId === 'calc') setupCalc();
+        }
+
+        function closeWindow(appId) { if (windows[appId]) { windows[appId].remove(); delete windows[appId]; updateTaskbar(); } }
+        function focusWindow(appId) { if (windows[appId]) { windows[appId].style.zIndex = ++zIndex; updateTaskbar(); } }
+        function minimizeWindow(appId) { if (windows[appId]) { windows[appId].style.display = 'none'; } }
+        function toggleMaximize(appId) { if (windows[appId]) { windows[appId].classList.toggle('maximized'); } }
+
+        function updateTaskbar() {
+            const container = document.getElementById('taskbar-items');
+            container.innerHTML = '';
+            Object.keys(windows).forEach(id => {
+                const btn = document.createElement('div');
+                btn.className = 'taskbar-app active';
+                btn.textContent = appTemplates[id].icon;
+                btn.onclick = () => {
+                    const win = windows[id];
+                    if (win.style.display === 'none') win.style.display = 'flex';
+                    focusWindow(id);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Draggable Logic
+        let activeWin = null, offsetX, offsetY;
+        function startDrag(e, appId) {
+            activeWin = windows[appId];
+            if (activeWin.classList.contains('maximized')) return;
+            focusWindow(appId);
+            const rect = activeWin.getBoundingClientRect();
+            offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+        function onDrag(e) { if (activeWin) { activeWin.style.left = (e.clientX - offsetX) + 'px'; activeWin.style.top = (e.clientY - offsetY) + 'px'; } }
+        function stopDrag() { activeWin = null; document.removeEventListener('mousemove', onDrag); }
+
+        // Terminal Logic
+        function setupTerminal() {
+            const input = document.getElementById('term-input');
+            const output = document.getElementById('term-output');
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = input.value.trim().toLowerCase();
+                    output.innerHTML += `user@simulator:~$ ${cmd}<br>`;
+                    if (cmd === 'help') output.innerHTML += 'Available: ls, whoami, date, clear, help<br>';
+                    else if (cmd === 'ls') output.innerHTML += 'documents/ downloads/ pictures/ secrets.txt<br>';
+                    else if (cmd === 'whoami') output.innerHTML += 'simulator_user<br>';
+                    else if (cmd === 'date') output.innerHTML += new Date().toString() + '<br>';
+                    else if (cmd === 'clear') output.innerHTML = '';
+                    else if (cmd !== '') output.innerHTML += `Command not found: ${cmd}<br>`;
+                    input.value = '';
+                    document.getElementById('term-container').scrollTop = 9999;
+                }
+            };
+        }
+
+        // Calculator Logic
+        function setupCalc() {
+            const screen = document.getElementById('calc-res');
+            let val = '0';
+            document.querySelectorAll('.calc-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const txt = btn.textContent;
+                    if (txt === 'C') val = '0';
+                    else if (txt === '=') { try { val = eval(val).toString(); } catch { val = 'Error'; } }
+                    else { val = val === '0' ? txt : val + txt; }
+                    screen.textContent = val;
+                };
+            });
+        }
+
+        function changeWallpaper() {
+            const wallpapers = [
+                'https://images.unsplash.com/photo-1477346611705-65d1883cee1e?auto=format&fit=crop&w=1920&q=80',
+                'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80',
+                'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80'
+            ];
+            const current = document.body.style.backgroundImage;
+            let next = wallpapers[Math.floor(Math.random() * wallpapers.length)];
+            document.body.style.backgroundImage = `url('${next}')`;
+            hideStartMenu();
+        }
+
+        window.onload = () => openWindow('explorer');
+    </script>
+</body>
+</html>
