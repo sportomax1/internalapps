@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dad Mode: Baby Boy Prep</title>
+  <style>
+    :root {
+      --bg: #070b18;
+      --bg-soft: #0f1730;
+      --card: rgba(255, 255, 255, 0.08);
+      --text: #eaf0ff;
+      --muted: #a7b5d8;
+      --accent: #73d8ff;
+      --accent-2: #9f86ff;
+      --good: #54e3aa;
+      --warn: #ffcf6b;
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 0%, #192d65 0%, var(--bg) 40%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+      padding-bottom: 32px;
+    }
+
+    .hero {
+      border-radius: var(--radius);
+      padding: 20px;
+      background: linear-gradient(145deg, rgba(115, 216, 255, 0.28), rgba(159, 134, 255, 0.18));
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #eff7ff;
+      opacity: 0.95;
+      line-height: 1.45;
+      font-size: 0.98rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius);
+      padding: 16px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    }
+
+    .label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .big {
+      font-size: clamp(1.4rem, 5.2vw, 2rem);
+      font-weight: 700;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 6px;
+    }
+
+    .tip {
+      line-height: 1.6;
+      font-size: 1rem;
+      margin-top: 8px;
+    }
+
+    .tip-title {
+      font-weight: 650;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 0.82rem;
+      color: #dce7ff;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 0.94rem;
+      color: #04112b;
+      background: linear-gradient(120deg, var(--accent), #87f1d0);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .secondary {
+      background: linear-gradient(120deg, #c3b6ff, #88b2ff);
+      margin-left: 8px;
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .check {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: #e5eeff;
+    }
+
+    .check input {
+      margin-top: 3px;
+      accent-color: #73d8ff;
+      transform: scale(1.12);
+    }
+
+    .progress {
+      margin-top: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--good), #8cf4ff);
+      transition: width 0.25s ease;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-top: 8px;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #f1f6ff;
+    }
+
+    .warning {
+      color: var(--warn);
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <h1>Dad Mode: Baby Boy Mission 🚀</h1>
+      <p class="subtitle">
+        You are building skills for two big roles: supportive husband + present father. Get one useful daily lesson,
+        matched to your current timeline toward <strong>November 10, 2026</strong>.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="label">Countdown</div>
+        <div class="big" id="countdown">--</div>
+        <div class="small" id="phase">Loading phase...</div>
+      </article>
+
+      <article class="card">
+        <div class="label">Today’s Focus</div>
+        <div class="big" id="dailyCategory">--</div>
+        <div class="small" id="dailyReason">--</div>
+      </article>
+
+      <article class="card">
+        <div class="label">Consistency</div>
+        <div class="big" id="streak">0 day streak</div>
+        <div class="small">Mark one lesson complete each day. Momentum beats intensity.</div>
+      </article>
+    </section>
+
+    <section class="card">
+      <div class="label">Daily Learning Drop</div>
+      <div class="tip-title" id="tipTitle">Loading tip...</div>
+      <p class="tip" id="tipBody"></p>
+      <div class="chip-row" id="chips"></div>
+      <p class="status" id="statusMsg"></p>
+      <div class="actions">
+        <button id="newTipBtn">New Useful Tip</button>
+        <button class="secondary" id="doneBtn">Mark Today Complete</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="label">Quick Action Checklist</div>
+      <div class="checklist" id="checklist"></div>
+      <div class="progress"><span id="progressBar"></span></div>
+      <div class="small" id="progressText">0 / 0 done</div>
+    </section>
+
+    <p class="footer">Built for your future son and your current partner. Tiny daily wins = elite dad prep.</p>
+  </main>
+
+  <script>
+    const dueDate = new Date('2026-11-10T12:00:00');
+
+    const tips = {
+      early: [
+        {
+          title: 'Build the 5-minute support scan',
+          body: 'Ask your wife once daily: “Energy 1-10? Stress 1-10? What can I remove today?” Then immediately do one concrete thing (meal, chore, errand, massage).',
+          tags: ['relationship', 'communication', 'support']
+        },
+        {
+          title: 'Start a “Baby Ops” code project',
+          body: 'Create a tiny app to track appointments, questions for OB visits, and prep tasks. Coding this keeps you mentally engaged and removes cognitive load for both of you.',
+          tags: ['coding', 'planning', 'systems']
+        },
+        {
+          title: 'Learn prenatal appointment basics',
+          body: 'Study what happens at each trimester milestone so you can ask informed questions and advocate calmly during visits.',
+          tags: ['medical literacy', 'advocacy']
+        }
+      ],
+      middle: [
+        {
+          title: 'Master safe sleep setup now',
+          body: 'Learn AAP-style safe sleep foundations: firm surface, no loose blankets/pillows, and baby on back for sleep. Set up the sleep area early and review it together.',
+          tags: ['safe sleep', 'newborn safety']
+        },
+        {
+          title: 'Practice active listening reps',
+          body: 'When your wife shares discomfort or fear, mirror back what you heard before fixing. Feeling understood is often more valuable than instant solutions.',
+          tags: ['emotional support', 'communication']
+        },
+        {
+          title: 'Create an “if-then” labor logistics plan',
+          body: 'If labor starts at night, then car seats + bags + route A. If route blocked, route B. If admitted, notify list in order. Automate the stress away.',
+          tags: ['logistics', 'stress reduction', 'leadership']
+        }
+      ],
+      late: [
+        {
+          title: 'Rehearse newborn night shift protocol',
+          body: 'Agree on a shift system now (example: you handle diaper + soothe, wife feeds, you resettle baby). Clarity before sleep deprivation prevents conflict.',
+          tags: ['teamwork', 'postpartum', 'sleep strategy']
+        },
+        {
+          title: 'Pack and test the go-bags',
+          body: 'Do one full dry run: load bags, install car seat check, drive route to hospital. Time it. Remove uncertainty while calm.',
+          tags: ['hospital prep', 'execution']
+        },
+        {
+          title: 'Build your postpartum protection list',
+          body: 'Plan meals, visitors policy, chore ownership, and emergency contacts for first 14 days. Your goal: shield mom and baby from decision fatigue.',
+          tags: ['postpartum', 'boundaries', 'care']
+        }
+      ],
+      arrived: [
+        {
+          title: 'Run the “Mom first, then tasks” rule',
+          body: 'Before chores, check in on hydration, food, pain level, and emotional state. Supporting recovery is one of the highest-value dad skills.',
+          tags: ['recovery', 'support']
+        },
+        {
+          title: 'Track patterns, not perfection',
+          body: 'Use your coding mindset: log feeds, diapers, sleep blocks, and mood notes. Look for trends to improve routines, not to judge yourselves.',
+          tags: ['data', 'newborn care', 'calm']
+        },
+        {
+          title: 'Do 1 bonding micro-session every wake window',
+          body: 'Eye contact, skin-to-skin, gentle talk, or a song for 2–5 minutes. Repetition builds attachment and your confidence.',
+          tags: ['bonding', 'confidence', 'presence']
+        }
+      ]
+    };
+
+    const checklistByPhase = {
+      early: ['Start prenatal reading habit (10 min/day)', 'Create shared appointments calendar', 'Review nutrition + hydration support habits', 'Draft monthly baby budget'],
+      middle: ['Finalize nursery/sleep area basics', 'Take infant CPR/first aid class', 'Research pediatricians and shortlist top 3', 'Create labor day contact + transportation plan'],
+      late: ['Install and inspect infant car seat', 'Pack hospital bags for both of you', 'Stock postpartum recovery and pantry essentials', 'Plan first 2 weeks visitor boundaries'],
+      arrived: ['Protect mom rest windows daily', 'Split nighttime duties intentionally', 'Track baby feeds/diapers/sleep', 'Book follow-up appointments and ask questions']
+    };
+
+    const el = (id) => document.getElementById(id);
+
+    function dayDiff(from, to) {
+      const one = 24 * 60 * 60 * 1000;
+      return Math.ceil((to - from) / one);
+    }
+
+    function getPhase(daysLeft) {
+      if (daysLeft > 180) return { key: 'early', label: 'Early prep season: foundation + habits' };
+      if (daysLeft > 75) return { key: 'middle', label: 'Middle prep season: systems + safety' };
+      if (daysLeft >= 0) return { key: 'late', label: 'Late prep season: execution + readiness' };
+      return { key: 'arrived', label: 'Baby is here: recovery + routines + bonding' };
+    }
+
+    function pickTip(phaseKey) {
+      const pool = tips[phaseKey] || tips.early;
+      const index = Math.floor(Math.random() * pool.length);
+      return pool[index];
+    }
+
+    function dailyCategory(phaseKey) {
+      const map = {
+        early: ['Marriage Support', 'Prenatal Basics', 'Dad Systems'],
+        middle: ['Safety & Health', 'Communication', 'Logistics'],
+        late: ['Go-Time Readiness', 'Postpartum Plan', 'Team Protocols'],
+        arrived: ['Recovery Support', 'Bonding', 'Sustainable Routines']
+      };
+      const arr = map[phaseKey] || map.early;
+      const idx = new Date().getDate() % arr.length;
+      return arr[idx];
+    }
+
+    function loadOrCreateTip(phaseKey) {
+      const key = `dadmode_tip_${new Date().toISOString().slice(0, 10)}`;
+      const stored = localStorage.getItem(key);
+      if (stored) return JSON.parse(stored);
+      const tip = pickTip(phaseKey);
+      localStorage.setItem(key, JSON.stringify(tip));
+      return tip;
+    }
+
+    function getStreak() {
+      return Number(localStorage.getItem('dadmode_streak') || 0);
+    }
+
+    function setStreak(v) {
+      localStorage.setItem('dadmode_streak', String(v));
+    }
+
+    function markDoneToday() {
+      const today = new Date().toISOString().slice(0, 10);
+      const lastDone = localStorage.getItem('dadmode_last_done');
+      if (lastDone === today) {
+        el('statusMsg').textContent = 'Already completed today. You are consistent 🔥';
+        return;
+      }
+
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const current = getStreak();
+      const next = lastDone === yesterday ? current + 1 : 1;
+      setStreak(next);
+      localStorage.setItem('dadmode_last_done', today);
+      el('streak').textContent = `${next} day streak`;
+      el('statusMsg').textContent = 'Daily lesson complete. Strong husband/father reps ✅';
+    }
+
+    function setChecklist(phaseKey) {
+      const list = checklistByPhase[phaseKey] || checklistByPhase.early;
+      const wrap = el('checklist');
+      wrap.innerHTML = '';
+
+      const key = `dadmode_checks_${phaseKey}`;
+      const saved = JSON.parse(localStorage.getItem(key) || '{}');
+
+      list.forEach((item, idx) => {
+        const row = document.createElement('label');
+        row.className = 'check';
+
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.checked = Boolean(saved[idx]);
+        box.addEventListener('change', () => {
+          saved[idx] = box.checked;
+          localStorage.setItem(key, JSON.stringify(saved));
+          updateProgress(list.length, saved);
+        });
+
+        const text = document.createElement('span');
+        text.textContent = item;
+
+        row.appendChild(box);
+        row.appendChild(text);
+        wrap.appendChild(row);
+      });
+
+      updateProgress(list.length, saved);
+    }
+
+    function updateProgress(total, saved) {
+      const done = Object.values(saved).filter(Boolean).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      el('progressBar').style.width = `${pct}%`;
+      el('progressText').textContent = `${done} / ${total} done`;
+    }
+
+    function renderTip(tip) {
+      el('tipTitle').textContent = tip.title;
+      el('tipBody').textContent = tip.body;
+      const chips = el('chips');
+      chips.innerHTML = '';
+      tip.tags.forEach((t) => {
+        const c = document.createElement('span');
+        c.className = 'chip';
+        c.textContent = `#${t}`;
+        chips.appendChild(c);
+      });
+    }
+
+    function init() {
+      const now = new Date();
+      const daysLeft = dayDiff(now, dueDate);
+      const phase = getPhase(daysLeft);
+
+      if (daysLeft >= 0) {
+        el('countdown').textContent = `${daysLeft} days to go`;
+      } else {
+        el('countdown').textContent = `${Math.abs(daysLeft)} days in`;
+      }
+
+      el('phase').textContent = phase.label;
+      el('dailyCategory').textContent = dailyCategory(phase.key);
+      el('dailyReason').textContent = `Plan generated for ${now.toLocaleDateString()} based on your current timeline.`;
+
+      const tip = loadOrCreateTip(phase.key);
+      renderTip(tip);
+
+      el('streak').textContent = `${getStreak()} day streak`;
+      setChecklist(phase.key);
+
+      el('newTipBtn').addEventListener('click', () => {
+        const fresh = pickTip(phase.key);
+        renderTip(fresh);
+        el('statusMsg').textContent = 'New tip generated. Pick one and execute in under 20 minutes.';
+      });
+
+      el('doneBtn').addEventListener('click', markDoneToday);
+
+      if (daysLeft < 0) {
+        el('statusMsg').innerHTML = '<span class="warning">Baby may already be here. Switch your energy to mom recovery, feeding support, and sleep protection.</span>';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
