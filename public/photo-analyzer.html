@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo Analyzer</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --surface: #141924;
+      --surface-2: #1b2232;
+      --border: #2a3449;
+      --text: #edf2ff;
+      --muted: #a6b0c6;
+      --accent: #5b8cff;
+      --accent-2: #7e61ff;
+      --danger: #ff5f7a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: radial-gradient(circle at 15% 0%, #19213a 0%, var(--bg) 40%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: min(880px, 100%);
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    h1 { margin: 0 0 8px 0; }
+
+    .hint { color: var(--muted); margin: 0; }
+
+    .upload {
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .upload:hover, .upload.dragging {
+      border-color: var(--accent);
+      background: rgba(91, 140, 255, 0.08);
+    }
+
+    .preview {
+      margin-top: 12px;
+      width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: none;
+      background: #0d111a;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      margin-top: 12px;
+      background: #0e1320;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      resize: vertical;
+      font: inherit;
+    }
+
+    .controls { display: flex; gap: 10px; margin-top: 12px; }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    button.secondary { background: #2b3348; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status { margin-top: 10px; color: var(--muted); min-height: 20px; }
+    .status.error { color: var(--danger); }
+
+    .output {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card">
+      <h1>Photo Analyzer</h1>
+      <p class="hint">Upload a photo to get a concise summary of what is visible.</p>
+    </section>
+
+    <section class="card">
+      <label class="upload" id="dropZone">
+        <input id="fileInput" type="file" accept="image/*" hidden>
+        <strong>Click or drag a photo here</strong>
+        <p class="hint">PNG, JPEG, WEBP, or GIF</p>
+      </label>
+      <img id="preview" class="preview" alt="Image preview">
+
+      <textarea id="promptInput">Summarize this photo in concise bullet points. Mention important objects, scene context, and any visible text.</textarea>
+
+      <div class="controls">
+        <button id="analyzeButton" disabled>Analyze photo</button>
+        <button id="clearButton" class="secondary" type="button">Clear</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <section class="card">
+      <h2>Summary</h2>
+      <p id="summary" class="output">No summary yet.</p>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const preview = document.getElementById('preview');
+    const analyzeButton = document.getElementById('analyzeButton');
+    const clearButton = document.getElementById('clearButton');
+    const status = document.getElementById('status');
+    const summary = document.getElementById('summary');
+    const promptInput = document.getElementById('promptInput');
+
+    let selectedFile = null;
+
+    function setStatus(message, isError = false) {
+      status.textContent = message;
+      status.classList.toggle('error', isError);
+    }
+
+    function onFileSelected(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        setStatus('Please choose a valid image file.', true);
+        return;
+      }
+
+      selectedFile = file;
+      analyzeButton.disabled = false;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.src = reader.result;
+        preview.style.display = 'block';
+        summary.textContent = 'Ready to analyze.';
+      };
+      reader.readAsDataURL(file);
+      setStatus(`Selected: ${file.name}`);
+    }
+
+    fileInput.addEventListener('change', (event) => {
+      onFileSelected(event.target.files[0]);
+    });
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropZone.classList.add('dragging');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('dragging');
+      });
+    });
+
+    dropZone.addEventListener('drop', (event) => {
+      const [file] = event.dataTransfer.files;
+      onFileSelected(file);
+    });
+
+    clearButton.addEventListener('click', () => {
+      selectedFile = null;
+      fileInput.value = '';
+      preview.src = '';
+      preview.style.display = 'none';
+      analyzeButton.disabled = true;
+      setStatus('');
+      summary.textContent = 'No summary yet.';
+    });
+
+    analyzeButton.addEventListener('click', async () => {
+      if (!selectedFile) {
+        setStatus('Please upload a photo first.', true);
+        return;
+      }
+
+      try {
+        analyzeButton.disabled = true;
+        setStatus('Analyzing photo...');
+        summary.textContent = 'Working on your summary...';
+
+        const base64 = await fileToBase64(selectedFile);
+        const payload = {
+          imageBase64: base64,
+          mimeType: selectedFile.type,
+          prompt: promptInput.value
+        };
+
+        const response = await fetch('/api/photo-analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || data.details || 'Analysis failed');
+        }
+
+        summary.textContent = data.summary || 'No summary returned.';
+        setStatus('Done.');
+      } catch (error) {
+        summary.textContent = 'Unable to analyze photo.';
+        setStatus(error.message, true);
+      } finally {
+        analyzeButton.disabled = !selectedFile;
+      }
+    });
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          const commaIndex = dataUrl.indexOf(',');
+          resolve(dataUrl.slice(commaIndex + 1));
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
+</body>
+</html>
