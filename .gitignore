@@ -1,2 +1,12 @@
 .vercel
 .env*.local
+
+# Ignore node_modules folder
+node_modules/
+
+# Ignore logs
+*.log
+
+# Ignore system files
+.DS_Store
+Thumbs.db

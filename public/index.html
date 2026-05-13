@@ -1,1643 +1,343 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Oura Sleep Trends</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #111114;
-      --panel: #1b1b20;
-      --panel-2: #23232a;
-      --ink: #f6f3ed;
-      --muted: #aaa39a;
-      --line: rgba(246, 243, 237, 0.12);
-      --brand: #7bdcb5;
-      --brand-2: #ffb86b;
-      --brand-3: #8ab4ff;
-      --warn: #ff7a7a;
-      --good: #83e28f;
-      --shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
-      --radius: 8px;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    [data-theme="light"] {
-      color-scheme: light;
-      --bg: #f5f1ea;
-      --panel: #fffaf2;
-      --panel-2: #ebe4da;
-      --ink: #191815;
-      --muted: #6f6860;
-      --line: rgba(25, 24, 21, 0.12);
-      --shadow: 0 18px 46px rgba(67, 52, 30, 0.13);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    button, input, select {
-      font: inherit;
-      color: inherit;
-    }
-
-    button, select, input {
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-    }
-
-    button {
-      min-height: 40px;
-      padding: 0 12px;
-      cursor: pointer;
-    }
-
-    button:hover, select:hover, input:hover { border-color: rgba(123, 220, 181, 0.55); }
-
-    button.active, .pill.active {
-      background: var(--brand);
-      border-color: var(--brand);
-      color: #101411;
-      font-weight: 750;
-    }
-
-    select, input {
-      min-height: 40px;
-      padding: 0 10px;
-      width: 100%;
-    }
-
-    .app {
-      width: min(1180px, 100%);
-      margin: 0 auto;
-      padding: env(safe-area-inset-top) 12px calc(86px + env(safe-area-inset-bottom));
-    }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: color-mix(in srgb, var(--bg) 88%, transparent);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--line);
-      margin: 0 -12px 12px;
-      padding: 12px;
-    }
-
-    .title-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    h1, h2, h3, p { margin: 0; }
-
-    h1 {
-      font-size: 1.2rem;
-      letter-spacing: 0;
-    }
-
-    h2 { font-size: 1rem; }
-
-    .subtle {
-      color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1.35;
-    }
-
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 6px 9px;
-      font-size: 0.76rem;
-      white-space: nowrap;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 99px;
-      background: var(--brand-2);
-    }
-
-    .dot.ok { background: var(--good); }
-    .dot.bad { background: var(--warn); }
-
-    .nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 40;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
-      background: color-mix(in srgb, var(--bg) 90%, transparent);
-      border-top: 1px solid var(--line);
-      backdrop-filter: blur(18px);
-    }
-
-    .nav button {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      min-height: 48px;
-      padding: 4px 2px;
-      font-size: 0.74rem;
-      color: var(--muted);
-    }
-
-    .nav button span:first-child {
-      font-size: 1rem;
-      line-height: 1;
-    }
-
-    .nav button.active { color: #101411; }
-
-    .grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .cards {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 12px;
-    }
-
-    .metric-card {
-      min-height: 92px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .metric-card .label {
-      color: var(--muted);
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 800;
-    }
-
-    .metric-card .value {
-      font-size: clamp(1.25rem, 6vw, 2rem);
-      font-weight: 850;
-      letter-spacing: 0;
-    }
-
-    .delta {
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-
-    .delta.good { color: var(--good); }
-    .delta.warn { color: var(--warn); }
-
-    .toolbar {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      align-items: end;
-    }
-
-    .toolbar.compact {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .field {
-      display: grid;
-      gap: 5px;
-    }
-
-    .field label {
-      color: var(--muted);
-      font-size: 0.72rem;
-      font-weight: 750;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-    }
-
-    .range-row, .toggle-row {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding-bottom: 1px;
-    }
-
-    .range-row::-webkit-scrollbar, .toggle-row::-webkit-scrollbar { display: none; }
-
-    .pill {
-      flex: 0 0 auto;
-      min-height: 38px;
-      padding: 0 12px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .chart-wrap {
-      position: relative;
-      height: 315px;
-      min-height: 315px;
-    }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      touch-action: manipulation;
-    }
-
-    .tooltip {
-      position: fixed;
-      z-index: 60;
-      pointer-events: none;
-      display: none;
-      min-width: 178px;
-      max-width: 240px;
-      padding: 10px;
-      border-radius: var(--radius);
-      background: color-mix(in srgb, var(--panel) 94%, black);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      font-size: 0.8rem;
-    }
-
-    .tooltip strong { display: block; margin-bottom: 5px; }
-
-    .insights {
-      display: grid;
-      gap: 8px;
-    }
-
-    .insight {
-      display: grid;
-      gap: 5px;
-      padding: 11px;
-      border-radius: var(--radius);
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-    }
-
-    .tag {
-      width: fit-content;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 3px 7px;
-      color: #101411;
-      background: var(--brand-2);
-      font-size: 0.68rem;
-      font-weight: 850;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .tab-panel { display: none; }
-    .tab-panel.active { display: grid; gap: 12px; }
-
-    .table-tools {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 8px;
-    }
-
-    .table-scroll {
-      overflow: auto;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      max-height: 62vh;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 920px;
-      background: var(--panel);
-    }
-
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      font-size: 0.82rem;
-      white-space: nowrap;
-    }
-
-    th {
-      position: sticky;
-      top: 0;
-      background: var(--panel-2);
-      color: var(--muted);
-      font-size: 0.7rem;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      z-index: 1;
-    }
-
-    .settings-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .setting-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: center;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .setting-row:last-child { border-bottom: 0; }
-
-    .switch {
-      width: 52px;
-      height: 32px;
-      border-radius: 999px;
-      padding: 3px;
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-    }
-
-    .switch::before {
-      content: "";
-      display: block;
-      width: 24px;
-      height: 24px;
-      border-radius: 999px;
-      background: var(--muted);
-      transition: transform 0.18s ease, background 0.18s ease;
-    }
-
-    .switch.on::before {
-      transform: translateX(20px);
-      background: var(--brand);
-    }
-
-    .logbox {
-      white-space: pre-wrap;
-      word-break: break-word;
-      max-height: 230px;
-      overflow: auto;
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: 0.74rem;
-      color: var(--muted);
-      background: color-mix(in srgb, var(--panel-2) 82%, black);
-      border-radius: var(--radius);
-      padding: 10px;
-    }
-
-    .empty {
-      display: grid;
-      place-items: center;
-      min-height: 190px;
-      text-align: center;
-      color: var(--muted);
-      border: 1px dashed var(--line);
-      border-radius: var(--radius);
-      padding: 20px;
-    }
-
-    .hidden { display: none !important; }
-
-    @media (min-width: 720px) {
-      .app {
-        padding: 0 18px 24px;
-      }
-
-      .topbar {
-        margin: 0 -18px 18px;
-        padding: 14px 18px;
-      }
-
-      h1 { font-size: 1.55rem; }
-
-      .nav {
-        position: sticky;
-        top: 68px;
-        bottom: auto;
-        grid-template-columns: repeat(4, max-content);
-        justify-content: start;
-        margin: 0 0 14px;
-        padding: 8px 0;
-        background: transparent;
-        border-top: 0;
-        border-bottom: 1px solid var(--line);
-        backdrop-filter: none;
-      }
-
-      .nav button {
-        min-width: 118px;
-        flex-direction: row;
-        font-size: 0.86rem;
-      }
-
-      .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-      .dashboard-layout {
-        grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.8fr);
-        align-items: start;
-      }
-
-      .toolbar {
-        grid-template-columns: 170px 170px 145px 1fr;
-      }
-
-      .toolbar.compact {
-        grid-template-columns: 170px 170px 145px 160px 1fr;
-      }
-
-      .chart-wrap {
-        height: 430px;
-        min-height: 430px;
-      }
-
-      .settings-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Apps | Secure Portal</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #007aff;
+            --primary-glow: rgba(0, 122, 255, 0.3);
+            --bg: #0a0a0a;
+            --surface: rgba(25, 25, 25, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+            --text-secondary: #a1a1a1;
+            --accent-gradient: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(100px);
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.15;
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: #007aff;
+            top: -100px;
+            left: -100px;
+            animation-duration: 25s;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: #5856d6;
+            bottom: -150px;
+            right: -100px;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: #ff2d55;
+            top: 40%;
+            left: 60%;
+            animation-duration: 20s;
+            animation-delay: -10s;
+        }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(50px, 100px) scale(1.1); }
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 12px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 10px 40px var(--primary-glow);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .app-card {
+            position: relative;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .app-card:hover {
+            transform: translateY(-4px) scale(1.05);
+            border-color: rgba(0, 122, 255, 0.5);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 
+                        0 0 15px var(--primary-glow);
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        .app-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .app-card:hover .app-icon-wrapper {
+            transform: scale(1.12);
+            background: var(--accent-gradient);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .app-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1.2;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-desc {
+            display: none;
+        }
+
+        .card-footer {
+            display: none;
+        }
+
+        .status-tag {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #34c759;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #34c759;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #34c759;
+            animation: pulse 2s infinite;
+        }
+
+        .arrow-link {
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-top: auto;
+            animation: fadeIn 1s ease-out 0.5s backwards;
+        }
+
+        .status-bar {
+            display: none;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem; }
+            .apps-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+            .app-icon-wrapper { width: 40px; height: 40px; font-size: 20px; }
+            .app-name { font-size: 0.75rem; }
+        }
+    </style>
 </head>
-<body data-theme="dark">
-  <div class="app">
-    <header class="topbar">
-      <div class="title-row">
-        <div>
-          <h1>Oura Sleep Trends</h1>
-          <p class="subtle" id="subtitle">Trends-focused dashboard</p>
+<body>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo-container">🔐</div>
+            <h1>Internal Apps</h1>
+            <p class="subtitle">Quick access to your tools.</p>
+        </header>
+
+        <div class="apps-grid">
+            <a href="/tracking/" class="app-card">
+                <div class="app-icon-wrapper">📍</div>
+                <div class="app-name">Activity Tracker</div>
+            </a>
+
+            <a href="/oura/" class="app-card">
+                <div class="app-icon-wrapper">🚀</div>
+                <div class="app-name">Oura Explorer</div>
+            </a>
+
+            <a href="/tools/font" class="app-card">
+                <div class="app-icon-wrapper">🔡</div>
+                <div class="app-name">Typography</div>
+            </a>
+
+            <a href="/tools/iphone" class="app-card">
+                <div class="app-icon-wrapper">📱</div>
+                <div class="app-name">iOS Sim</div>
+            </a>
+
+            <a href="/tools/desktop" class="app-card">
+                <div class="app-icon-wrapper">🖥️</div>
+                <div class="app-name">Desktop Sim</div>
+            </a>
+
+            <a href="/tools/screensavers" class="app-card">
+                <div class="app-icon-wrapper">✨</div>
+                <div class="app-name">Screensavers</div>
+            </a>
         </div>
-        <div class="status-chip" id="statusChip"><span class="dot"></span><span>Loading</span></div>
-      </div>
-    </header>
 
-    <nav class="nav" aria-label="App tabs">
-      <button class="active" data-tab="dashboard"><span>DB</span><span>Dashboard</span></button>
-      <button data-tab="trends"><span>TR</span><span>Trends</span></button>
-      <button data-tab="raw"><span>RD</span><span>Raw Data</span></button>
-      <button data-tab="settings"><span>ST</span><span>Settings</span></button>
-    </nav>
-
-    <main>
-      <section class="tab-panel active" id="dashboard">
-        <div class="grid cards" id="summaryCards"></div>
-        <div class="grid dashboard-layout">
-          <section class="card grid">
-            <div class="range-row" id="dashboardRanges"></div>
-            <div class="toolbar">
-              <div class="field">
-                <label for="metricSelect">Metric</label>
-                <select id="metricSelect"></select>
-              </div>
-              <div class="field">
-                <label for="chartType">Chart</label>
-                <select id="chartType">
-                  <option value="line">Line</option>
-                  <option value="bar">Bar</option>
-                </select>
-              </div>
-              <button id="refreshBtn">Refresh</button>
-              <div class="toggle-row">
-                <button class="pill" id="smoothBtn">Smooth</button>
-                <button class="pill" id="compareBtn">Compare</button>
-              </div>
-            </div>
-            <div class="chart-wrap">
-              <canvas id="mainChart" aria-label="Sleep trend chart"></canvas>
-            </div>
-          </section>
-          <aside class="card">
-            <h2>Auto Insights</h2>
-            <div class="insights" id="insights"></div>
-          </aside>
-        </div>
-      </section>
-
-      <section class="tab-panel" id="trends">
-        <section class="card grid">
-          <div class="toolbar compact">
-            <div class="field">
-              <label for="trendMetric">Metric</label>
-              <select id="trendMetric"></select>
-            </div>
-            <div class="field">
-              <label for="trendRange">Range</label>
-              <select id="trendRange">
-                <option value="week">Week</option>
-                <option value="month" selected>Month</option>
-                <option value="quarter">Quarter</option>
-                <option value="year">Year</option>
-                <option value="all">All time</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="trendChartType">Chart</label>
-              <select id="trendChartType">
-                <option value="line">Line</option>
-                <option value="bar">Bar</option>
-              </select>
-            </div>
-            <button id="trendApply">Apply</button>
-            <div class="toggle-row">
-              <button class="pill active" id="trendCompare">Previous period</button>
-              <button class="pill" id="trendSmooth">Smooth</button>
-            </div>
-          </div>
-          <div class="toolbar" id="customDates">
-            <div class="field">
-              <label for="startDate">Start</label>
-              <input id="startDate" type="date">
-            </div>
-            <div class="field">
-              <label for="endDate">End</label>
-              <input id="endDate" type="date">
-            </div>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="trendChart" aria-label="Power trends chart"></canvas>
-          </div>
-        </section>
-
-        <section class="card grid">
-          <div class="toolbar">
-            <div>
-              <h2>Bedtime vs Wake Time</h2>
-              <p class="subtle">One dot per sleep session.</p>
-            </div>
-            <div class="field">
-              <label for="colorMetric">Dot color</label>
-              <select id="colorMetric"></select>
-            </div>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="scatterChart" aria-label="Bedtime versus wake time scatter chart"></canvas>
-          </div>
-        </section>
-      </section>
-
-      <section class="tab-panel" id="raw">
-        <section class="card grid">
-          <div class="table-tools">
-            <input id="tableSearch" type="search" placeholder="Search dates or values">
-            <button id="csvBtn">CSV</button>
-            <button id="jsonBtn">JSON</button>
-          </div>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Bedtime</th>
-                  <th>Wake time</th>
-                  <th>Total sleep</th>
-                  <th>Sleep score</th>
-                  <th>Efficiency</th>
-                  <th>Deep sleep</th>
-                  <th>REM</th>
-                  <th>Resting HR</th>
-                  <th>HRV</th>
-                </tr>
-              </thead>
-              <tbody id="rawBody"></tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-
-      <section class="tab-panel" id="settings">
-        <div class="settings-grid">
-          <section class="card">
-            <h2>API</h2>
-            <div class="setting-row">
-              <div>
-                <strong>API status test</strong>
-                <p class="subtle" id="apiStatusText">Not checked yet.</p>
-              </div>
-              <button id="testApiBtn">Test</button>
-            </div>
-            <div class="setting-row">
-              <div>
-                <strong>Last fetch time</strong>
-                <p class="subtle" id="lastFetch">Never</p>
-              </div>
-              <button id="manualRefreshBtn">Refresh</button>
-            </div>
-            <div class="setting-row">
-              <div>
-                <strong>Local cache</strong>
-                <p class="subtle" id="cacheStatus">Checking cache.</p>
-              </div>
-              <button id="clearCacheBtn">Clear</button>
-            </div>
-          </section>
-
-          <section class="card">
-            <h2>Preferences</h2>
-            <div class="setting-row">
-              <div>
-                <strong>Default date range</strong>
-                <p class="subtle">Used when the app opens.</p>
-              </div>
-              <select id="defaultRange">
-                <option value="week">Week</option>
-                <option value="month" selected>Month</option>
-                <option value="quarter">Quarter</option>
-                <option value="year">Year</option>
-                <option value="all">All time</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <div>
-                <strong>Theme</strong>
-                <p class="subtle">Dark mode is the default.</p>
-              </div>
-              <button class="switch on" id="themeSwitch" aria-label="Toggle theme"></button>
-            </div>
-            <div class="setting-row">
-              <div>
-                <strong>Debug mode</strong>
-                <p class="subtle">Shows readable app logs.</p>
-              </div>
-              <button class="switch" id="debugSwitch" aria-label="Toggle debug mode"></button>
-            </div>
-          </section>
-        </div>
-        <section class="card hidden" id="debugPanel">
-          <h2>Debug Log</h2>
-          <div class="logbox" id="debugLog"></div>
-        </section>
-      </section>
-    </main>
-  </div>
-  <div class="tooltip" id="tooltip"></div>
-
-  <script>
-    const state = {
-      records: [],
-      visible: [],
-      range: localStorage.getItem('ouraDefaultRange') || 'month',
-      metric: 'sleepScore',
-      chartType: 'line',
-      smooth: false,
-      compare: false,
-      trendMetric: 'sleepScore',
-      trendRange: 'month',
-      trendType: 'line',
-      trendSmooth: false,
-      trendCompare: true,
-      colorMetric: 'sleepScore',
-      theme: localStorage.getItem('ouraTheme') || 'dark',
-      debug: localStorage.getItem('ouraDebug') === '1',
-      lastFetch: localStorage.getItem('ouraLastFetch') || '',
-      logs: []
-    };
-
-    const metrics = {
-      bedtime: { label: 'Bedtime', unit: 'time', color: '#7bdcb5' },
-      wakeTime: { label: 'Wake Time', unit: 'time', color: '#ffb86b' },
-      totalSleepHours: { label: 'Total Sleep', unit: 'hours', color: '#8ab4ff' },
-      sleepScore: { label: 'Sleep Score', unit: 'score', color: '#7bdcb5' },
-      readiness: { label: 'Readiness', unit: 'score', color: '#c7a6ff' },
-      efficiency: { label: 'Efficiency', unit: 'percent', color: '#f0d66b' },
-      deepSleepHours: { label: 'Deep Sleep', unit: 'hours', color: '#80d8ff' },
-      remSleepHours: { label: 'REM', unit: 'hours', color: '#ff9fc7' },
-      restingHr: { label: 'Resting HR', unit: 'bpm', color: '#ff7a7a' },
-      hrv: { label: 'HRV', unit: 'ms', color: '#83e28f' }
-    };
-
-    const primaryMetrics = ['bedtime', 'wakeTime', 'totalSleepHours', 'sleepScore'];
-    const rangeDays = { week: 7, month: 30, quarter: 91, year: 365 };
-    const els = {};
-
-    function $(id) { return document.getElementById(id); }
-
-    function log(message, details) {
-      const line = `[${new Date().toLocaleTimeString()}] ${message}${details ? ' ' + JSON.stringify(details) : ''}`;
-      state.logs.push(line);
-      console.log(`[Oura Sleep Trends] ${message}`, details || '');
-      if (state.logs.length > 160) state.logs.shift();
-      if (els.debugLog) els.debugLog.textContent = state.logs.join('\n');
-    }
-
-    function todayIso() {
-      return new Date().toISOString().slice(0, 10);
-    }
-
-    function dateAdd(date, days) {
-      const copy = new Date(date);
-      copy.setDate(copy.getDate() + days);
-      return copy;
-    }
-
-    function isoDate(date) {
-      return date.toISOString().slice(0, 10);
-    }
-
-    function parseDate(value) {
-      return new Date(`${value}T12:00:00`);
-    }
-
-    function minutesFromDate(value, type) {
-      if (!value) return null;
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return null;
-      let minutes = date.getHours() * 60 + date.getMinutes();
-      if (type === 'bedtime' && minutes < 12 * 60) minutes += 24 * 60;
-      return minutes;
-    }
-
-    function formatTimeMinutes(value) {
-      if (!Number.isFinite(value)) return '-';
-      let total = Math.round(value) % 1440;
-      if (total < 0) total += 1440;
-      const hours = Math.floor(total / 60);
-      const minutes = total % 60;
-      const suffix = hours >= 12 ? 'PM' : 'AM';
-      const h12 = hours % 12 || 12;
-      return `${h12}:${String(minutes).padStart(2, '0')} ${suffix}`;
-    }
-
-    function formatHours(value) {
-      if (!Number.isFinite(value)) return '-';
-      const hours = Math.floor(value);
-      const minutes = Math.round((value - hours) * 60);
-      return `${hours}h ${String(minutes).padStart(2, '0')}m`;
-    }
-
-    function formatMetric(metric, value) {
-      if (!Number.isFinite(value)) return '-';
-      const unit = metrics[metric].unit;
-      if (unit === 'time') return formatTimeMinutes(value);
-      if (unit === 'hours') return formatHours(value);
-      if (unit === 'percent') return `${Math.round(value)}%`;
-      if (unit === 'bpm') return `${Math.round(value)} bpm`;
-      if (unit === 'ms') return `${Math.round(value)} ms`;
-      return String(Math.round(value));
-    }
-
-    function average(values) {
-      const clean = values.filter(Number.isFinite);
-      return clean.length ? clean.reduce((a, b) => a + b, 0) / clean.length : null;
-    }
-
-    function median(values) {
-      const clean = values.filter(Number.isFinite).sort((a, b) => a - b);
-      if (!clean.length) return null;
-      const mid = Math.floor(clean.length / 2);
-      return clean.length % 2 ? clean[mid] : (clean[mid - 1] + clean[mid]) / 2;
-    }
-
-    function normalizeRecord(record) {
-      const bedtime = minutesFromDate(record.bedtimeStart, 'bedtime');
-      const wakeTime = minutesFromDate(record.bedtimeEnd, 'wake');
-      const totalSleepHours = Number.isFinite(record.totalSleepSeconds) ? record.totalSleepSeconds / 3600 : null;
-      const deepSleepHours = Number.isFinite(record.deepSleepSeconds) ? record.deepSleepSeconds / 3600 : null;
-      const remSleepHours = Number.isFinite(record.remSleepSeconds) ? record.remSleepSeconds / 3600 : null;
-
-      return {
-        ...record,
-        dateValue: parseDate(record.day).getTime(),
-        bedtime,
-        wakeTime,
-        totalSleepHours,
-        deepSleepHours,
-        remSleepHours
-      };
-    }
-
-    function setStatus(kind, text) {
-      const dot = els.statusChip.querySelector('.dot');
-      const label = els.statusChip.querySelector('span:last-child');
-      dot.className = `dot ${kind || ''}`;
-      label.textContent = text;
-    }
-
-    function cachePayload(payload) {
-      localStorage.setItem('ouraSleepRecords', JSON.stringify(payload));
-      localStorage.setItem('ouraLastFetch', payload.fetchedAt);
-      state.lastFetch = payload.fetchedAt;
-      log('Records loaded', { count: payload.records.length });
-    }
-
-    function readCache() {
-      try {
-        const cached = localStorage.getItem('ouraSleepRecords');
-        if (!cached) {
-          log('Cache miss');
-          return null;
-        }
-        const payload = JSON.parse(cached);
-        log('Cache hit', { count: payload.records?.length || 0 });
-        return payload;
-      } catch (error) {
-        log('Bad cache JSON', { message: error.message });
-        return null;
-      }
-    }
-
-    async function fetchData(force) {
-      log('Fetch started', { force });
-      setStatus('', 'Fetching');
-
-      const end = todayIso();
-      const start = isoDate(dateAdd(new Date(), -370));
-
-      try {
-        const response = await fetch(`/api/oura?start=${start}&end=${end}`);
-        let payload;
-        try {
-          payload = await response.json();
-        } catch (error) {
-          throw new Error('Bad JSON from /api/oura.');
-        }
-
-        log('API response', { status: response.status, ok: response.ok, count: payload.count });
-
-        if (!response.ok || !payload.ok) {
-          throw new Error(payload.error || 'Unable to load Oura data.');
-        }
-
-        cachePayload(payload);
-        loadRecords(payload.records);
-        setStatus('ok', `${payload.records.length} records`);
-      } catch (error) {
-        log('Error details', { message: error.message });
-        const cached = readCache();
-        if (cached?.records?.length) {
-          loadRecords(cached.records);
-          setStatus('bad', 'Using cache');
-          showToast(`${error.message} Showing cached data.`);
-        } else {
-          state.records = [];
-          applyFilters();
-          setStatus('bad', 'No data');
-          showToast(error.message);
-        }
-      }
-
-      updateSettingsText();
-    }
-
-    function loadRecords(records) {
-      state.records = (records || []).map(normalizeRecord).sort((a, b) => a.dateValue - b.dateValue);
-      applyFilters();
-    }
-
-    function currentRangeDates(range) {
-      if (range === 'all') {
-        return {
-          start: state.records[0]?.dateValue || parseDate(todayIso()).getTime(),
-          end: state.records.at(-1)?.dateValue || parseDate(todayIso()).getTime()
-        };
-      }
-      const end = parseDate(todayIso()).getTime();
-      const start = dateAdd(new Date(end), -(rangeDays[range] || 30) + 1).getTime();
-      return { start, end };
-    }
-
-    function filterByRange(range) {
-      const { start, end } = currentRangeDates(range);
-      return state.records.filter((record) => record.dateValue >= start && record.dateValue <= end);
-    }
-
-    function previousPeriod(records, range) {
-      if (!records.length || range === 'all') return [];
-      const start = records[0].dateValue;
-      const end = records.at(-1).dateValue;
-      const span = end - start || (rangeDays[range] || 30) * 86400000;
-      return state.records.filter((record) => record.dateValue >= start - span - 86400000 && record.dateValue < start);
-    }
-
-    function applyFilters() {
-      state.visible = filterByRange(state.range);
-      renderAll();
-    }
-
-    function movingAverage(records, metric) {
-      return records.map((record, index) => {
-        const slice = records.slice(Math.max(0, index - 2), index + 1).map((item) => item[metric]);
-        const value = average(slice);
-        return { ...record, [`${metric}Smoothed`]: value };
-      });
-    }
-
-    function valuesFor(records, metric, smooth) {
-      const source = smooth ? movingAverage(records, metric) : records;
-      return source.map((record) => ({
-        record,
-        x: record.dateValue,
-        y: smooth ? record[`${metric}Smoothed`] : record[metric]
-      }));
-    }
-
-    function makeScale(values, height, pad, metric) {
-      const clean = values.filter(Number.isFinite);
-      let min = Math.min(...clean);
-      let max = Math.max(...clean);
-      if (!clean.length) { min = 0; max = 1; }
-      if (metrics[metric]?.unit === 'time') {
-        min = Math.floor((min - 30) / 60) * 60;
-        max = Math.ceil((max + 30) / 60) * 60;
-      }
-      if (min === max) {
-        min -= 1;
-        max += 1;
-      }
-      const span = max - min;
-      return {
-        min,
-        max,
-        y(value) {
-          return height - pad.bottom - ((value - min) / span) * (height - pad.top - pad.bottom);
-        }
-      };
-    }
-
-    function setupCanvas(canvas) {
-      const rect = canvas.getBoundingClientRect();
-      const ratio = window.devicePixelRatio || 1;
-      canvas.width = Math.max(1, Math.round(rect.width * ratio));
-      canvas.height = Math.max(1, Math.round(rect.height * ratio));
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      return { ctx, width: rect.width, height: rect.height };
-    }
-
-    function drawTrendChart(canvas, records, metric, options = {}) {
-      const { ctx, width, height } = setupCanvas(canvas);
-      const pad = { top: 22, right: 16, bottom: 36, left: 52 };
-      ctx.clearRect(0, 0, width, height);
-
-      if (!records.length) {
-        drawEmpty(ctx, width, height, 'No records for this range.');
-        return [];
-      }
-
-      const points = valuesFor(records, metric, options.smooth).filter((point) => Number.isFinite(point.y));
-      if (!points.length) {
-        drawEmpty(ctx, width, height, 'This metric has no data yet.');
-        return [];
-      }
-
-      const previous = options.compare ? valuesFor(options.previous || [], metric, options.smooth).filter((point) => Number.isFinite(point.y)) : [];
-      const allY = points.map((p) => p.y).concat(previous.map((p) => p.y));
-      const scale = makeScale(allY, height, pad, metric);
-      const minX = records[0].dateValue;
-      const maxX = records.at(-1).dateValue || minX + 1;
-      const spanX = Math.max(1, maxX - minX);
-      const xFor = (x) => pad.left + ((x - minX) / spanX) * (width - pad.left - pad.right);
-      const yFor = (y) => scale.y(y);
-      const color = metrics[metric].color;
-      const avg = average(points.map((p) => p.y));
-
-      drawAxes(ctx, width, height, pad, scale, metric, records);
-      drawAverage(ctx, width, pad, yFor(avg), avg, metric);
-
-      if (previous.length) {
-        drawSeries(ctx, previous.map((point, index) => ({
-          ...point,
-          px: pad.left + (index / Math.max(1, previous.length - 1)) * (width - pad.left - pad.right),
-          py: yFor(point.y)
-        })), '#77716a', options.type, true);
-      }
-
-      const drawable = points.map((point) => ({
-        ...point,
-        px: xFor(point.x),
-        py: yFor(point.y)
-      }));
-
-      drawSeries(ctx, drawable, color, options.type, false);
-      log('Chart rendered', { canvas: canvas.id, metric, records: records.length, type: options.type || 'line' });
-      return drawable;
-    }
-
-    function drawAxes(ctx, width, height, pad, scale, metric, records) {
-      ctx.strokeStyle = getCss('--line');
-      ctx.fillStyle = getCss('--muted');
-      ctx.lineWidth = 1;
-      ctx.font = '11px system-ui';
-      ctx.textBaseline = 'middle';
-
-      for (let i = 0; i <= 4; i++) {
-        const value = scale.min + ((scale.max - scale.min) * i / 4);
-        const y = scale.y(value);
-        ctx.beginPath();
-        ctx.moveTo(pad.left, y);
-        ctx.lineTo(width - pad.right, y);
-        ctx.stroke();
-        ctx.fillText(formatAxis(metric, value), 8, y);
-      }
-
-      const labels = records.length < 3 ? records : [records[0], records[Math.floor(records.length / 2)], records.at(-1)];
-      ctx.textBaseline = 'top';
-      for (const record of labels) {
-        const x = pad.left + ((record.dateValue - records[0].dateValue) / Math.max(1, records.at(-1).dateValue - records[0].dateValue)) * (width - pad.left - pad.right);
-        ctx.fillText(record.day.slice(5), Math.max(4, Math.min(width - 44, x - 16)), height - pad.bottom + 12);
-      }
-    }
-
-    function formatAxis(metric, value) {
-      const unit = metrics[metric].unit;
-      if (unit === 'time') return formatTimeMinutes(value).replace(':00 ', ' ');
-      if (unit === 'hours') return `${value.toFixed(1)}h`;
-      if (unit === 'percent') return `${Math.round(value)}%`;
-      return String(Math.round(value));
-    }
-
-    function drawAverage(ctx, width, pad, y, avg, metric) {
-      if (!Number.isFinite(avg)) return;
-      ctx.save();
-      ctx.setLineDash([5, 5]);
-      ctx.strokeStyle = getCss('--brand-2');
-      ctx.beginPath();
-      ctx.moveTo(pad.left, y);
-      ctx.lineTo(width - pad.right, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = getCss('--brand-2');
-      ctx.font = '11px system-ui';
-      ctx.fillText(`Avg ${formatMetric(metric, avg)}`, pad.left + 8, Math.max(12, y - 10));
-      ctx.restore();
-    }
-
-    function drawSeries(ctx, points, color, type, muted) {
-      if (type === 'bar') {
-        const maxBar = Math.max(4, Math.min(18, 260 / Math.max(points.length, 1)));
-        ctx.fillStyle = color;
-        ctx.globalAlpha = muted ? 0.28 : 0.82;
-        for (const point of points) {
-          const base = ctx.canvas.getBoundingClientRect().height - 36;
-          ctx.fillRect(point.px - maxBar / 2, point.py, maxBar, Math.max(1, base - point.py));
-        }
-        ctx.globalAlpha = 1;
-        return;
-      }
-
-      ctx.strokeStyle = color;
-      ctx.lineWidth = muted ? 2 : 3;
-      ctx.globalAlpha = muted ? 0.42 : 1;
-      ctx.beginPath();
-      let started = false;
-      for (let i = 0; i < points.length; i++) {
-        const point = points[i];
-        const prev = points[i - 1];
-        const gap = prev && ((point.record.dateValue - prev.record.dateValue) > 2.2 * 86400000);
-        if (!started || gap) {
-          ctx.moveTo(point.px, point.py);
-          started = true;
-        } else {
-          ctx.lineTo(point.px, point.py);
-        }
-      }
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-
-      if (!muted) {
-        ctx.fillStyle = color;
-        for (const point of points) {
-          ctx.beginPath();
-          ctx.arc(point.px, point.py, 3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    function drawScatter(canvas, records, colorMetric) {
-      const { ctx, width, height } = setupCanvas(canvas);
-      const pad = { top: 24, right: 18, bottom: 42, left: 58 };
-      ctx.clearRect(0, 0, width, height);
-
-      const points = records.filter((record) => Number.isFinite(record.bedtime) && Number.isFinite(record.wakeTime));
-      if (!points.length) {
-        drawEmpty(ctx, width, height, 'No bedtime and wake data for this range.');
-        return [];
-      }
-
-      const xScale = makeScale(points.map((p) => p.bedtime), height, pad, 'bedtime');
-      const yScale = makeScale(points.map((p) => p.wakeTime), height, pad, 'wakeTime');
-      const colorValues = points.map((p) => p[colorMetric]).filter(Number.isFinite);
-      const colorMin = Math.min(...colorValues);
-      const colorMax = Math.max(...colorValues);
-      const xFor = (value) => pad.left + ((value - xScale.min) / (xScale.max - xScale.min)) * (width - pad.left - pad.right);
-      const yFor = (value) => yScale.y(value);
-
-      drawScatterAxes(ctx, width, height, pad, xScale, yScale);
-      const drawable = points.map((record) => {
-        const ratio = Number.isFinite(record[colorMetric]) && colorMax > colorMin ? (record[colorMetric] - colorMin) / (colorMax - colorMin) : 0.5;
-        const fill = blend('#ff7a7a', '#7bdcb5', ratio);
-        const point = { record, x: xFor(record.bedtime), y: yFor(record.wakeTime), fill };
-        ctx.fillStyle = fill;
-        ctx.globalAlpha = 0.86;
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-        ctx.fill();
-        return point;
-      });
-      ctx.globalAlpha = 1;
-      log('Chart rendered', { canvas: canvas.id, chart: 'correlation', records: drawable.length });
-      return drawable;
-    }
-
-    function drawScatterAxes(ctx, width, height, pad, xScale, yScale) {
-      ctx.strokeStyle = getCss('--line');
-      ctx.fillStyle = getCss('--muted');
-      ctx.font = '11px system-ui';
-      for (let i = 0; i <= 4; i++) {
-        const yValue = yScale.min + ((yScale.max - yScale.min) * i / 4);
-        const y = yScale.y(yValue);
-        ctx.beginPath();
-        ctx.moveTo(pad.left, y);
-        ctx.lineTo(width - pad.right, y);
-        ctx.stroke();
-        ctx.fillText(formatTimeMinutes(yValue), 6, y + 3);
-
-        const xValue = xScale.min + ((xScale.max - xScale.min) * i / 4);
-        const x = pad.left + ((xValue - xScale.min) / (xScale.max - xScale.min)) * (width - pad.left - pad.right);
-        ctx.fillText(formatTimeMinutes(xValue), Math.max(2, x - 25), height - 24);
-      }
-      ctx.fillStyle = getCss('--ink');
-      ctx.fillText('Bedtime', width - 80, height - 8);
-      ctx.save();
-      ctx.translate(12, 90);
-      ctx.rotate(-Math.PI / 2);
-      ctx.fillText('Wake time', 0, 0);
-      ctx.restore();
-    }
-
-    function drawEmpty(ctx, width, height, text) {
-      ctx.fillStyle = getCss('--muted');
-      ctx.font = '14px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText(text, width / 2, height / 2);
-      ctx.textAlign = 'left';
-    }
-
-    function blend(a, b, ratio) {
-      const pa = parseInt(a.slice(1), 16);
-      const pb = parseInt(b.slice(1), 16);
-      const ar = (pa >> 16) & 255;
-      const ag = (pa >> 8) & 255;
-      const ab = pa & 255;
-      const br = (pb >> 16) & 255;
-      const bg = (pb >> 8) & 255;
-      const bb = pb & 255;
-      const rr = Math.round(ar + (br - ar) * ratio);
-      const rg = Math.round(ag + (bg - ag) * ratio);
-      const rb = Math.round(ab + (bb - ab) * ratio);
-      return `rgb(${rr}, ${rg}, ${rb})`;
-    }
-
-    function getCss(name) {
-      return getComputedStyle(document.body).getPropertyValue(name).trim();
-    }
-
-    function renderSummary() {
-      const records = state.visible;
-      const previous = previousPeriod(records, state.range);
-      const cards = [
-        ['bedtime', 'Avg bedtime'],
-        ['wakeTime', 'Avg wake time'],
-        ['totalSleepHours', 'Avg total sleep'],
-        ['sleepScore', 'Avg sleep score']
-      ].map(([metric, label]) => {
-        const value = metric === 'bedtime' || metric === 'wakeTime'
-          ? median(records.map((record) => record[metric]))
-          : average(records.map((record) => record[metric]));
-        const prev = metric === 'bedtime' || metric === 'wakeTime'
-          ? median(previous.map((record) => record[metric]))
-          : average(previous.map((record) => record[metric]));
-        const delta = Number.isFinite(value) && Number.isFinite(prev) ? value - prev : null;
-        const friendlyDelta = deltaText(metric, delta);
-        return `
-          <article class="card metric-card">
-            <div class="label">${label}</div>
-            <div class="value">${formatMetric(metric, value)}</div>
-            <div class="delta ${friendlyDelta.kind}">${friendlyDelta.text}</div>
-          </article>
-        `;
-      }).join('');
-      els.summaryCards.innerHTML = cards;
-    }
-
-    function deltaText(metric, delta) {
-      if (!Number.isFinite(delta)) return { text: 'No comparison yet', kind: '' };
-      if (metrics[metric].unit === 'time') {
-        const abs = Math.abs(Math.round(delta));
-        const direction = delta < 0 ? 'earlier' : 'later';
-        return { text: `${abs} min ${direction}`, kind: abs > 30 ? 'warn' : '' };
-      }
-      if (metrics[metric].unit === 'hours') {
-        const minutes = Math.round(Math.abs(delta) * 60);
-        return { text: `${minutes} min ${delta >= 0 ? 'more' : 'less'}`, kind: delta >= 0 ? 'good' : 'warn' };
-      }
-      return { text: `${Math.abs(delta).toFixed(1)} ${delta >= 0 ? 'higher' : 'lower'}`, kind: delta >= 0 ? 'good' : 'warn' };
-    }
-
-    function renderInsights() {
-      const records = state.visible;
-      const previous = previousPeriod(records, state.range);
-      const insights = [];
-
-      const currentBed = median(records.map((r) => r.bedtime));
-      const previousBed = median(previous.map((r) => r.bedtime));
-      if (Number.isFinite(currentBed) && Number.isFinite(previousBed)) {
-        const moved = Math.round(previousBed - currentBed);
-        insights.push({
-          tag: 'Trend',
-          text: moved > 0
-            ? `Your bedtime moved ${Math.abs(moved)} minutes earlier this period.`
-            : `Your bedtime moved ${Math.abs(moved)} minutes later this period.`
-        });
-      }
-
-      const bestScores = records.filter((r) => Number.isFinite(r.sleepScore) && Number.isFinite(r.bedtime)).sort((a, b) => b.sleepScore - a.sleepScore).slice(0, Math.max(3, Math.ceil(records.length * 0.2)));
-      const bestBed = median(bestScores.map((r) => r.bedtime));
-      if (Number.isFinite(bestBed)) {
-        insights.push({ tag: 'Pattern', text: `Best sleep scores happen around ${formatTimeMinutes(bestBed)}.` });
-      }
-
-      const wakeSpread = spread(records.map((r) => r.wakeTime));
-      const prevWakeSpread = spread(previous.map((r) => r.wakeTime));
-      if (Number.isFinite(wakeSpread) && Number.isFinite(prevWakeSpread)) {
-        insights.push({
-          tag: wakeSpread < prevWakeSpread ? 'Interesting' : 'Heads Up',
-          text: wakeSpread < prevWakeSpread
-            ? `Wake times became more consistent by ${Math.round(prevWakeSpread - wakeSpread)} minutes.`
-            : `Wake times spread out by ${Math.round(wakeSpread - prevWakeSpread)} minutes.`
-        });
-      }
-
-      const dur = average(records.map((r) => r.totalSleepHours));
-      const prevDur = average(previous.map((r) => r.totalSleepHours));
-      if (Number.isFinite(dur) && Number.isFinite(prevDur)) {
-        insights.push({
-          tag: dur >= prevDur ? 'Trend' : 'Heads Up',
-          text: `Sleep duration ${dur >= prevDur ? 'rose' : 'dropped'} by ${Math.round(Math.abs(dur - prevDur) * 60)} minutes compared with the previous period.`
-        });
-      }
-
-      const scored = records.filter((r) => Number.isFinite(r.sleepScore) && Number.isFinite(r.totalSleepHours));
-      if (scored.length >= 6) {
-        const best = scored.sort((a, b) => b.sleepScore - a.sleepScore).slice(0, Math.ceil(scored.length * 0.22));
-        const low = Math.min(...best.map((r) => r.totalSleepHours));
-        const high = Math.max(...best.map((r) => r.totalSleepHours));
-        insights.push({ tag: 'Hmm...', text: `Your highest scores happen with ${low.toFixed(1)}-${high.toFixed(1)} hours.` });
-      }
-
-      els.insights.innerHTML = insights.slice(0, 5).map((item) => `
-        <article class="insight">
-          <span class="tag">${item.tag}</span>
-          <p>${item.text}</p>
-        </article>
-      `).join('') || '<div class="empty">Load a few nights of data and the patterns will show up here.</div>';
-    }
-
-    function spread(values) {
-      const clean = values.filter(Number.isFinite);
-      if (clean.length < 2) return null;
-      return Math.max(...clean) - Math.min(...clean);
-    }
-
-    function renderRaw() {
-      const q = els.tableSearch.value.trim().toLowerCase();
-      const rows = state.records.filter((record) => {
-        if (!q) return true;
-        return Object.values(record).join(' ').toLowerCase().includes(q);
-      }).slice().reverse();
-
-      els.rawBody.innerHTML = rows.map((record) => `
-        <tr>
-          <td>${record.day}</td>
-          <td>${formatMetric('bedtime', record.bedtime)}</td>
-          <td>${formatMetric('wakeTime', record.wakeTime)}</td>
-          <td>${formatMetric('totalSleepHours', record.totalSleepHours)}</td>
-          <td>${formatMetric('sleepScore', record.sleepScore)}</td>
-          <td>${formatMetric('efficiency', record.efficiency)}</td>
-          <td>${formatMetric('deepSleepHours', record.deepSleepHours)}</td>
-          <td>${formatMetric('remSleepHours', record.remSleepHours)}</td>
-          <td>${formatMetric('restingHr', record.restingHr)}</td>
-          <td>${formatMetric('hrv', record.hrv)}</td>
-        </tr>
-      `).join('') || '<tr><td colspan="10">No rows to show.</td></tr>';
-    }
-
-    function renderAll() {
-      renderSummary();
-      renderInsights();
-      const mainPoints = drawTrendChart(els.mainChart, state.visible, state.metric, {
-        type: state.chartType,
-        smooth: state.smooth,
-        compare: state.compare,
-        previous: previousPeriod(state.visible, state.range)
-      });
-      attachTrendTooltip(els.mainChart, mainPoints, state.metric);
-
-      const trendRecords = getTrendRecords();
-      const trendPoints = drawTrendChart(els.trendChart, trendRecords, state.trendMetric, {
-        type: state.trendType,
-        smooth: state.trendSmooth,
-        compare: state.trendCompare,
-        previous: previousPeriod(trendRecords, state.trendRange)
-      });
-      attachTrendTooltip(els.trendChart, trendPoints, state.trendMetric);
-
-      const scatterPoints = drawScatter(els.scatterChart, trendRecords, state.colorMetric);
-      attachScatterTooltip(els.scatterChart, scatterPoints);
-      renderRaw();
-      updateSettingsText();
-    }
-
-    function getTrendRecords() {
-      if (state.trendRange === 'custom') {
-        const start = parseDate(els.startDate.value || todayIso()).getTime();
-        const end = parseDate(els.endDate.value || todayIso()).getTime();
-        return state.records.filter((record) => record.dateValue >= start && record.dateValue <= end);
-      }
-      return filterByRange(state.trendRange);
-    }
-
-    function nearestPoint(event, canvas, points, xKey = 'px', yKey = 'py') {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      let best = null;
-      let bestDistance = 999;
-      for (const point of points || []) {
-        const px = point[xKey] ?? point.x;
-        const py = point[yKey] ?? point.y;
-        const distance = Math.hypot(px - x, py - y);
-        if (distance < bestDistance) {
-          best = point;
-          bestDistance = distance;
-        }
-      }
-      return bestDistance <= 28 ? best : null;
-    }
-
-    function attachTrendTooltip(canvas, points, metric) {
-      canvas.onpointermove = (event) => {
-        const point = nearestPoint(event, canvas, points);
-        if (!point) return hideTooltip();
-        showTooltip(event, `
-          <strong>${point.record.day}</strong>
-          ${metrics[metric].label}: ${formatMetric(metric, point.y)}<br>
-          Bedtime: ${formatMetric('bedtime', point.record.bedtime)}<br>
-          Wake: ${formatMetric('wakeTime', point.record.wakeTime)}<br>
-          Score: ${formatMetric('sleepScore', point.record.sleepScore)}
-        `);
-      };
-      canvas.onpointerleave = hideTooltip;
-    }
-
-    function attachScatterTooltip(canvas, points) {
-      canvas.onpointermove = (event) => {
-        const point = nearestPoint(event, canvas, points, 'x', 'y');
-        if (!point) return hideTooltip();
-        const record = point.record;
-        showTooltip(event, `
-          <strong>${record.day}</strong>
-          Bedtime: ${formatMetric('bedtime', record.bedtime)}<br>
-          Wake: ${formatMetric('wakeTime', record.wakeTime)}<br>
-          ${metrics[state.colorMetric].label}: ${formatMetric(state.colorMetric, record[state.colorMetric])}<br>
-          Total: ${formatMetric('totalSleepHours', record.totalSleepHours)}
-        `);
-      };
-      canvas.onpointerleave = hideTooltip;
-    }
-
-    function showTooltip(event, html) {
-      els.tooltip.innerHTML = html;
-      els.tooltip.style.display = 'block';
-      const x = Math.min(window.innerWidth - 255, event.clientX + 14);
-      const y = Math.min(window.innerHeight - 160, event.clientY + 14);
-      els.tooltip.style.transform = `translate(${Math.max(8, x)}px, ${Math.max(8, y)}px)`;
-    }
-
-    function hideTooltip() {
-      els.tooltip.style.display = 'none';
-    }
-
-    function showToast(text) {
-      els.subtitle.textContent = text;
-    }
-
-    function exportCsv() {
-      const header = ['Date', 'Bedtime', 'Wake time', 'Total sleep', 'Sleep score', 'Efficiency', 'Deep sleep', 'REM', 'Resting HR', 'HRV'];
-      const rows = state.records.map((record) => [
-        record.day,
-        formatMetric('bedtime', record.bedtime),
-        formatMetric('wakeTime', record.wakeTime),
-        formatMetric('totalSleepHours', record.totalSleepHours),
-        record.sleepScore ?? '',
-        record.efficiency ?? '',
-        formatMetric('deepSleepHours', record.deepSleepHours),
-        formatMetric('remSleepHours', record.remSleepHours),
-        record.restingHr ?? '',
-        record.hrv ?? ''
-      ]);
-      download('oura-sleep-trends.csv', [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\n'), 'text/csv');
-    }
-
-    function csvCell(value) {
-      const text = String(value ?? '');
-      return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-    }
-
-    function exportJson() {
-      download('oura-sleep-trends.json', JSON.stringify(state.records, null, 2), 'application/json');
-    }
-
-    function download(filename, content, type) {
-      const blob = new Blob([content], { type });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-      log('Export data', { filename });
-    }
-
-    async function testApi() {
-      els.apiStatusText.textContent = 'Checking...';
-      try {
-        const response = await fetch('/api/oura?status=1');
-        const body = await response.json();
-        if (!response.ok || !body.ok) throw new Error(body.error || 'API test failed.');
-        els.apiStatusText.textContent = `${body.message} ${new Date(body.checkedAt).toLocaleString()}`;
-        log('API status test ok');
-      } catch (error) {
-        els.apiStatusText.textContent = error.message;
-        log('API status test failed', { message: error.message });
-      }
-    }
-
-    function updateSettingsText() {
-      els.lastFetch.textContent = state.lastFetch ? new Date(state.lastFetch).toLocaleString() : 'Never';
-      const cache = readCache();
-      els.cacheStatus.textContent = cache?.records?.length ? `${cache.records.length} records cached.` : 'No cached Oura data.';
-      els.defaultRange.value = state.range;
-      els.debugPanel.classList.toggle('hidden', !state.debug);
-      els.debugLog.textContent = state.logs.join('\n');
-    }
-
-    function fillControls() {
-      const metricOptions = Object.entries(metrics).map(([key, metric]) => `<option value="${key}">${metric.label}</option>`).join('');
-      els.metricSelect.innerHTML = primaryMetrics.map((key) => `<option value="${key}">${metrics[key].label}</option>`).join('');
-      els.trendMetric.innerHTML = metricOptions;
-      els.colorMetric.innerHTML = Object.entries(metrics).filter(([key]) => !['bedtime', 'wakeTime'].includes(key)).map(([key, metric]) => `<option value="${key}">${metric.label}</option>`).join('');
-      els.metricSelect.value = state.metric;
-      els.trendMetric.value = state.trendMetric;
-      els.colorMetric.value = state.colorMetric;
-
-      els.dashboardRanges.innerHTML = [
-        ['week', 'Week'],
-        ['month', 'Month'],
-        ['quarter', 'Quarter'],
-        ['year', 'Year'],
-        ['all', 'All time']
-      ].map(([key, label]) => `<button class="pill ${state.range === key ? 'active' : ''}" data-range="${key}">${label}</button>`).join('');
-    }
-
-    function bindEvents() {
-      document.querySelectorAll('.nav button').forEach((button) => {
-        button.addEventListener('click', () => {
-          document.querySelectorAll('.nav button').forEach((item) => item.classList.remove('active'));
-          document.querySelectorAll('.tab-panel').forEach((item) => item.classList.remove('active'));
-          button.classList.add('active');
-          $(button.dataset.tab).classList.add('active');
-          setTimeout(renderAll, 40);
-        });
-      });
-
-      els.dashboardRanges.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-range]');
-        if (!button) return;
-        state.range = button.dataset.range;
-        fillControls();
-        applyFilters();
-      });
-
-      els.metricSelect.addEventListener('change', () => { state.metric = els.metricSelect.value; renderAll(); });
-      els.chartType.addEventListener('change', () => { state.chartType = els.chartType.value; renderAll(); });
-      els.smoothBtn.addEventListener('click', () => { state.smooth = !state.smooth; els.smoothBtn.classList.toggle('active', state.smooth); renderAll(); });
-      els.compareBtn.addEventListener('click', () => { state.compare = !state.compare; els.compareBtn.classList.toggle('active', state.compare); renderAll(); });
-      els.refreshBtn.addEventListener('click', () => fetchData(true));
-      els.manualRefreshBtn.addEventListener('click', () => fetchData(true));
-
-      els.trendMetric.addEventListener('change', () => { state.trendMetric = els.trendMetric.value; renderAll(); });
-      els.trendRange.addEventListener('change', () => {
-        state.trendRange = els.trendRange.value;
-        els.customDates.classList.toggle('hidden', state.trendRange !== 'custom');
-        renderAll();
-      });
-      els.trendChartType.addEventListener('change', () => { state.trendType = els.trendChartType.value; renderAll(); });
-      els.trendApply.addEventListener('click', renderAll);
-      els.trendCompare.addEventListener('click', () => { state.trendCompare = !state.trendCompare; els.trendCompare.classList.toggle('active', state.trendCompare); renderAll(); });
-      els.trendSmooth.addEventListener('click', () => { state.trendSmooth = !state.trendSmooth; els.trendSmooth.classList.toggle('active', state.trendSmooth); renderAll(); });
-      els.colorMetric.addEventListener('change', () => { state.colorMetric = els.colorMetric.value; renderAll(); });
-      els.startDate.addEventListener('change', renderAll);
-      els.endDate.addEventListener('change', renderAll);
-
-      els.tableSearch.addEventListener('input', renderRaw);
-      els.csvBtn.addEventListener('click', exportCsv);
-      els.jsonBtn.addEventListener('click', exportJson);
-      els.testApiBtn.addEventListener('click', testApi);
-      els.clearCacheBtn.addEventListener('click', () => {
-        localStorage.removeItem('ouraSleepRecords');
-        localStorage.removeItem('ouraLastFetch');
-        state.lastFetch = '';
-        updateSettingsText();
-        log('Cache cleared');
-      });
-
-      els.defaultRange.addEventListener('change', () => {
-        state.range = els.defaultRange.value;
-        localStorage.setItem('ouraDefaultRange', state.range);
-        fillControls();
-        applyFilters();
-      });
-
-      els.themeSwitch.addEventListener('click', () => {
-        state.theme = state.theme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('ouraTheme', state.theme);
-        document.body.dataset.theme = state.theme;
-        els.themeSwitch.classList.toggle('on', state.theme === 'dark');
-        renderAll();
-      });
-
-      els.debugSwitch.addEventListener('click', () => {
-        state.debug = !state.debug;
-        localStorage.setItem('ouraDebug', state.debug ? '1' : '0');
-        els.debugSwitch.classList.toggle('on', state.debug);
-        updateSettingsText();
-      });
-
-      window.addEventListener('resize', () => renderAll());
-    }
-
-    function initElements() {
-      [
-        'statusChip', 'subtitle', 'summaryCards', 'dashboardRanges', 'metricSelect', 'chartType',
-        'refreshBtn', 'smoothBtn', 'compareBtn', 'mainChart', 'insights', 'trendMetric',
-        'trendRange', 'trendChartType', 'trendApply', 'trendCompare', 'trendSmooth', 'customDates',
-        'startDate', 'endDate', 'trendChart', 'scatterChart', 'colorMetric', 'tableSearch',
-        'csvBtn', 'jsonBtn', 'rawBody', 'apiStatusText', 'lastFetch', 'manualRefreshBtn',
-        'cacheStatus', 'clearCacheBtn', 'defaultRange', 'themeSwitch', 'debugSwitch',
-        'debugPanel', 'debugLog', 'testApiBtn', 'tooltip'
-      ].forEach((id) => { els[id] = $(id); });
-    }
-
-    function init() {
-      initElements();
-      document.body.dataset.theme = state.theme;
-      els.themeSwitch.classList.toggle('on', state.theme === 'dark');
-      els.debugSwitch.classList.toggle('on', state.debug);
-      els.customDates.classList.add('hidden');
-      const end = todayIso();
-      const start = isoDate(dateAdd(new Date(), -30));
-      els.startDate.value = start;
-      els.endDate.value = end;
-      fillControls();
-      bindEvents();
-      log('App loaded');
-
-      const cached = readCache();
-      if (cached?.records?.length) {
-        loadRecords(cached.records);
-        setStatus('ok', `${cached.records.length} cached`);
-      }
-      fetchData(false);
-    }
-
-    init();
-  </script>
+        <footer>
+            <p>&copy; 2026 Internal Apps</p>
+        </footer>
+    </div>
 </body>
 </html>

@@ -5,5 +5,9 @@
   "type": "module",
   "engines": {
     "node": "22.x"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.0",
+    "bad-words": "^3.0.4"
   }
 }
