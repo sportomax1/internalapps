@@ -25,7 +25,58 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  transition: width 0.25s ease, min-width 0.25s ease;
+  position: relative;
 }
+
+#sidebar.collapsed {
+  width: 48px;
+  min-width: 48px;
+  overflow: hidden;
+}
+
+#sidebar.collapsed #sidebar-header h1,
+#sidebar.collapsed #sidebar-header p,
+#sidebar.collapsed .chapter-label,
+#sidebar.collapsed .nav-item span:not(.icon),
+#sidebar.collapsed .nav-item .done {
+  display: none;
+}
+
+#sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 10px 0;
+  border-left: none;
+}
+
+#sidebar.collapsed .nav-item.active {
+  background: rgba(99,102,241,0.35);
+  border-radius: 0;
+}
+
+#sidebar-toggle {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #a5b4fc;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+#sidebar-toggle:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+#sidebar.collapsed #sidebar-toggle { right: 50%; transform: translateX(50%); top: 10px; }
 
 #sidebar-header {
   padding: 20px 16px 12px;
@@ -439,6 +490,7 @@ label { font-size: 0.85rem; font-weight: 600; color: #475569; }
 
 <!-- SIDEBAR -->
 <nav id="sidebar">
+  <button id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
   <div id="sidebar-header">
     <h1>🎮 BGA Coding Academy</h1>
     <p>Real patterns from Slambo, Vivo & Frenzy Falls</p>
@@ -1118,6 +1170,18 @@ const doneSet = new Set(JSON.parse(localStorage.getItem('teachme_done') || '[]')
 
 function saveDone() {
   localStorage.setItem('teachme_done', JSON.stringify([...doneSet]));
+}
+
+// ─────────────────────────────────────────────
+// SIDEBAR TOGGLE
+// ─────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  const collapsed = sidebar.classList.toggle('collapsed');
+  btn.textContent = collapsed ? '▶' : '◀';
+  btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  localStorage.setItem('teachme_sidebar_collapsed', collapsed ? '1' : '0');
 }
 
 // ─────────────────────────────────────────────
