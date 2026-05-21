@@ -1,0 +1,228 @@
+:root {
+    --ink: #f9fbff;
+    --muted: rgba(249, 251, 255, 0.68);
+    --panel: rgba(8, 13, 18, 0.62);
+    --panel-strong: rgba(7, 10, 14, 0.82);
+    --line: rgba(255, 255, 255, 0.2);
+    --amber: #f7b267;
+    --green: #7de2a8;
+    --red: #ff6b5f;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #11171b;
+    color: var(--ink);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.drive-shell {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #11171b;
+}
+
+#scene {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+.hud {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.gauge,
+.status-stack,
+.camera-btn,
+.control-btn,
+.pedal {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(16px);
+}
+
+.gauge {
+    width: 92px;
+    min-height: 70px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: grid;
+    align-content: center;
+    justify-items: start;
+}
+
+.gauge-value {
+    font-size: clamp(1.7rem, 4vw, 2.5rem);
+    font-weight: 800;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+}
+
+.gauge-label {
+    margin-top: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+}
+
+.status-stack {
+    min-width: 76px;
+    min-height: 70px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: grid;
+    align-content: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--green);
+    font-variant-numeric: tabular-nums;
+}
+
+#terrainMode {
+    color: var(--amber);
+}
+
+.camera-btn {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.camera-btn span {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.camera-btn:focus-visible,
+.control-btn:focus-visible,
+.pedal:focus-visible {
+    outline: 3px solid rgba(125, 226, 168, 0.75);
+    outline-offset: 3px;
+}
+
+.touch-controls {
+    position: fixed;
+    inset-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    pointer-events: none;
+}
+
+.steer-pad,
+.pedal-pad {
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.pedal-pad {
+    align-items: end;
+}
+
+.control-btn,
+.pedal {
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.control-btn {
+    width: clamp(54px, 12vw, 72px);
+    height: clamp(54px, 12vw, 72px);
+}
+
+.pedal {
+    width: clamp(58px, 13vw, 78px);
+    height: clamp(76px, 16vw, 112px);
+}
+
+.pedal-go {
+    background: rgba(18, 94, 60, 0.7);
+}
+
+.pedal-stop {
+    background: rgba(112, 28, 32, 0.72);
+}
+
+.control-btn span,
+.pedal span {
+    display: block;
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+    line-height: 1;
+}
+
+.control-btn:active,
+.control-btn.is-active,
+.pedal:active,
+.pedal.is-active,
+.camera-btn:active {
+    transform: translateY(2px) scale(0.98);
+    background: var(--panel-strong);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .control-btn:hover,
+    .pedal:hover,
+    .camera-btn:hover {
+        border-color: rgba(255, 255, 255, 0.42);
+        background: var(--panel-strong);
+    }
+}
+
+@media (min-width: 900px) {
+    .touch-controls {
+        opacity: 0.72;
+    }
+}
+
+@media (max-width: 520px) {
+    .hud {
+        gap: 8px;
+    }
+
+    .gauge {
+        width: 78px;
+        min-height: 58px;
+    }
+
+    .status-stack {
+        min-width: 64px;
+        min-height: 58px;
+        font-size: 0.68rem;
+    }
+}

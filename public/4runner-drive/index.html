@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>4Runner Drive</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <main class="drive-shell" aria-label="4Runner driving simulator">
+        <canvas id="scene" aria-label="3D driving scene"></canvas>
+
+        <section class="hud" aria-label="Vehicle telemetry">
+            <div class="gauge">
+                <span class="gauge-value" id="speed">0</span>
+                <span class="gauge-label">MPH</span>
+            </div>
+            <div class="status-stack">
+                <span id="driveMode">D</span>
+                <span id="terrainMode">ROAD</span>
+            </div>
+        </section>
+
+        <section class="touch-controls" aria-label="Driving controls">
+            <div class="steer-pad">
+                <button class="control-btn" type="button" data-control="left" aria-label="Steer left">
+                    <span aria-hidden="true">&#8592;</span>
+                </button>
+                <button class="control-btn" type="button" data-control="right" aria-label="Steer right">
+                    <span aria-hidden="true">&#8594;</span>
+                </button>
+            </div>
+            <div class="pedal-pad">
+                <button class="pedal pedal-go" type="button" data-control="forward" aria-label="Accelerate">
+                    <span aria-hidden="true">&#9650;</span>
+                </button>
+                <button class="pedal pedal-stop" type="button" data-control="backward" aria-label="Brake or reverse">
+                    <span aria-hidden="true">&#9660;</span>
+                </button>
+            </div>
+        </section>
+
+        <button class="camera-btn" id="cameraBtn" type="button" aria-label="Change camera">
+            <span aria-hidden="true">&#9711;</span>
+        </button>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+</body>
+</html>

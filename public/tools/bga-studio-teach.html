@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BGA Coding Academy</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f0f4f8;
+  color: #1e293b;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: #1e1b4b;
+  color: #c7d2fe;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+#sidebar-header {
+  padding: 20px 16px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+#sidebar-header h1 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.3;
+}
+
+#sidebar-header p {
+  font-size: 0.72rem;
+  color: #a5b4fc;
+  margin-top: 4px;
+}
+
+.chapter-label {
+  padding: 14px 16px 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #6366f1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: #c7d2fe;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+.nav-item.active {
+  background: rgba(99,102,241,0.25);
+  border-left-color: #6366f1;
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+.nav-item .done {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #4ade80;
+  display: none;
+}
+
+.nav-item.done-lesson .done { display: block; }
+
+/* ── MAIN AREA ── */
+#main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#topbar {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+#topbar-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+#progress-bar-wrap {
+  width: 180px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+#progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #06b6d4);
+  border-radius: 99px;
+  transition: width 0.4s;
+}
+
+#content {
+  padding: 32px 40px 60px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── LESSON ELEMENTS ── */
+.lesson-header { margin-bottom: 24px; }
+
+.lesson-tag {
+  display: inline-block;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 99px;
+  margin-bottom: 10px;
+}
+
+.lesson-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.lesson-subtitle {
+  font-size: 1rem;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* explanation boxes */
+.explain {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  line-height: 1.7;
+  font-size: 0.93rem;
+}
+
+.explain p + p { margin-top: 12px; }
+
+.explain strong { color: #4f46e5; }
+
+/* info callout */
+.callout {
+  display: flex;
+  gap: 12px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.callout .emoji { font-size: 1.3rem; flex-shrink: 0; }
+
+/* ── CODE BLOCK ── */
+.code-wrap {
+  margin-bottom: 20px;
+}
+
+.code-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 20px 22px;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+}
+
+.kw  { color: #c084fc; } /* keyword */
+.str { color: #86efac; } /* string */
+.num { color: #fb923c; } /* number */
+.cmt { color: #64748b; font-style: italic; } /* comment */
+.fn  { color: #67e8f9; } /* function name */
+.key { color: #fbbf24; } /* object key */
+
+/* ── DEMO BOX ── */
+.demo-wrap {
+  background: #fff;
+  border: 2px solid #6366f1;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.demo-header {
+  background: #6366f1;
+  color: #fff;
+  padding: 8px 18px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.demo-body {
+  padding: 20px 24px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.btn-primary { background: #6366f1; color: #fff; }
+.btn-primary:hover { background: #4f46e5; }
+.btn-secondary { background: #e2e8f0; color: #1e293b; }
+.btn-secondary:hover { background: #cbd5e1; }
+.btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+.btn-red { background: #ef4444; color: #fff; }
+.btn-red:hover { background: #dc2626; }
+.btn-green { background: #22c55e; color: #fff; }
+.btn-green:hover { background: #16a34a; }
+
+/* ── NAVIGATION FOOTER ── */
+.lesson-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.lesson-nav .btn { min-width: 130px; }
+
+/* scoreboard demo */
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.score-name { font-weight: 700; min-width: 80px; }
+.score-bar-bg { flex: 1; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+.score-num { font-weight: 800; min-width: 30px; text-align: right; font-size: 0.9rem; }
+
+/* hand demo */
+.hand-area {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  min-height: 80px;
+  align-items: center;
+}
+
+.demo-card {
+  width: 52px;
+  height: 72px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 2px solid rgba(0,0,0,0.15);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  user-select: none;
+}
+
+.demo-card:hover { transform: translateY(-8px) scale(1.05); box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+.demo-card.selected { transform: translateY(-10px) scale(1.07); box-shadow: 0 10px 20px rgba(99,102,241,0.4); border-color: #6366f1; }
+.demo-card.fuel { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #fff; }
+.demo-card.coolant { background: linear-gradient(135deg, #f87171, #ef4444); color: #fff; }
+.demo-card.special { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; }
+
+/* status bar demo */
+.status-bar-demo {
+  background: linear-gradient(135deg, #1e3a5f, #1e293b);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.status-bar-msg { flex: 1; font-size: 0.9rem; font-weight: 500; }
+.status-bar-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.status-bar-btn.blue { background: #3b82f6; color: #fff; }
+.status-bar-btn.blue:hover { background: #2563eb; }
+.status-bar-btn.red { background: #ef4444; color: #fff; }
+.status-bar-btn.red:hover { background: #dc2626; }
+.status-bar-btn.grey { background: #475569; color: #fff; }
+.status-bar-btn.grey:hover { background: #334155; }
+
+/* log demo */
+.log-area {
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 12px;
+  height: 160px;
+  overflow-y: auto;
+  font-size: 0.78rem;
+  font-family: monospace;
+}
+
+.log-entry { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.log-entry.info { color: #93c5fd; }
+.log-entry.warn { color: #fbbf24; }
+.log-entry.action { color: #86efac; }
+.log-entry.system { color: #94a3b8; }
+
+/* stability meter demo */
+.stability-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 60px;
+}
+
+.stability-bar-bg {
+  width: 30px;
+  height: 130px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.stability-bar-fill {
+  width: 100%;
+  border-radius: 4px;
+  transition: height 0.4s, background 0.4s;
+}
+
+.stability-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #334155;
+}
+
+/* output box for code results */
+.output-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #334155;
+  min-height: 36px;
+}
+
+input[type=range] { cursor: pointer; }
+input[type=text], input[type=number] {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type=text]:focus, input[type=number]:focus { border-color: #6366f1; }
+
+label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <h1>🎮 BGA Coding Academy</h1>
+    <p>Real patterns from Slambo, Vivo & Frenzy Falls</p>
+  </div>
+  <div id="nav-tree"></div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div id="topbar-title">Loading…</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="progress-text" style="font-size:0.78rem;color:#64748b;"></span>
+      <div id="progress-bar-wrap"><div id="progress-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div id="content"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// LESSON DATA
+// ─────────────────────────────────────────────
+const LESSONS = [
+  // ══ CHAPTER 1 ══
+  {
+    chapter: true, id: 'ch1', title: 'Chapter 1 — The Basics',
+  },
+  {
+    id: '1-1', icon: '📦', title: 'Variables',
+    tag: 'Level 1 · Absolute Beginner',
+    subtitle: 'Storing information so code can use it later',
+    explain: `
+      <p>A <strong>variable</strong> is like a labelled box. You put a value in, give it a name, and refer to it by that name later.</p>
+      <p>In JavaScript (the language that runs your BGA game in the browser), you create variables with <strong>const</strong> or <strong>let</strong>.</p>
+      <p><strong>const</strong> = the box never changes. Use this by default.<br>
+         <strong>let</strong> = the box can be updated. Use when the value needs to change (like a score).</p>
+    `,
+    callout: '🎮 In Slambo, the card image filenames are stored as <strong>const</strong> variables because the filenames never change. Player scores use <strong>let</strong> because they update every round.',
+    code: `<span class="cmt">// From Slambo's Game.js — fixed card info, never changes:</span>
+<span class="kw">const</span> CARD_BACK_IMG = <span class="str">'Slambo_Cards_v524.jpg'</span>;
+<span class="kw">const</span> CARD_TYPE_FUEL = <span class="str">'1'</span>;
+<span class="kw">const</span> CARD_TYPE_COOLANT = <span class="str">'2'</span>;
+<span class="kw">const</span> CARD_TYPE_SPECIAL = <span class="str">'3'</span>;
+
+<span class="cmt">// Score that changes during the game:</span>
+<span class="kw">let</span> playerScore = <span class="num">0</span>;
+playerScore = playerScore + <span class="num">5</span>;  <span class="cmt">// score is now 5</span>
+playerScore += <span class="num">3</span>;             <span class="cmt">// score is now 8</span>`,
+    demo: 'variables',
+    points: ['Use <code>const</code> for values that never change', 'Use <code>let</code> for values that will be updated', 'Give variables CLEAR names — future you will thank you', 'ALL_CAPS with underscores = convention for constants'],
+  },
+  {
+    id: '1-2', icon: '🔢', title: 'Numbers & Strings',
+    tag: 'Level 1 · Absolute Beginner',
+    subtitle: 'The two most common types of data',
+    explain: `
+      <p>Data comes in different <strong>types</strong>. The two you'll use most are:</p>
+      <p><strong>Numbers</strong> — for counting, calculating, comparing. Card values, scores, zoom levels, player IDs.</p>
+      <p><strong>Strings</strong> — text wrapped in quotes. Player names, image filenames, button labels.</p>
+      <p>JavaScript is loosely typed, meaning a variable can hold any type. But be careful — <code>"5" + 3</code> gives you <code>"53"</code> (string join), not <code>8</code> (addition). Always convert with <code>Number()</code> when needed.</p>
+    `,
+    callout: '🎮 Frenzy Falls encodes a whole card into a single number: water×1000 + influence×10 + action. So "card 3214" means 3 water, 2 influence, action 4. One number holds three pieces of info!',
+    code: `<span class="cmt">// Numbers</span>
+<span class="kw">const</span> cardValue = <span class="num">7</span>;
+<span class="kw">const</span> stability = <span class="num">5</span>;
+<span class="kw">const</span> newStability = stability + cardValue; <span class="cmt">// 12</span>
+
+<span class="cmt">// Strings</span>
+<span class="kw">const</span> playerName = <span class="str">"Alice"</span>;
+<span class="kw">const</span> filename = <span class="str">'Slambo_Cards_v5.jpg'</span>;
+
+<span class="cmt">// Frenzy Falls card encoding trick:</span>
+<span class="kw">const</span> encoded = <span class="num">3214</span>; <span class="cmt">// water=3, influence=2, action=4</span>
+<span class="kw">const</span> water = Math.<span class="fn">floor</span>(encoded / <span class="num">1000</span>);      <span class="cmt">// 3</span>
+<span class="kw">const</span> influence = Math.<span class="fn">floor</span>((encoded % <span class="num">1000</span>) / <span class="num">10</span>); <span class="cmt">// 2</span>
+<span class="kw">const</span> action = encoded % <span class="num">10</span>;               <span class="cmt">// 4</span>`,
+    demo: 'decode',
+    points: ['Numbers: no quotes. Strings: always in quotes', 'Number() converts a string to a number', 'Math.floor() rounds down', '% is the "remainder" operator (modulo) — great for extracting digits'],
+  },
+  {
+    id: '1-3', icon: '🗂️', title: 'Objects',
+    tag: 'Level 1 · Absolute Beginner',
+    subtitle: 'Grouping related data together',
+    explain: `
+      <p>An <strong>object</strong> is a collection of named values (called <em>properties</em>) grouped under one variable. Think of it like a form with labelled fields.</p>
+      <p>You access properties with a dot: <code>card.type</code>, <code>player.name</code>.</p>
+      <p>Objects can be nested — an object can contain other objects. The Slambo card image map is an object whose values are themselves objects.</p>
+    `,
+    callout: '🎮 Slambo uses a big object called CARD_IMAGE_MAP. Each key is a card identifier like "1_3" and the value is an object with the image filename and display label.',
+    code: `<span class="cmt">// A player object — groups related info</span>
+<span class="kw">const</span> player = {
+    <span class="key">id</span>: <span class="num">42</span>,
+    <span class="key">name</span>: <span class="str">'Alice'</span>,
+    <span class="key">score</span>: <span class="num">0</span>,
+    <span class="key">isActive</span>: <span class="kw">true</span>,
+};
+
+<span class="cmt">// Access properties with a dot:</span>
+console.<span class="fn">log</span>(player.name);   <span class="cmt">// "Alice"</span>
+player.score = <span class="num">15</span>;          <span class="cmt">// update a property</span>
+
+<span class="cmt">// From Slambo — card image map (object of objects):</span>
+<span class="kw">const</span> CARD_IMAGE_MAP = {
+    <span class="key">'1_1'</span>: { <span class="key">img</span>: <span class="str">'Slambo_Cards_v5.jpg'</span>, <span class="key">label</span>: <span class="str">'+1'</span> },
+    <span class="key">'1_2'</span>: { <span class="key">img</span>: <span class="str">'Slambo_Cards_v52.jpg'</span>, <span class="key">label</span>: <span class="str">'+2'</span> },
+    <span class="key">'2_1'</span>: { <span class="key">img</span>: <span class="str">'Slambo_Cards_v510.jpg'</span>, <span class="key">label</span>: <span class="str">'-1'</span> },
+};
+
+<span class="cmt">// Access nested:</span>
+<span class="kw">const</span> info = CARD_IMAGE_MAP[<span class="str">'1_2'</span>];
+console.<span class="fn">log</span>(info.label); <span class="cmt">// "+2"</span>`,
+    demo: 'objects',
+    points: ['Objects store related data together', 'Access with dot: <code>obj.property</code>', 'Access with brackets when key is a variable: <code>obj[key]</code>', 'Nested objects = objects inside objects'],
+  },
+  {
+    id: '1-4', icon: '📋', title: 'Arrays',
+    tag: 'Level 1 · Absolute Beginner',
+    subtitle: 'Ordered lists of values',
+    explain: `
+      <p>An <strong>array</strong> is an ordered list of values in square brackets. Items are accessed by their position (index), starting at 0.</p>
+      <p>Arrays are everywhere in games: the list of players, a hand of cards, zoom level options, the game log history.</p>
+      <p>Key array methods: <code>.length</code>, <code>.push()</code> to add, <code>.forEach()</code> to loop.</p>
+    `,
+    callout: '🎮 The ZOOM_LEVELS array in all three games defines exactly which zoom steps are allowed: [0.5, 0.625, 0.75, 0.875, 1, 1.125, 1.25]. The zoom buttons step through this list.',
+    code: `<span class="cmt">// From Slambo — zoom levels array:</span>
+<span class="kw">const</span> ZOOM_LEVELS = [<span class="num">0.5</span>, <span class="num">0.625</span>, <span class="num">0.75</span>, <span class="num">0.875</span>, <span class="num">1</span>, <span class="num">1.125</span>, <span class="num">1.25</span>];
+
+<span class="cmt">// Access by index (0-based):</span>
+ZOOM_LEVELS[<span class="num">0</span>]; <span class="cmt">// 0.5  (first item)</span>
+ZOOM_LEVELS[<span class="num">4</span>]; <span class="cmt">// 1    (fifth item = default zoom)</span>
+ZOOM_LEVELS.length; <span class="cmt">// 7</span>
+
+<span class="cmt">// A hand of cards (array of objects):</span>
+<span class="kw">let</span> hand = [
+    { <span class="key">id</span>: <span class="num">1</span>, <span class="key">type</span>: <span class="str">'fuel'</span>, <span class="key">value</span>: <span class="num">3</span> },
+    { <span class="key">id</span>: <span class="num">2</span>, <span class="key">type</span>: <span class="str">'coolant'</span>, <span class="key">value</span>: -<span class="num">2</span> },
+];
+
+<span class="cmt">// Add a card:</span>
+hand.<span class="fn">push</span>({ <span class="key">id</span>: <span class="num">3</span>, <span class="key">type</span>: <span class="str">'fuel'</span>, <span class="key">value</span>: <span class="num">5</span> });
+hand.length; <span class="cmt">// 3</span>`,
+    demo: 'arrays',
+    points: ['Arrays start at index 0', '<code>.push()</code> adds to end, <code>.pop()</code> removes from end', '<code>.length</code> tells you how many items', 'Arrays of objects = very common in games'],
+  },
+
+  // ══ CHAPTER 2 ══
+  { chapter: true, id: 'ch2', title: 'Chapter 2 — Logic & Functions' },
+  {
+    id: '2-1', icon: '🔀', title: 'If / Else',
+    tag: 'Level 1 · Absolute Beginner',
+    subtitle: 'Making decisions in code',
+    explain: `
+      <p><strong>if/else</strong> lets code take different paths based on a condition. "If this is true, do this — otherwise, do that."</p>
+      <p>Comparisons: <code>===</code> equals, <code>!==</code> not equals, <code>&gt;</code> greater, <code>&lt;</code> less, <code>&gt;=</code> greater or equal.</p>
+      <p>You can chain multiple conditions with <code>else if</code>. When you have many options for one value, a <code>switch</code> is cleaner.</p>
+    `,
+    callout: '🎮 Slambo uses if/else to check whether a played card would push the stability out of range (0–10). If yes, the move helper blocks the play with a warning message.',
+    code: `<span class="cmt">// Slambo stability range check:</span>
+<span class="kw">const</span> stability = <span class="num">8</span>;
+<span class="kw">const</span> cardValue = <span class="num">4</span>;
+<span class="kw">const</span> newStability = stability + cardValue; <span class="cmt">// 12</span>
+
+<span class="kw">if</span> (newStability >= <span class="num">0</span> && newStability <= <span class="num">10</span>) {
+    console.<span class="fn">log</span>(<span class="str">'Valid play!'</span>);
+} <span class="kw">else</span> {
+    console.<span class="fn">log</span>(<span class="str">'BUST! Out of range.'</span>);
+}
+
+<span class="cmt">// Switch — from Frenzy Falls action names:</span>
+<span class="kw">const</span> actionId = <span class="num">2</span>;
+<span class="kw">switch</span> (actionId) {
+    <span class="kw">case</span> <span class="num">0</span>: console.<span class="fn">log</span>(<span class="str">'No action'</span>); <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="num">1</span>: console.<span class="fn">log</span>(<span class="str">'PROXY'</span>); <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="num">2</span>: console.<span class="fn">log</span>(<span class="str">'BUMP'</span>); <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="num">3</span>: console.<span class="fn">log</span>(<span class="str">'PULL'</span>); <span class="kw">break</span>;
+}`,
+    demo: 'ifelse',
+    points: ['<code>===</code> is strict equality (use this, not ==)', '<code>&&</code> means AND, <code>||</code> means OR', '<code>!</code> flips true/false: <code>!true === false</code>', 'switch is cleaner than long else-if chains'],
+  },
+  {
+    id: '2-2', icon: '⚙️', title: 'Functions',
+    tag: 'Level 1 · Absolute Beginner',
+    subtitle: 'Reusable blocks of code with a name',
+    explain: `
+      <p>A <strong>function</strong> is a named block of code that you can call (run) whenever you need it. Give it inputs (<em>parameters</em>), it does work, and returns a result.</p>
+      <p>Instead of writing the same logic in 10 places, write it once as a function and call it 10 times. Easier to fix, easier to read.</p>
+      <p>Modern JavaScript uses arrow functions: <code>(param) => result</code>. Traditional: <code>function name(param) { return result; }</code>. Both work.</p>
+    `,
+    callout: '🎮 Both Slambo and Vivo have a getImgUrl() function that takes a filename and returns the full image URL. It\'s called dozens of times but only written once.',
+    code: `<span class="cmt">// Traditional function:</span>
+<span class="kw">function</span> <span class="fn">getCardLabel</span>(card) {
+    <span class="kw">const</span> key = card.type + <span class="str">'_'</span> + card.type_arg;
+    <span class="kw">return</span> CARD_IMAGE_MAP[key]?.label || <span class="str">'?'</span>;
+}
+
+<span class="cmt">// Arrow function (shorter, same result):</span>
+<span class="kw">const</span> <span class="fn">getCardLabel</span> = (card) => {
+    <span class="kw">const</span> key = <span class="str">\`\${card.type}_\${card.type_arg}\`</span>;
+    <span class="kw">return</span> CARD_IMAGE_MAP[key]?.label || <span class="str">'?'</span>;
+};
+
+<span class="cmt">// One-liner arrow (when just returning one thing):</span>
+<span class="kw">const</span> <span class="fn">double</span> = (n) => n * <span class="num">2</span>;
+<span class="fn">double</span>(<span class="num">5</span>); <span class="cmt">// 10</span>
+
+<span class="cmt">// From Slambo — image URL builder:</span>
+<span class="kw">function</span> <span class="fn">getImgUrl</span>(filename) {
+    <span class="kw">return</span> g_gamethemeurl + <span class="str">'img/'</span> + filename;
+}`,
+    demo: 'functions',
+    points: ['Functions = named, reusable code blocks', 'Parameters go in parentheses, return value comes back out', 'Arrow functions: shorter syntax for simple functions', 'Good names make code self-documenting'],
+  },
+  {
+    id: '2-3', icon: '🔄', title: 'Loops',
+    tag: 'Level 2 · Getting Comfortable',
+    subtitle: 'Repeating actions for each item in a list',
+    explain: `
+      <p>Loops let you do something <strong>for every item</strong> in an array without writing the same code over and over.</p>
+      <p><code>forEach</code> calls a function for each item. <code>map</code> transforms each item into something new. <code>filter</code> keeps only items that pass a test.</p>
+      <p>A classic <code>for</code> loop gives you more control: you choose start, stop, and step size.</p>
+    `,
+    callout: '🎮 When rendering all opponent cards, Slambo loops over the players array and creates a card panel for each player. When building the reference card row, it loops over all card types.',
+    code: `<span class="cmt">// forEach — do something with each player:</span>
+players.<span class="fn">forEach</span>((player) => {
+    console.<span class="fn">log</span>(<span class="str">\`\${player.name}: \${player.score} pts\`</span>);
+});
+
+<span class="cmt">// map — transform array into new array:</span>
+<span class="kw">const</span> names = players.<span class="fn">map</span>((p) => p.name);
+<span class="cmt">// ["Alice", "Bob", "Carol"]</span>
+
+<span class="cmt">// filter — keep only players still in the game:</span>
+<span class="kw">const</span> alive = players.<span class="fn">filter</span>((p) => !p.eliminated);
+
+<span class="cmt">// Classic for loop (with index access):</span>
+<span class="kw">const</span> cards = [<span class="str">'A'</span>, <span class="str">'B'</span>, <span class="str">'C'</span>];
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < cards.length; i++) {
+    console.<span class="fn">log</span>(<span class="str">\`Card \${i}: \${cards[i]}\`</span>);
+}`,
+    demo: 'loops',
+    points: ['forEach → run code for each item', 'map → transform each item, get new array back', 'filter → keep items that pass a test', 'Classic for loop when you need the index number'],
+  },
+
+  // ══ CHAPTER 3 ══
+  { chapter: true, id: 'ch3', title: 'Chapter 3 — The Web Layer' },
+  {
+    id: '3-1', icon: '🏗️', title: 'HTML Structure',
+    tag: 'Level 2 · Getting Comfortable',
+    subtitle: 'The skeleton that holds a game UI together',
+    explain: `
+      <p><strong>HTML</strong> is the skeleton of every webpage. You define <em>elements</em> with tags like <code>&lt;div&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;span&gt;</code>. Each element can have an <code>id</code> (unique) or <code>class</code> (shared).</p>
+      <p>A BGA game page has predictable sections: <strong>the scoreboard</strong> (top right), <strong>the main game area</strong> (centre), <strong>the status bar</strong> (bottom action bar), and <strong>the log</strong> (right side chat/history).</p>
+      <p>You design the layout in HTML, then style it with CSS, then make it interactive with JavaScript.</p>
+    `,
+    callout: '🎮 In Slambo, the main area is #slambo-game-area. Inside it: #slambo-opponents (top), #slambo-played-area (middle, with start card + stability + played card), and #slambo-hand (bottom).',
+    code: `<span class="cmt">&lt;!-- BGA-style game layout skeleton --&gt;</span>
+&lt;<span class="kw">div</span> <span class="key">id</span>=<span class="str">"overall-content"</span>&gt;
+
+  <span class="cmt">&lt;!-- Scoreboard lives in BGA's sidebar (top-right) --&gt;</span>
+  &lt;<span class="kw">div</span> <span class="key">id</span>=<span class="str">"player-boards"</span>&gt;
+    &lt;<span class="kw">div</span> <span class="key">class</span>=<span class="str">"player-board"</span>&gt;
+      &lt;<span class="kw">span</span> <span class="key">class</span>=<span class="str">"player-name"</span>&gt;Alice&lt;/<span class="kw">span</span>&gt;
+      &lt;<span class="kw">span</span> <span class="key">class</span>=<span class="str">"player-score"</span>&gt;0&lt;/<span class="kw">span</span>&gt;
+    &lt;/<span class="kw">div</span>&gt;
+  &lt;/<span class="kw">div</span>&gt;
+
+  <span class="cmt">&lt;!-- Main game area --&gt;</span>
+  &lt;<span class="kw">div</span> <span class="key">id</span>=<span class="str">"slambo-game-area"</span>&gt;
+    &lt;<span class="kw">div</span> <span class="key">id</span>=<span class="str">"slambo-opponents"</span>&gt;<span class="cmt">&lt;!-- opponent cards --&gt;</span>&lt;/<span class="kw">div</span>&gt;
+    &lt;<span class="kw">div</span> <span class="key">id</span>=<span class="str">"slambo-played-area"</span>&gt;<span class="cmt">&lt;!-- play zone --&gt;</span>&lt;/<span class="kw">div</span>&gt;
+    &lt;<span class="kw">div</span> <span class="key">id</span>=<span class="str">"slambo-hand"</span>&gt;<span class="cmt">&lt;!-- your cards --&gt;</span>&lt;/<span class="kw">div</span>&gt;
+  &lt;/<span class="kw">div</span>&gt;
+
+  <span class="cmt">&lt;!-- Status bar — BGA provides this --&gt;</span>
+  &lt;<span class="kw">div</span> <span class="key">id</span>=<span class="str">"generalactions"</span>&gt;<span class="cmt">&lt;!-- action buttons --&gt;</span>&lt;/<span class="kw">div</span>&gt;
+
+&lt;/<span class="kw">div</span>&gt;`,
+    demo: 'htmlstructure',
+    points: ['id = unique identifier (one element per page)', 'class = shared style (many elements can share)', 'Nesting HTML = parent/child relationship', 'BGA provides: player boards, status bar, log — you fill in the game area'],
+  },
+  {
+    id: '3-2', icon: '🎨', title: 'CSS Styling',
+    tag: 'Level 2 · Getting Comfortable',
+    subtitle: 'Making elements look good',
+    explain: `
+      <p><strong>CSS</strong> controls how HTML looks. You write <em>selectors</em> (which element) and <em>properties</em> (what to change).</p>
+      <p>Key layout tools: <strong>flexbox</strong> (<code>display: flex</code>) lines things up in a row or column. <strong>position</strong> lets you place elements precisely. <strong>transition</strong> animates changes smoothly.</p>
+      <p>CSS classes can be added/removed by JavaScript, which is how you show/hide things, highlight selected cards, animate banners.</p>
+    `,
+    callout: '🎮 The Slambo stability banner uses CSS transitions. When the game adds the class <code>slambo-banner-visible</code>, CSS transitions opacity from 0 to 1 and scale from 0.95 to 1 — no JS animation code needed!',
+    code: `<span class="cmt">/* From Slambo's CSS — card hover effect */</span>
+.<span class="fn">slambo-card</span>:hover {
+    transform: translateY(<span class="num">-15px</span>) scale(<span class="num">1.05</span>);
+    z-index: <span class="num">50</span>;
+}
+
+<span class="cmt">/* Banner visibility toggle — JS adds/removes the class */</span>
+#<span class="fn">slambo-banner</span> {
+    opacity: <span class="num">0</span>;
+    transform: scale(<span class="num">0.95</span>);
+    transition: opacity <span class="num">0.2s</span> ease, transform <span class="num">0.2s</span> ease;
+}
+
+#<span class="fn">slambo-banner</span>.<span class="fn">slambo-banner-visible</span> {
+    opacity: <span class="num">1</span>;
+    transform: scale(<span class="num">1</span>);
+}
+
+<span class="cmt">/* Flexbox — from Frenzy Falls game area */</span>
+#<span class="fn">ff-pools-area</span> {
+    display: flex;
+    flex-direction: column;
+    gap: <span class="num">10px</span>;
+}`,
+    demo: 'css',
+    points: ['Selectors: <code>#id</code>, <code>.class</code>, <code>element</code>', 'Flexbox: the best layout tool for games', 'transition: animate property changes for free', 'Add/remove classes in JS to change appearance'],
+  },
+  {
+    id: '3-3', icon: '🖱️', title: 'The DOM & Events',
+    tag: 'Level 2 · Getting Comfortable',
+    subtitle: 'JavaScript talking to the HTML page',
+    explain: `
+      <p>The <strong>DOM</strong> (Document Object Model) is the live HTML page that JavaScript can read and change. Every element is a JavaScript object you can find, modify, or create.</p>
+      <p>You find elements with <code>document.getElementById('id')</code> or <code>document.querySelector('.class')</code>. You react to user actions with <strong>event listeners</strong>: click, hover, keyboard.</p>
+      <p>This is the core loop of interactive UIs: <em>user does something → event fires → JS updates the DOM</em>.</p>
+    `,
+    callout: '🎮 When you click a Slambo card, an event listener fires. It checks if it\'s a choice card (±7/±8), then either shows confirm/cancel buttons in the status bar or auto-plays it after a 5-second countdown.',
+    code: `<span class="cmt">// Find an element by id:</span>
+<span class="kw">const</span> banner = document.<span class="fn">getElementById</span>(<span class="str">'slambo-banner'</span>);
+
+<span class="cmt">// Change its text:</span>
+banner.textContent = <span class="str">'SLAMBO!'</span>;
+
+<span class="cmt">// Add a CSS class to make it visible:</span>
+banner.classList.<span class="fn">add</span>(<span class="str">'slambo-banner-visible'</span>);
+
+<span class="cmt">// Remove it later:</span>
+banner.classList.<span class="fn">remove</span>(<span class="str">'slambo-banner-visible'</span>);
+
+<span class="cmt">// Event listener — respond to a button click:</span>
+<span class="kw">const</span> confirmBtn = document.<span class="fn">getElementById</span>(<span class="str">'confirm-btn'</span>);
+confirmBtn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => {
+    console.<span class="fn">log</span>(<span class="str">'Player confirmed their move!'</span>);
+    <span class="fn">playCard</span>(selectedCardId);
+});
+
+<span class="cmt">// Create a new element and add it to the page:</span>
+<span class="kw">const</span> newCard = document.<span class="fn">createElement</span>(<span class="str">'div'</span>);
+newCard.className = <span class="str">'demo-card fuel'</span>;
+newCard.textContent = <span class="str">'+5'</span>;
+document.<span class="fn">getElementById</span>(<span class="str">'slambo-hand'</span>).<span class="fn">appendChild</span>(newCard);`,
+    demo: 'domevents',
+    points: ['getElementById / querySelector — find elements', 'classList.add/remove — toggle visual states', 'addEventListener — react to user input', 'createElement + appendChild — build HTML from JS'],
+  },
+
+  // ══ CHAPTER 4 ══
+  { chapter: true, id: 'ch4', title: 'Chapter 4 — Game UI Pieces' },
+  {
+    id: '4-1', icon: '🏆', title: 'The Scoreboard',
+    tag: 'Level 2 · Getting Comfortable',
+    subtitle: 'Displaying and updating player scores',
+    explain: `
+      <p>The <strong>scoreboard</strong> is the always-visible panel (top-right in BGA) showing every player's current score, colour, and status. It's the first thing players glance at.</p>
+      <p>It's built from an array of player objects. When scores change, JavaScript finds the right score element and updates its text. A bar width or colour change signals who's winning.</p>
+      <p>The trick: use data attributes (<code>data-player-id</code>) on elements so you can find the right row later without maintaining a separate reference.</p>
+    `,
+    callout: '🎮 BGA provides a standard player table automatically. But in custom games, developers build their own score panel and call bga.scoreCtrl to animate score updates — the number ticks up dramatically.',
+    code: `<span class="cmt">// Build a scoreboard row for each player:</span>
+<span class="kw">function</span> <span class="fn">buildScoreboard</span>(players) {
+    <span class="kw">const</span> container = document.<span class="fn">getElementById</span>(<span class="str">'scoreboard'</span>);
+    players.<span class="fn">forEach</span>((player) => {
+        <span class="kw">const</span> row = document.<span class="fn">createElement</span>(<span class="str">'div'</span>);
+        row.className = <span class="str">'player-row'</span>;
+        row.dataset.playerId = player.id; <span class="cmt">// remember the ID</span>
+        row.innerHTML = <span class="str">\`
+          &lt;span class="name"&gt;\${player.name}&lt;/span&gt;
+          &lt;span class="score" id="score-\${player.id}"&gt;0&lt;/span&gt;
+        \`</span>;
+        container.<span class="fn">appendChild</span>(row);
+    });
+}
+
+<span class="cmt">// Update one player's score:</span>
+<span class="kw">function</span> <span class="fn">updateScore</span>(playerId, newScore) {
+    <span class="kw">const</span> el = document.<span class="fn">getElementById</span>(<span class="str">\`score-\${playerId}\`</span>);
+    <span class="kw">if</span> (el) el.textContent = newScore;
+}`,
+    demo: 'scoreboard',
+    points: ['data-* attributes store extra info on elements', 'Template literals (backtick strings) build HTML strings', 'innerHTML sets the HTML content of an element', 'textContent is safer than innerHTML when inserting user text'],
+  },
+  {
+    id: '4-2', icon: '🃏', title: 'The Game Area & Cards',
+    tag: 'Level 3 · Intermediate',
+    subtitle: 'Building the main playing field',
+    explain: `
+      <p>The <strong>main game area</strong> is where the action happens. In a card game, this typically has: a play pile (where cards land), a stability/score indicator, and your hand of cards at the bottom.</p>
+      <p>Cards in hand have hover effects (CSS transitions), click selection (JS class toggle), and can be dragged to the play area or clicked to play. Stacking multiple cards uses absolute positioning with a z-index sequence.</p>
+      <p>The stability meter is just a div whose height is set as a percentage — simple but effective.</p>
+    `,
+    callout: '🎮 Slambo\'s hand rendering uses a smart overlap algorithm: it calculates how many pixels to shift each card left so all cards fit in the container width without overflow.',
+    code: `<span class="cmt">// Slambo's smart card overlap algorithm:</span>
+<span class="kw">function</span> <span class="fn">updateHandOverlap</span>() {
+    <span class="kw">const</span> handEl = document.<span class="fn">getElementById</span>(<span class="str">'slambo-hand'</span>);
+    <span class="kw">const</span> cards = handEl.<span class="fn">querySelectorAll</span>(<span class="str">'.slambo-card'</span>);
+    <span class="kw">const</span> cardCount = cards.length;
+    <span class="kw">const</span> available = handEl.clientWidth - <span class="num">32</span>;
+    <span class="kw">const</span> cardWidth = <span class="num">128</span>;
+
+    <span class="kw">let</span> marginLeft = <span class="num">0</span>;
+    <span class="kw">if</span> (cardCount * cardWidth > available && cardCount > <span class="num">1</span>) {
+        <span class="kw">const</span> save = (cardCount * cardWidth) - available;
+        marginLeft = -Math.<span class="fn">ceil</span>(save / (cardCount - <span class="num">1</span>));
+        marginLeft = Math.<span class="fn">max</span>(marginLeft, -(cardWidth - <span class="num">26</span>));
+    }
+
+    cards.<span class="fn">forEach</span>((card, i) => {
+        card.style.marginLeft = i === <span class="num">0</span> ? <span class="str">'0'</span> : <span class="str">\`\${marginLeft}px\`</span>;
+        card.style.zIndex = i;
+    });
+}`,
+    demo: 'gamearea',
+    points: ['querySelectorAll returns all matching elements', 'clientWidth = visible width of an element', 'style.property = change CSS directly from JavaScript', 'The overlap math: how much to save ÷ number of gaps'],
+  },
+  {
+    id: '4-3', icon: '📢', title: 'The Status Bar',
+    tag: 'Level 3 · Intermediate',
+    subtitle: 'Guiding the player with dynamic messages and action buttons',
+    explain: `
+      <p>The <strong>status bar</strong> is the most important UI piece for player guidance. It shows: whose turn it is, what they need to do, and action buttons (Confirm, Cancel, Choose +7 or -7).</p>
+      <p>It needs to change completely between states. When you enter a state, you set the message and add buttons. When you leave, you clear everything. This pattern is called <em>state-driven UI</em>.</p>
+      <p>Buttons are created dynamically in JavaScript — not hardcoded in HTML — because what's available depends on the game state.</p>
+    `,
+    callout: '🎮 Slambo\'s status bar shows a 5-second countdown: "Confirm play +7 — auto-confirms in 4s". It uses setInterval to update the count each second and auto-fires if the player doesn\'t click.',
+    code: `<span class="cmt">// Status bar controller pattern:</span>
+<span class="kw">const</span> StatusBar = {
+    <span class="fn">setTitle</span>(message) {
+        document.<span class="fn">getElementById</span>(<span class="str">'status-msg'</span>).textContent = message;
+    },
+
+    <span class="fn">addButton</span>(label, onClick, style = <span class="str">'blue'</span>) {
+        <span class="kw">const</span> btn = document.<span class="fn">createElement</span>(<span class="str">'button'</span>);
+        btn.textContent = label;
+        btn.className = <span class="str">\`status-bar-btn \${style}\`</span>;
+        btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, onClick);
+        document.<span class="fn">getElementById</span>(<span class="str">'status-buttons'</span>).<span class="fn">appendChild</span>(btn);
+    },
+
+    <span class="fn">clear</span>() {
+        document.<span class="fn">getElementById</span>(<span class="str">'status-buttons'</span>).innerHTML = <span class="str">''</span>;
+    },
+};
+
+<span class="cmt">// Usage in a game state:</span>
+StatusBar.<span class="fn">setTitle</span>(<span class="str">'You must play a card'</span>);
+StatusBar.<span class="fn">addButton</span>(<span class="str">'Confirm'</span>, () => <span class="fn">playCard</span>());
+StatusBar.<span class="fn">addButton</span>(<span class="str">'Cancel'</span>, () => StatusBar.<span class="fn">clear</span>(), <span class="str">'red'</span>);`,
+    demo: 'statusbar',
+    points: ['Create buttons dynamically — not hardcoded HTML', 'Clear buttons when leaving a state', 'setInterval for countdown timers', 'The object pattern (StatusBar = {}) groups related functions'],
+  },
+  {
+    id: '4-4', icon: '📜', title: 'The Game Log',
+    tag: 'Level 3 · Intermediate',
+    subtitle: 'Recording what happened for all players to read',
+    explain: `
+      <p>The <strong>game log</strong> is a scrolling history of everything that happened — cards played, scores changed, special effects triggered. It's vital for players who missed a moment.</p>
+      <p>Each entry is prepended (added to the top) or appended (added to the bottom). The log auto-scrolls so the latest is always visible.</p>
+      <p>Good log entries have a timestamp, the player name in their colour, and a clear action description. They're styled by type: system messages, player actions, warnings.</p>
+    `,
+    callout: '🎮 BGA provides a standard log panel, but games add their own log entries by calling notif handlers. Each notification type (card played, score changed) has a function that adds a formatted log entry.',
+    code: `<span class="cmt">// Log entry system:</span>
+<span class="kw">function</span> <span class="fn">addLog</span>(message, type = <span class="str">'info'</span>) {
+    <span class="kw">const</span> log = document.<span class="fn">getElementById</span>(<span class="str">'game-log'</span>);
+    <span class="kw">const</span> entry = document.<span class="fn">createElement</span>(<span class="str">'div'</span>);
+    entry.className = <span class="str">\`log-entry \${type}\`</span>;
+
+    <span class="kw">const</span> time = <span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">toLocaleTimeString</span>([], 
+        { <span class="key">hour</span>: <span class="str">'2-digit'</span>, <span class="key">minute</span>: <span class="str">'2-digit'</span>, <span class="key">second</span>: <span class="str">'2-digit'</span> }
+    );
+
+    entry.textContent = <span class="str">\`[\${time}] \${message}\`</span>;
+    log.<span class="fn">appendChild</span>(entry);
+
+    <span class="cmt">// Auto-scroll to bottom:</span>
+    log.scrollTop = log.scrollHeight;
+}
+
+<span class="cmt">// Calling it:</span>
+<span class="fn">addLog</span>(<span class="str">'Alice played +5'</span>, <span class="str">'action'</span>);
+<span class="fn">addLog</span>(<span class="str">'Stability: 5 → 10'</span>, <span class="str">'info'</span>);
+<span class="fn">addLog</span>(<span class="str">'SLAMBO! Bob is eliminated.'</span>, <span class="str">'warn'</span>);`,
+    demo: 'gamelog',
+    points: ['appendChild adds to bottom, prepend adds to top', 'scrollTop = scrollHeight auto-scrolls to newest entry', 'CSS classes on entries let you style each type differently', 'Timestamps make logs much more useful'],
+  },
+
+  // ══ CHAPTER 5 ══
+  { chapter: true, id: 'ch5', title: 'Chapter 5 — Advanced Patterns' },
+
+  {
+    id: '5-0', icon: '✏️', title: 'Template Literals',
+    tag: 'Level 3 · Intermediate',
+    subtitle: 'Building strings that contain live variable values',
+    explain: `
+      <p><strong>Template literals</strong> are strings wrapped in backtick characters ( \` ) instead of quotes. Inside them you can embed any JavaScript expression using <code>\${...}</code>.</p>
+      <p>This is how every game builds dynamic text: player names in messages, image URLs from filenames, HTML snippets from data objects. It replaces messy string concatenation (<code>'Hello ' + name + '!'</code>) with readable inline expressions.</p>
+      <p>They also support multi-line strings, making it easy to write HTML templates directly in JavaScript.</p>
+    `,
+    callout: '🎮 Slambo\'s confirmation message is built with template literals: <code>\'Confirm play \${cardLabel} — auto-confirms in \${timeRemaining}s\'</code>. Every second, the whole string is rebuilt with the new countdown number.',
+    code: `<span class="cmt">// Old way — messy concatenation:</span>
+<span class="kw">const</span> msg1 = <span class="str">'Hello '</span> + playerName + <span class="str">'! You have '</span> + cardCount + <span class="str">' cards.'</span>;
+
+<span class="cmt">// Template literal — clean and readable:</span>
+<span class="kw">const</span> msg2 = <span class="str">\`Hello \${playerName}! You have \${cardCount} cards.\`</span>;
+
+<span class="cmt">// Multi-line HTML template (from Slambo scoreboard):</span>
+<span class="kw">const</span> rowHtml = <span class="str">\`
+    &lt;div class="score-row" data-player-id="\${player.id}"&gt;
+        &lt;span class="name" style="color:\${player.color}"&gt;\${player.name}&lt;/span&gt;
+        &lt;span class="score"&gt;\${player.score}&lt;/span&gt;
+    &lt;/div&gt;
+\`</span>;
+
+<span class="cmt">// Expression inside — any JS works:</span>
+<span class="kw">const</span> label = <span class="str">\`\${card.value > 0 ? '+' : ''}\${card.value}\`</span>;
+<span class="cmt">// card.value = 5  →  "+5"</span>
+<span class="cmt">// card.value = -3 →  "-3"</span>
+
+<span class="cmt">// Image URL building (getImgUrl pattern):</span>
+<span class="kw">const</span> url = <span class="str">\`\${g_gamethemeurl}img/\${filename}\`</span>;`,
+    demo: 'template',
+    points: ['Backticks ` wrap template literals', '<code>${expression}</code> embeds live values', 'Multi-line strings work without special characters', 'Any valid JS expression works inside <code>${}</code>'],
+  },
+  {
+    id: '5-1', icon: '🏛️', title: 'Classes',
+    tag: 'Level 4 · Advanced',
+    subtitle: 'Bundling data and behaviour into reusable blueprints',
+    explain: `
+      <p>A <strong>class</strong> is a blueprint for creating objects. All three games use classes heavily: <code>ZoomManager</code>, <code>SlamboCardManager</code>, <code>PlayerTurnState</code>.</p>
+      <p>The <strong>constructor</strong> runs when you create a new instance (<code>new ZoomManager(settings)</code>). The class's <strong>methods</strong> are the functions that all instances share.</p>
+      <p><strong>this</strong> refers to the current instance — the specific ZoomManager you created, not a generic one.</p>
+    `,
+    callout: '🎮 All three games have a ZoomManager class. It stores the current zoom level, the available levels, and the buttons. When you zoom in, it finds the next level in the array and applies it.',
+    code: `<span class="cmt">// ZoomManager class — from Slambo (simplified):</span>
+<span class="kw">class</span> <span class="fn">ZoomManager</span> {
+    <span class="fn">constructor</span>(settings) {
+        <span class="kw">this</span>.levels = settings.zoomLevels;
+        <span class="kw">this</span>.zoom = <span class="num">1</span>; <span class="cmt">// current zoom</span>
+        <span class="kw">this</span>.element = settings.element;
+    }
+
+    <span class="fn">setZoom</span>(zoom) {
+        <span class="kw">this</span>.zoom = zoom;
+        <span class="kw">this</span>.element.style.transform = <span class="str">\`scale(\${zoom})\`</span>;
+    }
+
+    <span class="fn">zoomIn</span>() {
+        <span class="kw">const</span> i = <span class="kw">this</span>.levels.<span class="fn">indexOf</span>(<span class="kw">this</span>.zoom);
+        <span class="kw">if</span> (i < <span class="kw">this</span>.levels.length - <span class="num">1</span>)
+            <span class="kw">this</span>.<span class="fn">setZoom</span>(<span class="kw">this</span>.levels[i + <span class="num">1</span>]);
+    }
+
+    <span class="fn">zoomOut</span>() {
+        <span class="kw">const</span> i = <span class="kw">this</span>.levels.<span class="fn">indexOf</span>(<span class="kw">this</span>.zoom);
+        <span class="kw">if</span> (i > <span class="num">0</span>)
+            <span class="kw">this</span>.<span class="fn">setZoom</span>(<span class="kw">this</span>.levels[i - <span class="num">1</span>]);
+    }
+}
+
+<span class="cmt">// Create an instance:</span>
+<span class="kw">const</span> zoom = <span class="kw">new</span> <span class="fn">ZoomManager</span>({
+    element: document.<span class="fn">getElementById</span>(<span class="str">'game-area'</span>),
+    zoomLevels: [<span class="num">0.5</span>, <span class="num">0.75</span>, <span class="num">1</span>, <span class="num">1.25</span>],
+});`,
+    demo: 'classes',
+    points: ['class = reusable blueprint; new = create an instance', '<code>this</code> = the current instance\'s data', 'constructor() runs once when creating the object', 'Methods are functions that belong to the class'],
+  },
+  {
+    id: '5-2', icon: '🔁', title: 'State Machines',
+    tag: 'Level 4 · Advanced',
+    subtitle: 'Managing complex game flow with clear states',
+    explain: `
+      <p>A <strong>state machine</strong> means the game is always in exactly one <em>state</em> (e.g. "playerTurn", "choosingCard", "waitForOthers"). When an event happens, it <em>transitions</em> to the next state.</p>
+      <p>Each state has: <code>onEnteringState()</code> — setup; <code>onLeavingState()</code> — cleanup; and event handlers for actions taken in that state.</p>
+      <p>This pattern makes complex game logic manageable. Instead of scattered if/else everywhere, each state handles only its own logic.</p>
+    `,
+    callout: '🎮 Slambo registers a PlayerTurnState class. When the game enters "playerTurn", it shows the card selection. On leaving, it clears buttons and resets selection. This keeps code clean and predictable.',
+    code: `<span class="cmt">// State machine pattern from Slambo:</span>
+<span class="kw">class</span> <span class="fn">PlayerTurnState</span> {
+    <span class="fn">constructor</span>(game) {
+        <span class="kw">this</span>.game = game;
+        <span class="kw">this</span>.selectedCard = <span class="kw">null</span>;
+    }
+
+    <span class="fn">onEnteringState</span>(args, isMyTurn) {
+        <span class="kw">if</span> (isMyTurn) {
+            <span class="kw">this</span>.game.statusBar.<span class="fn">setTitle</span>(<span class="str">'You must play a card'</span>);
+            <span class="kw">this</span>.game.hand.<span class="fn">setSelectable</span>(<span class="kw">true</span>);
+        }
+    }
+
+    <span class="fn">onLeavingState</span>() {
+        <span class="kw">this</span>.game.statusBar.<span class="fn">clear</span>();
+        <span class="kw">this</span>.game.hand.<span class="fn">setSelectable</span>(<span class="kw">false</span>);
+        <span class="kw">this</span>.selectedCard = <span class="kw">null</span>;
+    }
+
+    <span class="fn">onCardClicked</span>(card) {
+        <span class="kw">this</span>.selectedCard = card;
+        <span class="kw">this</span>.game.statusBar.<span class="fn">setTitle</span>(<span class="str">\`Play \${card.label}?\`</span>);
+        <span class="kw">this</span>.game.statusBar.<span class="fn">addButton</span>(<span class="str">'Confirm'</span>, () => <span class="kw">this</span>.<span class="fn">confirm</span>());
+        <span class="kw">this</span>.game.statusBar.<span class="fn">addButton</span>(<span class="str">'Cancel'</span>, () => <span class="kw">this</span>.<span class="fn">cancel</span>(), <span class="str">'red'</span>);
+    }
+}`,
+    demo: 'statemachine',
+    points: ['One active state at a time — no conflicting handlers', 'onEnteringState = setup; onLeavingState = cleanup', 'States are registered by name matching the server state names', 'Makes code predictable: know which state → know what\'s possible'],
+  },
+
+  // ══ CHAPTER 6 ══
+  { chapter: true, id: 'ch6', title: 'Chapter 6 — Putting It All Together' },
+  {
+    id: '6-1', icon: '🎮', title: 'The Full Mini-Game',
+    tag: 'Level 4 · Capstone',
+    subtitle: 'Every concept in one working game — play it right here',
+    explain: `
+      <p>This is a <strong>fully playable mini version of Slambo</strong> built from scratch using every concept in this course. No libraries, no shortcuts — just the same patterns the real game uses.</p>
+      <p>You'll see: <strong>const/let</strong> for game data, <strong>objects & arrays</strong> for cards and players, <strong>functions</strong> for game logic, <strong>classes</strong> for the state machine, <strong>DOM manipulation</strong> for the UI, <strong>event listeners</strong> for card clicks, <strong>CSS classes</strong> for selection states, and a <strong>game log</strong> for history.</p>
+      <p>Read the annotated code in the panel above, then play the game below. Try to force the AI opponent to bust (go above 10 or below 0).</p>
+    `,
+    callout: '🎮 The AI opponent in this demo uses the same "check if move busts" logic from Slambo\'s move helper — it always tries to pick a safe card. Can you trap it?',
+    code: `<span class="cmt">// ① VARIABLES — game state</span>
+<span class="kw">let</span> stability = <span class="num">5</span>;       <span class="cmt">// changes each turn</span>
+<span class="kw">const</span> RANGE = { <span class="key">min</span>: <span class="num">0</span>, <span class="key">max</span>: <span class="num">10</span> }; <span class="cmt">// never changes</span>
+
+<span class="cmt">// ② OBJECTS & ARRAYS — card definitions</span>
+<span class="kw">const</span> CARD_DEFS = [
+    { <span class="key">id</span>:<span class="num">1</span>, <span class="key">label</span>:<span class="str">'+1'</span>, <span class="key">value</span>:<span class="num">1</span>,  <span class="key">type</span>:<span class="str">'fuel'</span> },
+    { <span class="key">id</span>:<span class="num">2</span>, <span class="key">label</span>:<span class="str">'+3'</span>, <span class="key">value</span>:<span class="num">3</span>,  <span class="key">type</span>:<span class="str">'fuel'</span> },
+    { <span class="key">id</span>:<span class="num">3</span>, <span class="key">label</span>:<span class="str">'+5'</span>, <span class="key">value</span>:<span class="num">5</span>,  <span class="key">type</span>:<span class="str">'fuel'</span> },
+    { <span class="key">id</span>:<span class="num">4</span>, <span class="key">label</span>:<span class="str">'-2'</span>, <span class="key">value</span>:-<span class="num">2</span>, <span class="key">type</span>:<span class="str">'coolant'</span> },
+    { <span class="key">id</span>:<span class="num">5</span>, <span class="key">label</span>:<span class="str">'-4'</span>, <span class="key">value</span>:-<span class="num">4</span>, <span class="key">type</span>:<span class="str">'coolant'</span> },
+];
+
+<span class="cmt">// ③ FUNCTION — check if a play busts</span>
+<span class="kw">function</span> <span class="fn">wouldBust</span>(value) {
+    <span class="kw">const</span> result = stability + value;
+    <span class="kw">return</span> result < RANGE.min || result > RANGE.max;
+}
+
+<span class="cmt">// ④ FUNCTION — deal a random hand</span>
+<span class="kw">function</span> <span class="fn">dealHand</span>(size) {
+    <span class="kw">return</span> Array.<span class="fn">from</span>({ length: size }, () => {
+        <span class="kw">return</span> { ...CARD_DEFS[Math.<span class="fn">floor</span>(Math.<span class="fn">random</span>() * CARD_DEFS.length)] };
+    });
+}
+
+<span class="cmt">// ⑤ STATE MACHINE — game states</span>
+<span class="kw">let</span> gameState = <span class="str">'playerTurn'</span>; <span class="cmt">// or 'aiTurn', 'gameOver'</span>
+
+<span class="cmt">// ⑥ DOM — update the stability display</span>
+<span class="kw">function</span> <span class="fn">updateStability</span>(newVal) {
+    stability = newVal;
+    <span class="kw">const</span> pct = (stability / <span class="num">10</span>) * <span class="num">100</span>;
+    document.<span class="fn">getElementById</span>(<span class="str">'mg-stability-fill'</span>).style.height = pct + <span class="str">'%'</span>;
+    document.<span class="fn">getElementById</span>(<span class="str">'mg-stability-num'</span>).textContent = stability;
+}`,
+    demo: 'minigame',
+    points: ['Every lesson concept is visible in this ~80 line game', 'const = game rules that never change; let = state that does', 'Functions do one job each: wouldBust(), dealHand(), updateStability()', 'The state machine (playerTurn/aiTurn/gameOver) prevents invalid moves', 'DOM manipulation is the bridge between data and what you see'],
+  },
+];
+
+// ─────────────────────────────────────────────
+// APP STATE
+// ─────────────────────────────────────────────
+const CONTENT_LESSONS = LESSONS.filter(l => !l.chapter);
+let currentId = CONTENT_LESSONS[0].id;
+const doneSet = new Set(JSON.parse(localStorage.getItem('teachme_done') || '[]'));
+
+function saveDone() {
+  localStorage.setItem('teachme_done', JSON.stringify([...doneSet]));
+}
+
+// ─────────────────────────────────────────────
+// SIDEBAR BUILDER
+// ─────────────────────────────────────────────
+function buildSidebar() {
+  const tree = document.getElementById('nav-tree');
+  tree.innerHTML = '';
+  LESSONS.forEach(l => {
+    if (l.chapter) {
+      const d = document.createElement('div');
+      d.className = 'chapter-label';
+      d.textContent = l.title;
+      tree.appendChild(d);
+    } else {
+      const d = document.createElement('div');
+      d.className = 'nav-item' + (l.id === currentId ? ' active' : '') + (doneSet.has(l.id) ? ' done-lesson' : '');
+      d.dataset.id = l.id;
+      d.innerHTML = `<span class="icon">${l.icon}</span><span>${l.title}</span><span class="done">✓</span>`;
+      d.onclick = () => goTo(l.id);
+      tree.appendChild(d);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// TOPBAR
+// ─────────────────────────────────────────────
+function updateTopbar(lesson) {
+  document.getElementById('topbar-title').textContent = `${lesson.icon} ${lesson.title}`;
+  const done = doneSet.size;
+  const total = CONTENT_LESSONS.length;
+  document.getElementById('progress-text').textContent = `${done}/${total}`;
+  document.getElementById('progress-bar').style.width = `${(done / total) * 100}%`;
+}
+
+// ─────────────────────────────────────────────
+// LESSON RENDERER
+// ─────────────────────────────────────────────
+function renderLesson(lesson) {
+  const idx = CONTENT_LESSONS.findIndex(l => l.id === lesson.id);
+  const prev = CONTENT_LESSONS[idx - 1];
+  const next = CONTENT_LESSONS[idx + 1];
+
+  const pointsHtml = lesson.points
+    ? `<div class="callout" style="margin-top:0;margin-bottom:20px;background:#f0fdf4;border-color:#bbf7d0">
+        <span class="emoji">✅</span>
+        <ul style="padding-left:16px;line-height:2">${lesson.points.map(p => `<li>${p}</li>`).join('')}</ul>
+       </div>` : '';
+
+  const navHtml = `
+    <div class="lesson-nav">
+      ${prev ? `<button class="btn btn-secondary" onclick="goTo('${prev.id}')">← ${prev.title}</button>` : '<div></div>'}
+      <button class="btn btn-primary" onclick="markDone('${lesson.id}')">✓ Mark complete</button>
+      ${next ? `<button class="btn btn-primary" onclick="goTo('${next.id}')">${next.title} →</button>` : '<button class="btn btn-secondary" disabled>End of course</button>'}
+    </div>`;
+
+  document.getElementById('content').innerHTML = `
+    <div class="lesson-header">
+      <div class="lesson-tag">${lesson.tag}</div>
+      <div class="lesson-title">${lesson.icon} ${lesson.title}</div>
+      <div class="lesson-subtitle">${lesson.subtitle}</div>
+    </div>
+
+    <div class="explain">${lesson.explain}</div>
+
+    ${lesson.callout ? `<div class="callout"><span class="emoji">🎮</span><span>${lesson.callout}</span></div>` : ''}
+
+    <div class="code-wrap">
+      <div class="code-label">💻 Real Code — From the Games</div>
+      <pre>${lesson.code}</pre>
+    </div>
+
+    <div class="demo-wrap">
+      <div class="demo-header">🎮 Try It — Interactive Demo</div>
+      <div class="demo-body" id="demo-body"></div>
+    </div>
+
+    ${pointsHtml}
+    ${navHtml}
+  `;
+
+  renderDemo(lesson.demo);
+  updateTopbar(lesson);
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+function goTo(id) {
+  currentId = id;
+  buildSidebar();
+  const lesson = LESSONS.find(l => l.id === id);
+  renderLesson(lesson);
+  document.getElementById('main').scrollTop = 0;
+}
+
+function markDone(id) {
+  doneSet.add(id);
+  saveDone();
+  buildSidebar();
+  updateTopbar(LESSONS.find(l => l.id === id));
+  const btn = document.querySelector('.lesson-nav .btn-primary:first-of-type');
+  if (btn) { btn.textContent = '✓ Completed!'; btn.style.background = '#22c55e'; }
+}
+
+// ─────────────────────────────────────────────
+// DEMO RENDERERS
+// ─────────────────────────────────────────────
+function renderDemo(type) {
+  const el = document.getElementById('demo-body');
+  const demos = {
+    variables: demoVariables,
+    decode: demoDecode,
+    objects: demoObjects,
+    arrays: demoArrays,
+    ifelse: demoIfElse,
+    functions: demoFunctions,
+    loops: demoLoops,
+    htmlstructure: demoHtmlStructure,
+    css: demoCss,
+    domevents: demoDomEvents,
+    scoreboard: demoScoreboard,
+    gamearea: demoGameArea,
+    statusbar: demoStatusBar,
+    gamelog: demoGameLog,
+    classes: demoClasses,
+    statemachine: demoStateMachine,
+    template: demoTemplate,
+    minigame: demoMinigame,
+  };
+  if (demos[type]) demos[type](el);
+  else el.innerHTML = '<p style="color:#64748b;font-style:italic">Demo coming soon.</p>';
+}
+
+// ── DEMO: Variables ─────────────────────────────
+function demoVariables(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Change the values below and see how variables work:</p>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+      <div>
+        <label>const CARD_TYPE = </label><br>
+        <select id="v-const" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.88rem;margin-top:4px">
+          <option value="Fuel">Fuel</option>
+          <option value="Coolant">Coolant</option>
+          <option value="Special">Special</option>
+        </select>
+        <div style="font-size:0.72rem;color:#6366f1;margin-top:2px">const — cannot reassign ✓</div>
+      </div>
+      <div>
+        <label>let playerScore = </label><br>
+        <input type="number" id="v-score" value="0" min="0" max="999" style="width:90px;margin-top:4px">
+        <button class="btn btn-sm btn-primary" onclick="document.getElementById('v-score').value=parseInt(document.getElementById('v-score').value||0)+5;updateVarOutput()" style="margin-top:4px">+5 points</button>
+        <div style="font-size:0.72rem;color:#22c55e;margin-top:2px">let — can change ✓</div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="code-label">Output:</div>
+      <div class="output-box" id="v-output"></div>
+    </div>
+    <button class="btn btn-sm btn-secondary" style="margin-top:10px" onclick="document.getElementById('v-score').value=0;updateVarOutput()">Reset</button>
+  `;
+  function updateVarOutput() {
+    const t = document.getElementById('v-const').value;
+    const s = document.getElementById('v-score').value || 0;
+    document.getElementById('v-output').textContent =
+      `const CARD_TYPE = "${t}";\nlet playerScore = ${s};`;
+  }
+  document.getElementById('v-const').oninput = updateVarOutput;
+  document.getElementById('v-score').oninput = updateVarOutput;
+  updateVarOutput();
+}
+
+// ── DEMO: Decode ────────────────────────────────
+function demoDecode(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Enter a Frenzy Falls encoded card number (water×1000 + influence×10 + action 0-3):</p>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input type="number" id="encoded-val" value="3214" style="width:110px">
+      <button class="btn btn-primary btn-sm" onclick="runDecode()">Decode</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('encoded-val').value=Math.floor(Math.random()*5)*1000+Math.floor(Math.random()*5)*10+Math.floor(Math.random()*4);runDecode()">Random</button>
+    </div>
+    <div class="output-box" id="decode-out" style="margin-top:12px"></div>
+  `;
+  function runDecode() {
+    const v = parseInt(document.getElementById('encoded-val').value) || 0;
+    const water = Math.floor(v / 1000);
+    const influence = Math.floor((v % 1000) / 10);
+    const action = v % 10;
+    const actions = ['none', 'PROXY', 'BUMP', 'PULL'];
+    document.getElementById('decode-out').textContent =
+      `Encoded: ${v}\nwater     = Math.floor(${v} / 1000) = ${water}\ninfluence = Math.floor((${v} % 1000) / 10) = ${influence}\naction    = ${v} % 10 = ${action}  →  ${actions[action] || 'unknown'}`;
+  }
+  runDecode();
+}
+
+// ── DEMO: Objects ───────────────────────────────
+function demoObjects(el) {
+  const map = { '1_1':'+1','1_2':'+2','1_3':'+3','2_1':'-1','2_2':'-2','3_1':'=','3_4':'±7' };
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Click a card key to look it up in the CARD_IMAGE_MAP object:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${Object.keys(map).map(k => `<button class="btn btn-secondary btn-sm" onclick="lookupCard('${k}')">${k}</button>`).join('')}
+    </div>
+    <div class="output-box" id="obj-out">Click a key above...</div>
+  `;
+  window.lookupCard = (key) => {
+    const label = map[key];
+    document.getElementById('obj-out').textContent =
+      `CARD_IMAGE_MAP['${key}'] = { label: '${label}', img: 'Slambo_Cards_...jpg' }\n\n// Access: CARD_IMAGE_MAP['${key}'].label  →  "${label}"`;
+  };
+}
+
+// ── DEMO: Arrays ────────────────────────────────
+function demoArrays(el) {
+  const levels = [0.5, 0.625, 0.75, 0.875, 1, 1.125, 1.25];
+  let idx = 4;
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Step through the ZOOM_LEVELS array like the in-game zoom buttons:</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-secondary" id="zoom-out-btn" onclick="stepZoom(-1)">− Zoom Out</button>
+      <button class="btn btn-secondary" id="zoom-in-btn" onclick="stepZoom(1)">+ Zoom In</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="zoom-pills"></div>
+    <div class="output-box" id="arr-out"></div>
+  `;
+  function render() {
+    const pills = document.getElementById('zoom-pills');
+    pills.innerHTML = levels.map((v, i) =>
+      `<span style="padding:4px 10px;border-radius:99px;font-size:0.75rem;font-weight:700;background:${i===idx?'#6366f1':'#e2e8f0'};color:${i===idx?'#fff':'#475569'}">${v}</span>`
+    ).join('');
+    document.getElementById('arr-out').textContent =
+      `ZOOM_LEVELS = [${levels.join(', ')}]\nCurrent index: ${idx}\nCurrent value: ZOOM_LEVELS[${idx}] = ${levels[idx]}`;
+    document.getElementById('zoom-out-btn').disabled = idx === 0;
+    document.getElementById('zoom-in-btn').disabled = idx === levels.length - 1;
+  }
+  window.stepZoom = (dir) => { idx = Math.max(0, Math.min(levels.length-1, idx+dir)); render(); };
+  render();
+}
+
+// ── DEMO: If/Else ───────────────────────────────
+function demoIfElse(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Current stability is 5. Play a card value to see if it would bust:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${[-7,-5,-3,-1,0,1,3,5,7].map(v => `<button class="btn btn-sm" style="background:${v<0?'#fee2e2':v>0?'#dbeafe':'#f1f5f9'};color:#1e293b;border:1px solid #e2e8f0" onclick="playCard(${v})">${v>0?'+'+v:v}</button>`).join('')}
+    </div>
+    <div class="output-box" id="ie-out"></div>
+  `;
+  window.playCard = (v) => {
+    const stability = 5;
+    const result = stability + v;
+    let msg;
+    if (result >= 0 && result <= 10) msg = `✅ VALID: ${stability} + ${v>0?'+'+v:v} = ${result}  →  in range (0–10)`;
+    else if (result < 0) msg = `💥 BUST: ${stability} + ${v>0?'+'+v:v} = ${result}  →  below 0!`;
+    else msg = `💥 BUST: ${stability} + ${v>0?'+'+v:v} = ${result}  →  above 10!`;
+    document.getElementById('ie-out').textContent = msg;
+  };
+}
+
+// ── DEMO: Functions ─────────────────────────────
+function demoFunctions(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Call the getCardLabel() function with a card key:</p>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <label>type:</label>
+      <select id="fn-type" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.85rem">
+        <option value="1">1 (Fuel +)</option>
+        <option value="2">2 (Coolant −)</option>
+        <option value="3">3 (Special)</option>
+      </select>
+      <label>type_arg:</label>
+      <input type="number" id="fn-arg" value="3" min="1" max="8" style="width:60px">
+      <button class="btn btn-primary btn-sm" onclick="runFnDemo()">Call function</button>
+    </div>
+    <div class="output-box" id="fn-out"></div>
+  `;
+  const labelMap = {'1_1':'+1','1_2':'+2','1_3':'+3','1_4':'+4','1_5':'+5','1_6':'+6','1_7':'+7','1_8':'+8','2_1':'-1','2_2':'-2','2_3':'-3','2_4':'-4','2_5':'-5','2_6':'-6','2_7':'-7','3_1':'=','3_2':'-1🔄','3_3':'🔄+4','3_4':'±7','3_5':'±8'};
+  function runFnDemo() {
+    const t = document.getElementById('fn-type').value;
+    const a = document.getElementById('fn-arg').value;
+    const key = `${t}_${a}`;
+    const label = labelMap[key] || '?';
+    document.getElementById('fn-out').textContent =
+      `// Calling: getCardLabel({ type: '${t}', type_arg: '${a}' })\nkey = '${t}' + '_' + '${a}' = '${key}'\nCARD_IMAGE_MAP['${key}'].label = '${label}'\n\n→ Returns: "${label}"`;
+  }
+  document.getElementById('fn-type').oninput = runFnDemo;
+  document.getElementById('fn-arg').oninput = runFnDemo;
+  runFnDemo();
+}
+
+// ── DEMO: Loops ─────────────────────────────────
+function demoLoops(el) {
+  const players = [
+    {id:1,name:'Alice',score:15,eliminated:false},
+    {id:2,name:'Bob',score:8,eliminated:true},
+    {id:3,name:'Carol',score:22,eliminated:false},
+  ];
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Choose a loop method to process the players array:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-secondary btn-sm" onclick="runLoop('forEach')">forEach</button>
+      <button class="btn btn-secondary btn-sm" onclick="runLoop('map')">map (names)</button>
+      <button class="btn btn-secondary btn-sm" onclick="runLoop('filter')">filter (alive)</button>
+      <button class="btn btn-secondary btn-sm" onclick="runLoop('for')">for loop with index</button>
+    </div>
+    <div class="output-box" id="loop-out" style="white-space:pre"></div>
+  `;
+  window.runLoop = (type) => {
+    let out = '';
+    if (type === 'forEach') {
+      out = 'players.forEach(p => log(p.name + ": " + p.score)):\n';
+      players.forEach(p => out += `  ${p.name}: ${p.score} pts\n`);
+    } else if (type === 'map') {
+      const names = players.map(p => p.name);
+      out = `players.map(p => p.name):\n  → ${JSON.stringify(names)}`;
+    } else if (type === 'filter') {
+      const alive = players.filter(p => !p.eliminated);
+      out = `players.filter(p => !p.eliminated):\n  → ${alive.map(p=>p.name).join(', ')} (${alive.length} players)`;
+    } else {
+      out = 'for (let i=0; i<players.length; i++):\n';
+      for (let i = 0; i < players.length; i++) out += `  [${i}] ${players[i].name}\n`;
+    }
+    document.getElementById('loop-out').textContent = out;
+  };
+}
+
+// ── DEMO: HTML Structure ────────────────────────
+function demoHtmlStructure(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Toggle sections to see how a game UI is layered:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-sm btn-secondary" onclick="toggleSection('hs-scores')">Scoreboard</button>
+      <button class="btn btn-sm btn-secondary" onclick="toggleSection('hs-opponents')">Opponents</button>
+      <button class="btn btn-sm btn-secondary" onclick="toggleSection('hs-playzone')">Play Zone</button>
+      <button class="btn btn-sm btn-secondary" onclick="toggleSection('hs-hand')">Your Hand</button>
+      <button class="btn btn-sm btn-secondary" onclick="toggleSection('hs-statusbar')">Status Bar</button>
+    </div>
+    <div style="border:2px dashed #cbd5e1;border-radius:8px;overflow:hidden;font-size:0.75rem">
+      <div id="hs-scores" style="background:#fef3c7;padding:6px 10px;border-bottom:1px solid #fde68a;font-weight:700">🏆 #player-boards (Scoreboard) — Alice: 15pts | Bob: 8pts</div>
+      <div id="hs-opponents" style="background:#dbeafe;padding:8px 10px;border-bottom:1px solid #bfdbfe;text-align:center;font-weight:600">👥 #slambo-opponents — [Bob: 3 cards] [Carol: 5 cards]</div>
+      <div id="hs-playzone" style="background:#f0fdf4;padding:10px;border-bottom:1px solid #bbf7d0;text-align:center;font-weight:600">🎴 #slambo-played-area — Start Card | Stability: 7 | Last Played: +3</div>
+      <div id="hs-hand" style="background:#fae8ff;padding:8px 10px;border-bottom:1px solid #f0abfc;text-align:center;font-weight:600">🤚 #slambo-hand — [+2] [+5] [−3] [=] [±7]</div>
+      <div id="hs-statusbar" style="background:#1e293b;color:#fff;padding:8px 10px;text-align:center;font-weight:600">📢 #generalactions — "You must play a card" | [Confirm] [Cancel]</div>
+    </div>
+  `;
+  window.toggleSection = (id) => {
+    const el2 = document.getElementById(id);
+    el2.style.display = el2.style.display === 'none' ? '' : 'none';
+  };
+}
+
+// ── DEMO: CSS ───────────────────────────────────
+function demoCss(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:14px">Live-edit CSS properties on a demo card:</p>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div id="css-card" style="width:90px;height:126px;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all 0.3s;cursor:default;flex-shrink:0">+5</div>
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:200px">
+        <div><label>border-radius: <span id="br-val">10</span>px</label><br><input type="range" min="0" max="50" value="10" oninput="document.getElementById('br-val').textContent=this.value;document.getElementById('css-card').style.borderRadius=this.value+'px'"></div>
+        <div><label>opacity: <span id="op-val">1</span></label><br><input type="range" min="0.1" max="1" step="0.05" value="1" oninput="document.getElementById('op-val').textContent=this.value;document.getElementById('css-card').style.opacity=this.value"></div>
+        <div><label>scale (transform):</label><br>
+          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('css-card').style.transform='scale(0.7)'">0.7×</button>
+          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('css-card').style.transform='scale(1)'">1×</button>
+          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('css-card').style.transform='scale(1.3)'">1.3×</button>
+        </div>
+        <div><label>Hover class:</label><br>
+          <button class="btn btn-sm btn-primary" onmousedown="document.getElementById('css-card').style.transform='translateY(-15px) scale(1.05)'" onmouseup="document.getElementById('css-card').style.transform=''">Hold for hover effect</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── DEMO: DOM & Events ──────────────────────────
+function demoDomEvents(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Watch how JavaScript finds elements, changes them, and responds to clicks:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-sm btn-primary" onclick="domAddCard()">Add card to hand</button>
+      <button class="btn btn-sm btn-red" onclick="domRemoveCard()">Remove last card</button>
+      <button class="btn btn-sm btn-secondary" onclick="domToggleBanner()">Toggle banner</button>
+    </div>
+    <div id="dom-banner" style="text-align:center;font-weight:900;font-size:1.5rem;letter-spacing:3px;color:#ef4444;opacity:0;transition:opacity 0.3s,transform 0.3s;transform:scale(0.9)">SLAMBO!</div>
+    <div class="hand-area" id="dom-hand" style="min-height:90px;margin-top:8px"></div>
+    <div class="output-box" id="dom-log" style="margin-top:10px;font-size:0.75rem"></div>
+  `;
+  const types = ['fuel','fuel','coolant','special'];
+  const labels = ['+3','+5','−2','±7'];
+  let cardIndex = 0;
+  function domLog(msg) {
+    const el2 = document.getElementById('dom-log');
+    el2.textContent = msg + (el2.textContent ? '\n' + el2.textContent : '');
+  }
+  window.domAddCard = () => {
+    const hand = document.getElementById('dom-hand');
+    const card = document.createElement('div');
+    const t = types[cardIndex % types.length];
+    card.className = `demo-card ${t}`;
+    card.textContent = labels[cardIndex % labels.length];
+    card.onclick = () => { card.classList.toggle('selected'); domLog(`Clicked card: ${card.textContent}`); };
+    hand.appendChild(card);
+    domLog(`createElement('div') → appendChild to #dom-hand (${hand.children.length} cards)`);
+    cardIndex++;
+  };
+  window.domRemoveCard = () => {
+    const hand = document.getElementById('dom-hand');
+    if (hand.lastChild) { hand.removeChild(hand.lastChild); domLog(`removeChild → ${hand.children.length} cards remain`); }
+    else domLog('No cards to remove');
+  };
+  let bannerVisible = false;
+  window.domToggleBanner = () => {
+    const b = document.getElementById('dom-banner');
+    bannerVisible = !bannerVisible;
+    b.style.opacity = bannerVisible ? '1' : '0';
+    b.style.transform = bannerVisible ? 'scale(1)' : 'scale(0.9)';
+    domLog(`classList toggle → banner is now ${bannerVisible ? 'VISIBLE' : 'HIDDEN'}`);
+  };
+}
+
+// ── DEMO: Scoreboard ────────────────────────────
+function demoScoreboard(el) {
+  const players = [
+    {id:1,name:'Alice',score:0,color:'#3b82f6'},
+    {id:2,name:'Bob',score:0,color:'#ef4444'},
+    {id:3,name:'Carol',score:0,color:'#22c55e'},
+  ];
+  function sbRender() {
+    const max = Math.max(...players.map(p=>p.score), 10);
+    return players.map(p => `
+      <div class="score-row">
+        <div class="score-name" style="color:${p.color}">${p.name}</div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${(p.score/max)*100}%;background:${p.color}"></div></div>
+        <div class="score-num">${p.score}</div>
+      </div>
+    `).join('');
+  }
+  el.innerHTML = `
+    <div id="sb-display" style="margin-bottom:14px"></div>
+    <p style="font-size:0.82rem;color:#475569;margin-bottom:8px">Award points to a player:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${players.map(p => `<button class="btn btn-sm" style="background:${p.color};color:#fff" onclick="sbAddScore(${p.id},5)">${p.name} +5</button>`).join('')}
+      <button class="btn btn-sm btn-secondary" onclick="sbReset()">Reset</button>
+    </div>
+  `;
+  function refresh() { document.getElementById('sb-display').innerHTML = sbRender(); }
+  window.sbAddScore = (id, pts) => {
+    const p = players.find(p=>p.id===id);
+    if (p) { p.score += pts; refresh(); }
+  };
+  window.sbReset = () => { players.forEach(p=>p.score=0); refresh(); };
+  refresh();
+}
+
+// ── DEMO: Game Area ─────────────────────────────
+function demoGameArea(el) {
+  let stability = 5;
+  const cardDefs = [
+    {label:'+3',val:3,type:'fuel'},{label:'+5',val:5,type:'fuel'},
+    {label:'−2',val:-2,type:'coolant'},{label:'−4',val:-4,type:'coolant'},
+    {label:'±7',val:7,type:'special'},
+  ];
+  function gaRender() {
+    const pct = (stability / 10) * 100;
+    const color = stability <= 2 ? '#ef4444' : stability >= 8 ? '#ef4444' : '#22c55e';
+    return `
+      <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+        <div style="text-align:center">
+          <div style="font-size:0.72rem;font-weight:700;color:#64748b;margin-bottom:4px">STABILITY</div>
+          <div class="stability-wrap">
+            <div class="stability-bar-bg"><div class="stability-bar-fill" style="height:${pct}%;background:${color}"></div></div>
+            <div class="stability-label">${stability}/10</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <div style="font-size:0.72rem;font-weight:700;color:#64748b;margin-bottom:8px">YOUR HAND — click to play:</div>
+          <div class="hand-area" style="gap:8px">
+            ${cardDefs.map(c=>`<div class="demo-card ${c.type}" onclick="gaPlay(${c.val},'${c.label}')" title="Play ${c.label}">${c.label}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="output-box" id="ga-log" style="margin-top:12px;font-size:0.8rem"></div>
+    `;
+  }
+  el.innerHTML = gaRender();
+  window.gaPlay = (val, label) => {
+    const prev = stability;
+    stability = prev + val;
+    let msg;
+    if (stability < 0 || stability > 10) {
+      msg = `💥 BUST! ${prev} + ${label} = ${stability} — out of range!`;
+      stability = prev;
+    } else {
+      msg = `✅ Played ${label}: stability ${prev} → ${stability}`;
+    }
+    el.innerHTML = gaRender();
+    document.getElementById('ga-log').textContent = msg;
+  };
+}
+
+// ── DEMO: Status Bar ────────────────────────────
+function demoStatusBar(el) {
+  el.innerHTML = `
+    <p style="font-size:0.82rem;color:#475569;margin-bottom:12px">Simulate different game states by clicking a scenario:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-sm btn-secondary" onclick="sbScenario('wait')">Waiting for opponent</button>
+      <button class="btn btn-sm btn-primary" onclick="sbScenario('play')">Your turn — play card</button>
+      <button class="btn btn-sm btn-secondary" onclick="sbScenario('choice')">Choose ±7</button>
+      <button class="btn btn-sm btn-secondary" onclick="sbScenario('confirm')">Confirm play</button>
+    </div>
+    <div class="status-bar-demo" id="sb-bar">
+      <span class="status-bar-msg" id="sb-msg">Click a scenario above...</span>
+      <div id="sb-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+  `;
+  window.sbScenario = (s) => {
+    const msg = document.getElementById('sb-msg');
+    const btns = document.getElementById('sb-btns');
+    btns.innerHTML = '';
+    const addBtn = (label, style, fn) => {
+      const b = document.createElement('button');
+      b.className = `status-bar-btn ${style}`;
+      b.textContent = label;
+      b.onclick = fn;
+      btns.appendChild(b);
+    };
+    if (s === 'wait') { msg.textContent = 'Waiting for Bob to play...'; }
+    else if (s === 'play') {
+      msg.textContent = 'You must play a card';
+      addBtn('(select a card from your hand)', 'grey', ()=>{});
+    } else if (s === 'choice') {
+      msg.textContent = 'Choose + or - for this card (±7)';
+      addBtn('+7', 'blue', () => sbScenario('confirm'));
+      addBtn('−7', 'red', () => sbScenario('confirm'));
+      addBtn('Cancel', 'grey', () => sbScenario('play'));
+    } else if (s === 'confirm') {
+      let t = 5;
+      msg.textContent = `Confirm play +7 — auto-confirms in ${t}s`;
+      addBtn('Confirm ✓', 'blue', () => { msg.textContent = '✅ Card played!'; btns.innerHTML = ''; });
+      addBtn('Cancel', 'red', () => sbScenario('play'));
+      const timer = setInterval(() => {
+        t--;
+        if (document.getElementById('sb-msg')) {
+          msg.textContent = `Confirm play +7 — auto-confirms in ${t}s`;
+          if (t <= 0) { clearInterval(timer); msg.textContent = '✅ Auto-confirmed!'; btns.innerHTML = ''; }
+        } else clearInterval(timer);
+      }, 1000);
+    }
+  };
+}
+
+// ── DEMO: Game Log ──────────────────────────────
+function demoGameLog(el) {
+  el.innerHTML = `
+    <p style="font-size:0.82rem;color:#475569;margin-bottom:12px">Add different types of log entries:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-sm btn-primary" onclick="glAdd('Alice played +5','action')">Action</button>
+      <button class="btn btn-sm btn-secondary" onclick="glAdd('Stability: 5 → 10','info')">Info</button>
+      <button class="btn btn-sm btn-red" onclick="glAdd('SLAMBO! Bob is eliminated.','warn')">Warning</button>
+      <button class="btn btn-sm btn-secondary" onclick="glAdd('Game started — 3 players','system')">System</button>
+      <button class="btn btn-sm btn-secondary" onclick="document.getElementById('gl-area').innerHTML=''">Clear</button>
+    </div>
+    <div class="log-area" id="gl-area"></div>
+  `;
+  window.glAdd = (msg, type) => {
+    const area = document.getElementById('gl-area');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    entry.textContent = `[${t}] ${msg}`;
+    area.appendChild(entry);
+    area.scrollTop = area.scrollHeight;
+  };
+  // seed a few entries
+  window.glAdd('Game started — 3 players', 'system');
+  window.glAdd('Alice played +3', 'action');
+  window.glAdd('Stability: 5 → 8', 'info');
+}
+
+// ── DEMO: Classes ───────────────────────────────
+function demoClasses(el) {
+  el.innerHTML = `
+    <p style="font-size:0.82rem;color:#475569;margin-bottom:12px">A live ZoomManager instance — click the buttons to call its methods:</p>
+    <div id="cl-target" style="background:#dbeafe;border-radius:8px;padding:16px;text-align:center;font-weight:700;transition:transform 0.3s;transform-origin:top center;margin-bottom:14px">
+      Game Area Content<br><span style="font-size:0.75rem;font-weight:400;color:#475569">this.zoom = 1</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-sm btn-secondary" onclick="clZoom.zoomOut()">− zoomOut()</button>
+      <button class="btn btn-sm btn-secondary" onclick="clZoom.setZoom(1)">↺ setZoom(1)</button>
+      <button class="btn btn-sm btn-secondary" onclick="clZoom.zoomIn()">+ zoomIn()</button>
+    </div>
+    <div class="output-box" id="cl-out"></div>
+  `;
+  const levels = [0.5, 0.75, 1, 1.25, 1.5];
+  window.clZoom = {
+    levels, zoom: 1,
+    setZoom(z) {
+      this.zoom = z;
+      document.getElementById('cl-target').style.transform = `scale(${z})`;
+      document.getElementById('cl-target').querySelector('span').textContent = `this.zoom = ${z}`;
+      document.getElementById('cl-out').textContent = `setZoom(${z}) called\nthis.zoom = ${z}\nthis.element.style.transform = "scale(${z})"`;
+    },
+    zoomIn() { const i = this.levels.indexOf(this.zoom); if (i < this.levels.length-1) this.setZoom(this.levels[i+1]); },
+    zoomOut() { const i = this.levels.indexOf(this.zoom); if (i > 0) this.setZoom(this.levels[i-1]); },
+  };
+}
+
+// ── DEMO: State Machine ─────────────────────────
+function demoStateMachine(el) {
+  const states = {
+    idle:      { label: 'Idle / Waiting',    color: '#94a3b8', next: ['playerTurn'] },
+    playerTurn:{ label: 'Player Turn',       color: '#3b82f6', next: ['choosingCard','waiting'] },
+    choosingCard:{ label: 'Choosing Card',   color: '#f59e0b', next: ['confirming','playerTurn'] },
+    confirming:{ label: 'Confirming Play',   color: '#8b5cf6', next: ['waiting','playerTurn'] },
+    waiting:   { label: 'Waiting for Others',color: '#64748b', next: ['playerTurn','gameOver'] },
+    gameOver:  { label: 'Game Over',         color: '#ef4444', next: [] },
+  };
+  let current = 'idle';
+  function smRender() {
+    const s = states[current];
+    const transitions = s.next.map(n =>
+      `<button class="btn btn-sm btn-secondary" onclick="smGo('${n}')">→ ${states[n].label}</button>`
+    ).join('');
+    el.innerHTML = `
+      <p style="font-size:0.82rem;color:#475569;margin-bottom:12px">Current state: <strong style="color:${s.color}">${s.label}</strong></p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+        ${Object.entries(states).map(([k,v])=>
+          `<div style="padding:6px 12px;border-radius:99px;font-size:0.75rem;font-weight:700;background:${k===current?v.color:'#e2e8f0'};color:${k===current?'#fff':'#64748b'};transition:all 0.2s">${v.label}</div>`
+        ).join('')}
+      </div>
+      <div style="margin-bottom:12px">
+        <span style="font-size:0.82rem;color:#475569">Transition to:</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${transitions || '<span style="font-size:0.82rem;color:#94a3b8">No transitions (end state)</span>'}</div>
+      </div>
+      <div class="output-box" id="sm-log"></div>
+    `;
+  }
+  window.smGo = (next) => {
+    const prev = current;
+    current = next;
+    smRender();
+    document.getElementById('sm-log').textContent =
+      `onLeavingState('${prev}') called\nonEnteringState('${next}') called\nNew state: ${states[next].label}`;
+  };
+  smRender();
+}
+
+// ── DEMO: Template Literals ─────────────────────
+function demoTemplate(el) {
+  el.innerHTML = `
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:12px">Fill in the fields — watch the template literal build in real time:</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="min-width:100px">Player name:</label>
+        <input type="text" id="tl-name" value="Alice" style="width:130px">
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="min-width:100px">Card played:</label>
+        <input type="text" id="tl-card" value="+5" style="width:80px">
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="min-width:100px">New stability:</label>
+        <input type="number" id="tl-stab" value="10" min="0" max="10" style="width:70px">
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div class="code-label">Template literal source:</div>
+      <pre style="font-size:0.8rem;padding:12px 16px"><span class="str">\`\${playerName} played \${card} — stability is now \${stability}\`</span></pre>
+    </div>
+    <div>
+      <div class="code-label">Output (what the player sees):</div>
+      <div class="output-box" id="tl-out" style="font-size:1rem;font-weight:600;color:#1e293b;min-height:42px;padding:12px 14px"></div>
+    </div>
+    <div style="margin-top:12px">
+      <div class="code-label">HTML template (multi-line):</div>
+      <div class="output-box" id="tl-html" style="font-size:0.75rem;white-space:pre;line-height:1.6"></div>
+    </div>
+  `;
+  function update() {
+    const name = document.getElementById('tl-name').value || 'Player';
+    const card = document.getElementById('tl-card').value || '?';
+    const stab = document.getElementById('tl-stab').value || '0';
+    document.getElementById('tl-out').textContent = `${name} played ${card} — stability is now ${stab}`;
+    document.getElementById('tl-html').textContent =
+      `<div class="score-row" data-player="${name}">\n  <span class="name">${name}</span>\n  <span class="score">${stab}/10</span>\n</div>`;
+  }
+  ['tl-name','tl-card','tl-stab'].forEach(id => document.getElementById(id).oninput = update);
+  update();
+}
+
+// ── DEMO: Mini Game ─────────────────────────────
+function demoMinigame(el) {
+  // ① CONSTANTS
+  const RANGE = { min: 0, max: 10 };
+  const CARD_DEFS = [
+    { label:'+1', value:1,  type:'fuel' },
+    { label:'+2', value:2,  type:'fuel' },
+    { label:'+3', value:3,  type:'fuel' },
+    { label:'+5', value:5,  type:'fuel' },
+    { label:'-1', value:-1, type:'coolant' },
+    { label:'-2', value:-2, type:'coolant' },
+    { label:'-3', value:-3, type:'coolant' },
+    { label:'-4', value:-4, type:'coolant' },
+  ];
+  const PLAYERS = [
+    { id:'you', name:'YOU', color:'#6366f1' },
+    { id:'ai',  name:'AI',  color:'#ef4444' },
+  ];
+
+  // ② GAME STATE (let = changes)
+  let stability = 5;
+  let gameState = 'playerTurn'; // playerTurn | aiTurn | gameOver
+  let playerHand = [];
+  let aiHand = [];
+  let scores = { you: 0, ai: 0 };
+  let round = 1;
+
+  // ③ FUNCTIONS
+  function dealHand(size) {
+    return Array.from({ length: size }, () => ({ ...CARD_DEFS[Math.floor(Math.random() * CARD_DEFS.length)] }));
+  }
+
+  function wouldBust(value) {
+    const result = stability + value;
+    return result < RANGE.min || result > RANGE.max;
+  }
+
+  function addLog(msg, type = 'info') {
+    const area = document.getElementById('mg-log');
+    if (!area) return;
+    const div = document.createElement('div');
+    div.className = `log-entry ${type}`;
+    div.textContent = msg;
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function updateUI() {
+    // Stability meter
+    const pct = (stability / 10) * 100;
+    const color = (stability <= 1 || stability >= 9) ? '#ef4444' : stability <= 3 || stability >= 7 ? '#f59e0b' : '#22c55e';
+    const fillEl = document.getElementById('mg-stab-fill');
+    const numEl  = document.getElementById('mg-stab-num');
+    if (fillEl) { fillEl.style.height = pct + '%'; fillEl.style.background = color; }
+    if (numEl)  numEl.textContent = stability;
+
+    // Status bar message
+    const msgEl = document.getElementById('mg-status-msg');
+    const btnsEl = document.getElementById('mg-status-btns');
+    if (!msgEl || !btnsEl) return;
+    btnsEl.innerHTML = '';
+
+    if (gameState === 'playerTurn') {
+      msgEl.textContent = '🎮 YOUR TURN — click a card to play it';
+      renderHand('mg-player-hand', playerHand, true);
+    } else if (gameState === 'aiTurn') {
+      msgEl.textContent = '🤖 AI is thinking...';
+      renderHand('mg-player-hand', playerHand, false);
+    } else {
+      msgEl.textContent = '🏁 Round over — click New Round';
+      renderHand('mg-player-hand', playerHand, false);
+      const btn = document.createElement('button');
+      btn.className = 'status-bar-btn blue';
+      btn.textContent = 'New Round';
+      btn.onclick = startRound;
+      btnsEl.appendChild(btn);
+    }
+
+    // AI hand (always face-down)
+    renderHand('mg-ai-hand', aiHand, false, true);
+
+    // Scores
+    const scEl = document.getElementById('mg-scores');
+    if (scEl) scEl.innerHTML = PLAYERS.map(p =>
+      `<div style="display:flex;align-items:center;gap:8px">
+        <span style="font-weight:800;color:${p.color};min-width:36px">${p.name}</span>
+        <span style="font-weight:700">${scores[p.id]} pts</span>
+        ${gameState !== 'gameOver' && p.id === (gameState === 'playerTurn' ? 'you' : 'ai') ? '<span style="font-size:0.7rem;background:#22c55e;color:#fff;padding:1px 7px;border-radius:99px">TURN</span>' : ''}
+       </div>`
+    ).join('');
+  }
+
+  function renderHand(containerId, hand, clickable, faceDown = false) {
+    const el2 = document.getElementById(containerId);
+    if (!el2) return;
+    el2.innerHTML = '';
+    hand.forEach((card, i) => {
+      const div = document.createElement('div');
+      if (faceDown) {
+        div.className = 'demo-card';
+        div.style.background = 'linear-gradient(135deg,#334155,#1e293b)';
+        div.style.color = '#94a3b8';
+        div.textContent = '?';
+      } else {
+        div.className = `demo-card ${card.type}`;
+        div.textContent = card.label;
+        if (clickable) {
+          const bust = wouldBust(card.value);
+          if (bust) div.style.opacity = '0.45';
+          div.style.cursor = bust ? 'not-allowed' : 'pointer';
+          div.title = bust ? 'This would bust!' : `Play ${card.label} → stability ${stability + card.value}`;
+          if (!bust) div.onclick = () => playerPlay(i);
+        }
+      }
+      el2.appendChild(div);
+    });
+  }
+
+  // ④ GAME ACTIONS (state machine transitions)
+  function playerPlay(handIndex) {
+    if (gameState !== 'playerTurn') return;
+    const card = playerHand[handIndex];
+    if (wouldBust(card.value)) return;
+
+    const prev = stability;
+    stability += card.value;
+    playerHand.splice(handIndex, 1);
+    addLog(`YOU played ${card.label}: stability ${prev} → ${stability}`, 'action');
+
+    if (playerHand.length === 0) { endRound('ai', 'You ran out of cards'); return; }
+
+    gameState = 'aiTurn';
+    updateUI();
+    setTimeout(aiPlay, 900);
+  }
+
+  function aiPlay() {
+    if (gameState !== 'aiTurn') return;
+
+    // AI logic: prefer safe cards; pick lowest-impact safe card
+    const safe = aiHand.filter(c => !wouldBust(c.value));
+    let chosen;
+    if (safe.length > 0) {
+      // Pick the card that leaves stability closest to middle (5)
+      chosen = safe.sort((a, b) =>
+        Math.abs((stability + a.value) - 5) - Math.abs((stability + b.value) - 5)
+      )[0];
+    } else {
+      // No safe card — AI must bust
+      chosen = aiHand[0];
+      const result = stability + chosen.value;
+      stability = result;
+      const aiIdx = aiHand.indexOf(chosen);
+      aiHand.splice(aiIdx, 1);
+      addLog(`AI played ${chosen.label}: stability ${stability - chosen.value} → ${stability} 💥`, 'warn');
+      endRound('you', 'AI busted!');
+      return;
+    }
+
+    const prev = stability;
+    stability += chosen.value;
+    const aiIdx = aiHand.indexOf(chosen);
+    aiHand.splice(aiIdx, 1);
+    addLog(`AI played ${chosen.label}: stability ${prev} → ${stability}`, 'system');
+
+    if (aiHand.length === 0) { endRound('you', 'AI ran out of cards'); return; }
+
+    gameState = 'playerTurn';
+    updateUI();
+  }
+
+  function endRound(winner, reason) {
+    scores[winner]++;
+    gameState = 'gameOver';
+    addLog(`— Round ${round} over: ${reason}. ${winner.toUpperCase()} wins! —`, 'warn');
+    round++;
+    updateUI();
+  }
+
+  function startRound() {
+    stability = 5;
+    playerHand = dealHand(4);
+    aiHand = dealHand(4);
+    gameState = 'playerTurn';
+    addLog(`— Round ${round} started — stability: 5 —`, 'system');
+    updateUI();
+  }
+
+  // ⑤ BUILD THE HTML STRUCTURE
+  el.innerHTML = `
+    <style>
+      #mg-wrap { display:flex; flex-direction:column; gap:12px; }
+      #mg-top  { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+      .mg-panel { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; }
+      .mg-label { font-size:0.68rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#94a3b8; margin-bottom:8px; }
+      #mg-stab-bg { width:28px; height:120px; background:#e2e8f0; border-radius:6px; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; }
+      #mg-stab-fill { width:100%; transition:height 0.4s, background 0.4s; border-radius:4px; }
+    </style>
+    <div id="mg-wrap">
+      <div id="mg-top">
+        <!-- Scoreboard -->
+        <div class="mg-panel" style="min-width:130px">
+          <div class="mg-label">🏆 Scores</div>
+          <div id="mg-scores"></div>
+        </div>
+        <!-- Stability -->
+        <div class="mg-panel" style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="mg-label">Stability</div>
+          <div id="mg-stab-bg"><div id="mg-stab-fill"></div></div>
+          <div id="mg-stab-num" style="font-weight:900;font-size:1.1rem;color:#1e293b"></div>
+          <div style="font-size:0.65rem;color:#94a3b8">0–10</div>
+        </div>
+        <!-- AI hand -->
+        <div class="mg-panel" style="flex:1;min-width:160px">
+          <div class="mg-label">🤖 AI Hand (face-down)</div>
+          <div class="hand-area" id="mg-ai-hand" style="min-height:80px"></div>
+        </div>
+      </div>
+      <!-- Your hand -->
+      <div class="mg-panel">
+        <div class="mg-label">🤚 Your Hand — click a card (faded = would bust)</div>
+        <div class="hand-area" id="mg-player-hand" style="min-height:80px"></div>
+      </div>
+      <!-- Status bar -->
+      <div class="status-bar-demo" style="flex-wrap:wrap;gap:10px">
+        <span class="status-bar-msg" id="mg-status-msg"></span>
+        <div id="mg-status-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <!-- Log -->
+      <div class="log-area" id="mg-log" style="height:110px"></div>
+    </div>
+  `;
+
+  // ⑥ START
+  startRound();
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+buildSidebar();
+goTo(CONTENT_LESSONS[0].id);
+</script>
+</body>
+</html>
