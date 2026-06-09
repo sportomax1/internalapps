@@ -1,0 +1,2518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenSCAD Card Box Builder</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171a1f;
+      --muted: #626a73;
+      --line: #d9dee5;
+      --soft: #f4f6f8;
+      --panel: #ffffff;
+      --field: #fbfcfd;
+      --accent: #0b6f6b;
+      --accent-2: #1f5f8f;
+      --warn: #a54d17;
+      --good: #166a3b;
+      --shadow: 0 18px 55px rgba(29, 39, 50, 0.13);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(11, 111, 107, 0.12), transparent 28%),
+        radial-gradient(circle at 88% 8%, rgba(31, 95, 143, 0.12), transparent 26%),
+        linear-gradient(180deg, #f8fafb, #e9eef2);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #aeb6bf;
+      background: #f9fafb;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: #075d59;
+    }
+
+    .app {
+      width: min(1600px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 20px 0 28px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 8px 0 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 2.4vw, 2.65rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .subhead {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid rgba(217, 222, 229, 0.88);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(310px, 430px) minmax(430px, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid rgba(217, 222, 229, 0.92);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow);
+      overflow: clip;
+    }
+
+    .controls {
+      padding: 14px;
+      position: sticky;
+      top: 12px;
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+    }
+
+    .tabbar,
+    .segmented {
+      display: grid;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .tabbar {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      margin-bottom: 14px;
+    }
+
+    .segmented {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .tabbar button,
+    .segmented button {
+      min-height: 34px;
+      padding: 0 8px;
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .tabbar button.active,
+    .segmented button.active {
+      border-color: var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 5px 14px rgba(22, 31, 40, 0.08);
+    }
+
+    .control-page {
+      display: none;
+    }
+
+    .control-page.active {
+      display: block;
+    }
+
+    .section {
+      padding: 15px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 0.84rem;
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #30343a;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field.span,
+    .check-row.span,
+    .shape-grid {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: #333841;
+      font-size: 0.84rem;
+      font-weight: 680;
+    }
+
+    .unit {
+      color: var(--muted);
+      font-weight: 520;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--field);
+      color: var(--ink);
+    }
+
+    input,
+    select {
+      min-height: 39px;
+      padding: 0 10px;
+    }
+
+    input[readonly] {
+      color: #38404a;
+      background: #eef3f4;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--accent);
+    }
+
+    input[type="range"] {
+      padding: 0;
+      min-height: 28px;
+      accent-color: var(--accent);
+      background: transparent;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 42px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--field);
+      font-size: 0.9rem;
+      font-weight: 680;
+    }
+
+    .preset-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .preset-row button {
+      min-height: 36px;
+      padding: 0 8px;
+      font-size: 0.83rem;
+    }
+
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .style-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .style-option {
+      width: 100%;
+      min-height: 68px;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .style-option strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+
+    .style-option span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.25;
+    }
+
+    .style-option .style-meta {
+      margin-bottom: 5px;
+      color: #315461;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .style-option.active {
+      border-color: var(--accent);
+      background: #eef8f6;
+    }
+
+    .shape-grid button {
+      display: grid;
+      place-items: center;
+      gap: 6px;
+      min-height: 72px;
+      padding: 8px 6px;
+      font-size: 0.78rem;
+      color: #333841;
+    }
+
+    .shape-grid button.active {
+      border-color: var(--accent);
+      background: #eef8f6;
+      color: #073f3c;
+    }
+
+    .shape-icon {
+      width: 32px;
+      height: 22px;
+      background: #dbe6ea;
+      border: 1px solid #9eb2bb;
+    }
+
+    .shape-icon.capsule { border-radius: 999px; }
+    .shape-icon.rounded_rect { border-radius: 7px; }
+    .shape-icon.rectangle { border-radius: 1px; }
+    .shape-icon.circle { width: 26px; height: 26px; border-radius: 50%; }
+    .shape-icon.oval { border-radius: 50%; }
+    .shape-icon.diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+    .shape-icon.hexagon { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+    .shape-icon.octagon { clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
+    .shape-icon.star { clip-path: polygon(50% 0, 61% 34%, 98% 34%, 68% 55%, 79% 91%, 50% 69%, 21% 91%, 32% 55%, 2% 34%, 39% 34%); }
+    .shape-icon.plus { clip-path: polygon(36% 0, 64% 0, 64% 34%, 100% 34%, 100% 66%, 64% 66%, 64% 100%, 36% 100%, 36% 66%, 0 66%, 0 34%, 36% 34%); }
+    .shape-icon.double_circle {
+      width: 38px;
+      height: 22px;
+      border: 0;
+      background:
+        radial-gradient(circle at 31% 50%, #dbe6ea 0 46%, transparent 48%),
+        radial-gradient(circle at 69% 50%, #dbe6ea 0 46%, transparent 48%);
+      filter: drop-shadow(0 0 0 #9eb2bb);
+    }
+    .shape-icon.dogbone {
+      width: 40px;
+      border-radius: 999px;
+      box-shadow: inset 12px 0 0 rgba(11, 111, 107, 0.13), inset -12px 0 0 rgba(11, 111, 107, 0.13);
+    }
+
+    .recommend-box {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #b9d8ca;
+      border-radius: 8px;
+      background: #eef8f2;
+      color: #205f3c;
+      font-size: 0.85rem;
+      line-height: 1.34;
+    }
+
+    .workbench {
+      display: grid;
+      grid-template-columns: minmax(320px, 0.95fr) minmax(390px, 1.05fr);
+      min-height: calc(100vh - 126px);
+    }
+
+    .preview-side,
+    .code-side {
+      min-width: 0;
+      padding: 16px;
+    }
+
+    .preview-side {
+      border-right: 1px solid var(--line);
+      background: #f8fafb;
+    }
+
+    .preview-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .preview-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 760;
+      font-size: 0.88rem;
+    }
+
+    .preview-head span {
+      color: var(--muted);
+      font-weight: 560;
+      font-size: 0.78rem;
+      text-align: right;
+    }
+
+    .top-stage {
+      min-height: 330px;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      place-items: center;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.88), rgba(236,241,244,0.92)),
+        repeating-linear-gradient(90deg, rgba(32, 33, 36, 0.045) 0, rgba(32, 33, 36, 0.045) 1px, transparent 1px, transparent 22px),
+        repeating-linear-gradient(0deg, rgba(32, 33, 36, 0.04) 0, rgba(32, 33, 36, 0.04) 1px, transparent 1px, transparent 22px);
+    }
+
+    .top-model {
+      position: relative;
+      width: min(82%, 320px);
+      aspect-ratio: var(--box-ratio, 0.74);
+      border: 2px solid #0b6f6b;
+      border-radius: var(--preview-radius, 18px);
+      background: rgba(11, 111, 107, 0.08);
+      box-shadow:
+        inset 0 0 0 var(--wall-preview, 12px) rgba(11, 111, 107, 0.22),
+        0 18px 30px rgba(28, 45, 55, 0.12);
+    }
+
+    .card-stack {
+      position: absolute;
+      inset: var(--card-inset, 28px);
+      border-radius: calc(var(--preview-radius, 18px) * 0.72);
+      background:
+        repeating-linear-gradient(135deg, rgba(31,95,143,0.16) 0 4px, rgba(31,95,143,0.06) 4px 8px),
+        #f6fbfc;
+      border: 1px solid rgba(31, 95, 143, 0.35);
+    }
+
+    .lid-outline {
+      position: absolute;
+      inset: -18px;
+      border: 2px dashed rgba(31, 95, 143, 0.55);
+      border-radius: calc(var(--preview-radius, 18px) + 10px);
+      pointer-events: none;
+    }
+
+    .preview-hole {
+      position: absolute;
+      left: 50%;
+      top: calc(50% + var(--hole-y, 0px));
+      width: var(--hole-w, 42%);
+      height: var(--hole-h, 22%);
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      border: 1px solid rgba(23, 26, 31, 0.22);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.9);
+      clip-path: var(--hole-clip, inset(0 round 999px));
+      border-radius: var(--hole-radius, 999px);
+    }
+
+    .parts-preview {
+      width: min(96%, 520px);
+      min-height: 132px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .part-tile {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+      justify-items: center;
+      color: #2f3840;
+      font-size: 0.75rem;
+      font-weight: 760;
+      text-align: center;
+    }
+
+    .part3d {
+      --part-w: 96px;
+      --part-h: 58px;
+      --part-d: 18px;
+      position: relative;
+      width: var(--part-w);
+      height: var(--part-h);
+      transform: skewX(-16deg);
+      border: 2px solid rgba(11, 111, 107, 0.72);
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.72), rgba(11,111,107,0.12)),
+        rgba(11,111,107,0.08);
+      box-shadow: 0 10px 18px rgba(28, 45, 55, 0.14);
+    }
+
+    .part3d::before,
+    .part3d::after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(11, 111, 107, 0.44);
+      background: rgba(31, 95, 143, 0.12);
+      pointer-events: none;
+    }
+
+    .part3d::before {
+      left: 8px;
+      right: -10px;
+      top: calc(-1 * var(--part-d));
+      height: var(--part-d);
+      transform: skewX(32deg);
+      border-radius: 7px 7px 3px 3px;
+    }
+
+    .part3d::after {
+      top: -8px;
+      right: -15px;
+      width: 14px;
+      bottom: 7px;
+      transform: skewY(42deg);
+      border-radius: 2px 6px 6px 2px;
+    }
+
+    .part3d.lid,
+    .part3d.slider {
+      --part-h: 42px;
+      --part-d: 11px;
+      border-color: rgba(31, 95, 143, 0.72);
+      background: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(31,95,143,0.14));
+    }
+
+    .part3d.sleeve {
+      --part-h: 54px;
+      background:
+        linear-gradient(90deg, transparent 16%, rgba(31,95,143,0.12) 16% 84%, transparent 84%),
+        linear-gradient(145deg, rgba(255,255,255,0.78), rgba(31,95,143,0.14));
+    }
+
+    .part3d.hinge::before {
+      box-shadow: -32px -4px 0 -6px rgba(31,95,143,0.5), 0 -4px 0 -6px rgba(31,95,143,0.5), 32px -4px 0 -6px rgba(31,95,143,0.5);
+    }
+
+    .part3d.snap::before,
+    .part3d.bayonet::before {
+      box-shadow: -25px 2px 0 -6px rgba(165,77,23,0.8), 25px 2px 0 -6px rgba(165,77,23,0.8);
+    }
+
+    .part3d .preview-text {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      max-width: 82%;
+      transform: translate(-50%, -50%);
+      color: rgba(23, 26, 31, 0.56);
+      font-size: calc(0.72rem * var(--preview-text-scale, 1));
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .part3d .preview-cutout {
+      position: absolute;
+      left: 50%;
+      top: 54%;
+      width: 42%;
+      height: 28%;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(23,26,31,0.28);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.72);
+    }
+
+    .side-stage {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .side-bar {
+      position: relative;
+      height: 78px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #edf3f5;
+      overflow: hidden;
+    }
+
+    .floor-band,
+    .top-gap-band,
+    .bottom-gap-band,
+    .cards-band {
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    .floor-band {
+      bottom: 0;
+      height: var(--floor-band, 8%);
+      background: rgba(11, 111, 107, 0.32);
+    }
+
+    .bottom-gap-band {
+      bottom: var(--floor-band, 8%);
+      height: var(--bottom-gap-band, 10%);
+      background: rgba(165, 77, 23, 0.14);
+    }
+
+    .cards-band {
+      bottom: calc(var(--floor-band, 8%) + var(--bottom-gap-band, 10%));
+      height: var(--cards-band, 58%);
+      background:
+        repeating-linear-gradient(0deg, rgba(31, 95, 143, 0.28) 0 2px, rgba(255,255,255,0.1) 2px 5px),
+        rgba(31, 95, 143, 0.18);
+    }
+
+    .top-gap-band {
+      top: 0;
+      height: var(--top-gap-band, 12%);
+      background: rgba(22, 106, 59, 0.14);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .metric b {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.98rem;
+      font-weight: 760;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    textarea {
+      min-height: calc(100vh - 224px);
+      resize: vertical;
+      padding: 12px;
+      font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      tab-size: 2;
+      white-space: pre;
+      background: #10151a;
+      color: #dce9df;
+      border-color: #26323d;
+    }
+
+    @media (max-width: 1150px) {
+      main,
+      .workbench {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+        max-height: none;
+      }
+
+      .preview-side {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      textarea {
+        min-height: 480px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        width: min(100vw - 18px, 1600px);
+        padding-top: 12px;
+      }
+
+      header,
+      .actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .header-meta {
+        justify-content: flex-start;
+      }
+
+      .grid,
+      .preset-row,
+      .metric-grid,
+      .shape-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls,
+      .preview-side,
+      .code-side {
+        padding: 12px;
+      }
+
+      .top-stage {
+        min-height: 285px;
+        padding: 14px;
+      }
+
+      .tabbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tabbar button,
+      .segmented button {
+        font-size: 0.82rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>OpenSCAD Card Box Builder</h1>
+        <div class="subhead">Generate paste-ready OpenSCAD for a 3D printed card storage box.</div>
+      </div>
+      <div class="header-meta" aria-live="polite">
+        <span class="pill" id="outerBadge">Outer: --</span>
+        <span class="pill" id="fitBadge">Fit: --</span>
+        <span class="pill" id="capacityBadge">Cards: --</span>
+      </div>
+    </header>
+
+    <main>
+      <aside class="panel controls" aria-label="Box settings">
+        <nav class="tabbar" aria-label="Settings groups">
+          <button type="button" class="active" data-tab="basic">Basic</button>
+          <button type="button" data-tab="style">Style</button>
+          <button type="button" data-tab="cutout">Cutout</button>
+          <button type="button" data-tab="text">Text</button>
+          <button type="button" data-tab="advanced">Advanced</button>
+        </nav>
+
+        <div class="control-page active" data-page="basic">
+          <section class="section">
+            <div class="section-title">
+              <h2>Output</h2>
+            </div>
+            <div class="segmented" role="group" aria-label="OpenSCAD output part">
+              <button type="button" data-part="both" class="active">Both</button>
+              <button type="button" data-part="bottom">Bottom</button>
+              <button type="button" data-part="lid">Lid</button>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h2>Sizing</h2>
+              <span class="hint">2.5 x 3.5 cards</span>
+            </div>
+            <div class="grid">
+              <div class="field span">
+                <label for="sizingMode">Sizing mode</label>
+                <select id="sizingMode">
+                  <option value="cards">Card count drives box</option>
+                  <option value="manual">Manual internal size</option>
+                </select>
+              </div>
+              <div class="field span">
+                <label for="cardPreset">Card format</label>
+                <select id="cardPreset">
+                  <option value="standard">Trading card, 2.5 x 3.5 in</option>
+                  <option value="sleeved">Sleeved trading cards</option>
+                  <option value="poker">Poker card, 63 x 88 mm</option>
+                  <option value="custom">Custom card size</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="cardCount">Cards <span class="unit">count</span></label>
+                <input id="cardCount" type="number" min="1" step="1" value="100">
+              </div>
+              <div class="field">
+                <label for="cardThickness">Card thickness <span class="unit">mm</span></label>
+                <input id="cardThickness" type="number" min="0.1" step="0.01" value="0.32">
+              </div>
+              <div class="field">
+                <label for="cardW">Card width <span class="unit">mm</span></label>
+                <input id="cardW" type="number" min="20" step="0.1" value="63.5">
+              </div>
+              <div class="field">
+                <label for="cardL">Card length <span class="unit">mm</span></label>
+                <input id="cardL" type="number" min="20" step="0.1" value="88.9">
+              </div>
+              <div class="field span">
+                <label for="cardClearance">Side clearance <span class="unit">mm per side</span></label>
+                <input id="cardClearance" type="number" min="0" step="0.1" value="2">
+              </div>
+            </div>
+            <div class="recommend-box" id="cardMath"></div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h2>Fit Preset</h2>
+              <span class="hint">gaps</span>
+            </div>
+            <div class="preset-row">
+              <button type="button" data-preset="snug">FDM snug</button>
+              <button type="button" data-preset="easy">FDM easy</button>
+              <button type="button" data-preset="resin">Resin</button>
+            </div>
+            <div class="grid">
+              <div class="field">
+                <label for="topGap">Top card gap <span class="unit">mm</span></label>
+                <input id="topGap" type="number" min="0" step="0.05" value="1.5">
+              </div>
+              <div class="field">
+                <label for="bottomGap">Bottom card gap <span class="unit">mm</span></label>
+                <input id="bottomGap" type="number" min="0" step="0.05" value="1">
+              </div>
+            </div>
+            <div class="recommend-box" id="recommendBox"></div>
+          </section>
+        </div>
+
+        <div class="control-page" data-page="style">
+          <section class="section">
+            <div class="section-title">
+              <h2>Box Style</h2>
+              <span class="hint">geometry</span>
+            </div>
+            <div class="style-grid" id="styleGrid" aria-label="Box style"></div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h2>Style Extras</h2>
+              <span class="hint">optional</span>
+            </div>
+            <div class="grid">
+              <label class="check-row span" for="thumbNotch">
+                <span>Finger notch on lid</span>
+                <input id="thumbNotch" type="checkbox" checked>
+              </label>
+              <div class="field">
+                <label for="thumbRadius">Notch radius <span class="unit">mm</span></label>
+                <input id="thumbRadius" type="number" min="2" step="0.1" value="8">
+              </div>
+              <div class="field">
+                <label for="railWidth">Slide rail width <span class="unit">mm</span></label>
+                <input id="railWidth" type="number" min="1" step="0.1" value="3">
+              </div>
+              <div class="field">
+                <label for="railHeight">Slide rail height <span class="unit">mm</span></label>
+                <input id="railHeight" type="number" min="0.8" step="0.1" value="2">
+              </div>
+              <div class="field">
+                <label for="snapDepth">Snap bead depth <span class="unit">mm</span></label>
+                <input id="snapDepth" type="number" min="0" step="0.05" value="0.45">
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="control-page" data-page="cutout">
+          <section class="section">
+            <div class="section-title">
+              <h2>Cutout</h2>
+              <span class="hint">lid or bottom</span>
+            </div>
+            <div class="grid">
+              <label class="check-row span" for="holeOn">
+                <span>Cut a shape</span>
+                <input id="holeOn" type="checkbox" checked>
+              </label>
+              <div class="field span">
+                <label for="holeTarget">Apply cutout to</label>
+                <select id="holeTarget">
+                  <option value="lid">Lid top</option>
+                  <option value="bottom">Bottom floor</option>
+                  <option value="both">Lid and bottom</option>
+                </select>
+              </div>
+              <div class="shape-grid" id="shapeGrid" aria-label="Cutout shape"></div>
+              <div class="field">
+                <label for="holeW">Cutout width <span class="unit">mm</span></label>
+                <input id="holeW" type="number" min="4" step="0.1" value="38">
+              </div>
+              <div class="field">
+                <label for="holeL">Cutout length <span class="unit">mm</span></label>
+                <input id="holeL" type="number" min="4" step="0.1" value="22">
+              </div>
+              <div class="field">
+                <label for="holeY">Offset toward end <span class="unit">mm</span></label>
+                <input id="holeY" type="number" step="0.1" value="0">
+              </div>
+              <div class="field">
+                <label for="holeRound">Corner rounding <span class="unit">mm</span></label>
+                <input id="holeRound" type="number" min="0.2" step="0.1" value="8">
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="control-page" data-page="text">
+          <section class="section">
+            <div class="section-title">
+              <h2>Engraved Text</h2>
+              <span class="hint">auto-sized</span>
+            </div>
+            <div class="grid">
+              <label class="check-row span" for="textOn">
+                <span>Primary text is always engraved</span>
+                <input id="textOn" type="checkbox" checked disabled>
+              </label>
+              <div class="field span">
+                <label for="textValue">Text</label>
+                <input id="textValue" type="text" value="K2 Games">
+              </div>
+              <div class="field">
+                <label for="textTarget">Text face</label>
+                <select id="textTarget">
+                  <option value="lid_top">Lid top</option>
+                  <option value="lid_front">Lid front</option>
+                  <option value="lid_back">Lid back</option>
+                  <option value="lid_left">Lid left</option>
+                  <option value="lid_right">Lid right</option>
+                  <option value="bottom_front">Bottom front</option>
+                  <option value="bottom_back">Bottom back</option>
+                  <option value="bottom_left">Bottom left</option>
+                  <option value="bottom_right">Bottom right</option>
+                  <option value="bottom_inside">Bottom inside floor</option>
+                  <option value="bottom_under">Bottom underside</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="textFont">Font</label>
+                <select id="textFont">
+                  <option value="Liberation Sans:style=Bold">Liberation Sans Bold</option>
+                  <option value="Liberation Sans">Liberation Sans</option>
+                  <option value="Liberation Serif:style=Bold">Liberation Serif Bold</option>
+                  <option value="DejaVu Sans:style=Bold">DejaVu Sans Bold</option>
+                  <option value="Arial:style=Bold">Arial Bold</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="textSize">Text size <span class="unit">mm</span></label>
+                <input id="textSize" type="number" min="0" step="0.1" value="0">
+              </div>
+              <div class="field">
+                <label for="textDepth">Engrave depth <span class="unit">mm</span></label>
+                <input id="textDepth" type="number" min="0.2" step="0.05" value="0.7">
+              </div>
+              <div class="field">
+                <label for="textX">Text offset X <span class="unit">mm</span></label>
+                <input id="textX" type="number" step="0.1" value="0">
+              </div>
+              <div class="field">
+                <label for="textY">Text offset Y/Z <span class="unit">mm</span></label>
+                <input id="textY" type="number" step="0.1" value="0">
+              </div>
+              <div class="field">
+                <label for="textRotate">Text rotation <span class="unit">deg</span></label>
+                <input id="textRotate" type="number" step="1" value="0">
+              </div>
+              <div class="field">
+                <label for="textMirror">Mirror for stamp</label>
+                <select id="textMirror">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h2>Second Label</h2>
+              <span class="hint">optional</span>
+            </div>
+            <div class="grid">
+              <label class="check-row span" for="text2On">
+                <span>Add second text label</span>
+                <input id="text2On" type="checkbox">
+              </label>
+              <div class="field span">
+                <label for="text2Value">Text</label>
+                <input id="text2Value" type="text" value="100 Cards">
+              </div>
+              <div class="field">
+                <label for="text2Target">Text face</label>
+                <select id="text2Target">
+                  <option value="bottom_front">Bottom front</option>
+                  <option value="lid_top">Lid top</option>
+                  <option value="lid_front">Lid front</option>
+                  <option value="lid_back">Lid back</option>
+                  <option value="lid_left">Lid left</option>
+                  <option value="lid_right">Lid right</option>
+                  <option value="bottom_back">Bottom back</option>
+                  <option value="bottom_left">Bottom left</option>
+                  <option value="bottom_right">Bottom right</option>
+                  <option value="bottom_inside">Bottom inside floor</option>
+                  <option value="bottom_under">Bottom underside</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="text2Size">Text size <span class="unit">mm</span></label>
+                <input id="text2Size" type="number" min="2" step="0.1" value="5">
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="control-page" data-page="advanced">
+          <section class="section">
+            <div class="section-title">
+              <h2>Manual Internal Size</h2>
+              <span class="hint" id="manualHint">calculated</span>
+            </div>
+            <div class="grid">
+              <div class="field">
+                <label for="innerW">Internal width <span class="unit">mm</span></label>
+                <input id="innerW" type="number" min="20" step="0.1" value="67.5">
+              </div>
+              <div class="field">
+                <label for="innerL">Internal length <span class="unit">mm</span></label>
+                <input id="innerL" type="number" min="20" step="0.1" value="92.9">
+              </div>
+              <div class="field">
+                <label for="stackH">Card stack height <span class="unit">mm</span></label>
+                <input id="stackH" type="number" min="1" step="0.1" value="32">
+              </div>
+              <div class="field">
+                <label for="cornerR">Rounded corners <span class="unit">mm</span></label>
+                <input id="cornerR" type="number" min="0.1" step="0.1" value="5">
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h2>Walls And Lid</h2>
+            </div>
+            <div class="grid">
+              <div class="field">
+                <label for="wall">Wall thickness <span class="unit">mm</span></label>
+                <input id="wall" type="number" min="0.8" step="0.1" value="2">
+              </div>
+              <div class="field">
+                <label for="floor">Bottom thickness <span class="unit">mm</span></label>
+                <input id="floor" type="number" min="0.8" step="0.1" value="2">
+              </div>
+              <div class="field">
+                <label for="lidTop">Lid top thickness <span class="unit">mm</span></label>
+                <input id="lidTop" type="number" min="0.8" step="0.1" value="2">
+              </div>
+              <div class="field">
+                <label for="fn">Curve quality <span class="unit">$fn</span></label>
+                <input id="fn" type="number" min="16" max="128" step="4" value="64">
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h2>Lips And Fit</h2>
+            </div>
+            <div class="grid">
+              <div class="field">
+                <label for="lipH">Bottom lip height <span class="unit">mm</span></label>
+                <input id="lipH" type="number" min="0" step="0.1" value="6">
+              </div>
+              <div class="field">
+                <label for="lipT">Lip thickness <span class="unit">mm</span></label>
+                <input id="lipT" type="number" min="0.8" step="0.1" value="1.4">
+              </div>
+              <div class="field">
+                <label for="skirtH">Lid skirt height <span class="unit">mm</span></label>
+                <input id="skirtH" type="number" min="1" step="0.1" value="6.3">
+              </div>
+              <div class="field">
+                <label for="lidWall">Lid wall thickness <span class="unit">mm</span></label>
+                <input id="lidWall" type="number" min="0.8" step="0.1" value="1.8">
+              </div>
+              <div class="field">
+                <label for="lidGap">Lid fit gap <span class="unit">mm/side</span></label>
+                <input id="lidGap" type="number" min="0" step="0.05" value="0.35">
+              </div>
+              <div class="field">
+                <label for="zGap">Lid vertical gap <span class="unit">mm</span></label>
+                <input id="zGap" type="number" min="0" step="0.05" value="0.3">
+              </div>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="panel workbench" aria-label="Preview and OpenSCAD output">
+        <div class="preview-side">
+          <div class="preview-grid">
+            <div class="preview-card">
+              <div class="preview-head">Top preview <span id="previewLabel">standard trading cards</span></div>
+              <div class="top-stage">
+                <div class="top-model" id="modelPreview">
+                  <div class="lid-outline"></div>
+                  <div class="card-stack"></div>
+                  <div class="preview-hole" id="previewHole"></div>
+                </div>
+                <div class="parts-preview" id="partsPreview" aria-label="3D style parts preview"></div>
+              </div>
+            </div>
+
+            <div class="preview-card">
+              <div class="preview-head">Stack height <span id="heightLabel">cards plus gaps</span></div>
+              <div class="side-stage">
+                <div class="side-bar" id="sidePreview">
+                  <div class="top-gap-band"></div>
+                  <div class="cards-band"></div>
+                  <div class="bottom-gap-band"></div>
+                  <div class="floor-band"></div>
+                </div>
+                <div class="metric-grid" id="metrics"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-side">
+          <div class="actions">
+            <div class="button-row">
+              <button class="primary" type="button" id="copyBtn">Copy OpenSCAD</button>
+              <button type="button" id="downloadBtn">Download .scad</button>
+              <button type="button" id="resetBtn">Reset</button>
+            </div>
+            <div class="status" id="status" aria-live="polite"></div>
+          </div>
+          <textarea id="scadOutput" spellcheck="false" aria-label="Generated OpenSCAD script"></textarea>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const cardPresets = {
+      standard: { label: "2.5 x 3.5 in trading cards", w: 63.5, l: 88.9, thickness: 0.32, clearance: 2 },
+      sleeved: { label: "sleeved trading cards", w: 66, l: 91, thickness: 0.55, clearance: 2.5 },
+      poker: { label: "poker cards", w: 63, l: 88, thickness: 0.3, clearance: 1.8 },
+      custom: { label: "custom cards", w: 63.5, l: 88.9, thickness: 0.32, clearance: 2 }
+    };
+
+    const cutoutShapes = [
+      ["capsule", "Capsule"],
+      ["rounded_rect", "Rounded rect"],
+      ["rectangle", "Rectangle"],
+      ["circle", "Circle"],
+      ["oval", "Oval"],
+      ["diamond", "Diamond"],
+      ["hexagon", "Hexagon"],
+      ["octagon", "Octagon"],
+      ["star", "Star"],
+      ["plus", "Plus"],
+      ["double_circle", "Two circles"],
+      ["dogbone", "Dogbone"]
+    ];
+
+    const boxStyles = [
+      {
+        value: "sliding_rail_lid",
+        label: "Sliding rail lid",
+        pieces: 2,
+        practical: "Box + sliding lid",
+        description: "Tray rails with a separate flat lid that slides from the end."
+      },
+      {
+        value: "telescoping_lid_base",
+        label: "Telescoping lid + base",
+        pieces: 2,
+        practical: "Bottom tray + top cover",
+        description: "Classic removable cover with a skirt around the box lip."
+      },
+      {
+        value: "drawer_sleeve",
+        label: "Drawer + sleeve",
+        pieces: 2,
+        practical: "Inner drawer + outer sleeve",
+        description: "An inner tray slides into a rectangular outer sleeve."
+      },
+      {
+        value: "hinge_clamshell",
+        label: "Print-in-place hinge clamshell",
+        pieces: 1,
+        practical: "One complete hinged case",
+        description: "Bottom and lid are laid open with hinge barrels joining them."
+      },
+      {
+        value: "friction_fit_case",
+        label: "Friction fit case",
+        pieces: 2,
+        practical: "Box + press-fit lid",
+        description: "A snug telescoping lid without snap beads."
+      },
+      {
+        value: "snap_on_lid",
+        label: "Snap-on lid / clip case",
+        pieces: 2,
+        practical: "Box + snap lid",
+        description: "Adds small bead details for a light snap-fit feel."
+      },
+      {
+        value: "twist_lock_bayonet",
+        label: "Twist lock / bayonet",
+        pieces: 2,
+        practical: "Base + twist cap",
+        description: "Telescoping cap with simple bayonet tabs and receiving slots."
+      },
+      {
+        value: "vault_door_slider",
+        label: "Vault door slider",
+        pieces: 2,
+        practical: "Box + fancier sliding door",
+        description: "Sliding rail lid with a raised front handle and panel detail."
+      },
+      {
+        value: "display_lid",
+        label: "Display lid",
+        pieces: 2,
+        practical: "Bottom tray + window cover",
+        description: "Optimized for large top windows or decorative cutouts."
+      },
+      {
+        value: "tray_only",
+        label: "Open tray",
+        pieces: 1,
+        practical: "Bottom tray only",
+        description: "Bottom-only card tray with no separate lid output."
+      }
+    ];
+
+    const legacyStyleMap = {
+      lift_off: "telescoping_lid_base",
+      sliding_lid: "sliding_rail_lid",
+      slip_cover: "telescoping_lid_base",
+      snap_lid: "snap_on_lid"
+    };
+
+    const defaults = {
+      builderVersion: 2,
+      part: "both",
+      boxStyle: "telescoping_lid_base",
+      sizingMode: "cards",
+      cardPreset: "standard",
+      cardCount: 100,
+      cardThickness: 0.32,
+      cardW: 63.5,
+      cardL: 88.9,
+      cardClearance: 2,
+      innerW: 67.5,
+      innerL: 92.9,
+      stackH: 32,
+      cornerR: 5,
+      wall: 2,
+      floor: 2,
+      lidTop: 2,
+      fn: 64,
+      topGap: 1.5,
+      bottomGap: 1,
+      lidGap: 0.35,
+      zGap: 0.3,
+      lipH: 6,
+      lipT: 1.4,
+      skirtH: 6.3,
+      lidWall: 1.8,
+      railWidth: 3,
+      railHeight: 2,
+      snapDepth: 0.45,
+      thumbNotch: true,
+      thumbRadius: 8,
+      holeOn: true,
+      holeTarget: "lid",
+      holeShape: "capsule",
+      holeW: 38,
+      holeL: 22,
+      holeY: 0,
+      holeRound: 8,
+      textOn: true,
+      textValue: "K2 Games",
+      textTarget: "lid_top",
+      textFont: "Liberation Sans:style=Bold",
+      textSize: 0,
+      textDepth: 0.7,
+      textX: 0,
+      textY: 0,
+      textRotate: 0,
+      textMirror: "no",
+      text2On: false,
+      text2Value: "100 Cards",
+      text2Target: "bottom_front",
+      text2Size: 5
+    };
+
+    const presets = {
+      snug: { topGap: 1, bottomGap: 0.6, lidGap: 0.25, zGap: 0.25 },
+      easy: { topGap: 1.5, bottomGap: 1, lidGap: 0.35, zGap: 0.3 },
+      resin: { topGap: 0.8, bottomGap: 0.5, lidGap: 0.15, zGap: 0.2 }
+    };
+
+    const ids = Object.keys(defaults).filter((key) => key !== "part" && key !== "boxStyle" && key !== "holeShape");
+    const els = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+    const output = document.getElementById("scadOutput");
+    const statusEl = document.getElementById("status");
+    const metricsEl = document.getElementById("metrics");
+    const outerBadge = document.getElementById("outerBadge");
+    const fitBadge = document.getElementById("fitBadge");
+    const capacityBadge = document.getElementById("capacityBadge");
+    const recommendBox = document.getElementById("recommendBox");
+    const cardMath = document.getElementById("cardMath");
+    const modelPreview = document.getElementById("modelPreview");
+    const sidePreview = document.getElementById("sidePreview");
+    const previewHole = document.getElementById("previewHole");
+    const partsPreview = document.getElementById("partsPreview");
+    const previewLabel = document.getElementById("previewLabel");
+    const heightLabel = document.getElementById("heightLabel");
+    const manualHint = document.getElementById("manualHint");
+    const shapeGrid = document.getElementById("shapeGrid");
+    const styleGrid = document.getElementById("styleGrid");
+
+    let state = loadState();
+
+    function buildShapeGrid() {
+      shapeGrid.innerHTML = cutoutShapes.map(([value, label]) => `
+        <button type="button" data-shape="${value}" aria-label="${label}">
+          <span class="shape-icon ${value}" aria-hidden="true"></span>
+          <span>${label}</span>
+        </button>
+      `).join("");
+    }
+
+    function buildStyleGrid() {
+      styleGrid.innerHTML = boxStyles.map((style) => `
+        <button type="button" class="style-option" data-style="${style.value}">
+          <strong>${style.label}</strong>
+          <span class="style-meta">${style.pieces} printed ${style.pieces === 1 ? "piece" : "pieces"} - ${style.practical}</span>
+          <span>${style.description}</span>
+        </button>
+      `).join("");
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("openscadCardBoxBuilder") || "{}");
+        const loaded = { ...defaults, ...saved };
+        loaded.boxStyle = legacyStyleMap[loaded.boxStyle] || loaded.boxStyle;
+        if (saved.builderVersion !== defaults.builderVersion) {
+          loaded.builderVersion = defaults.builderVersion;
+          loaded.textOn = true;
+          loaded.textValue = !saved.textValue || saved.textValue === "My Deck" ? defaults.textValue : saved.textValue;
+          loaded.textSize = 0;
+        }
+        return loaded;
+      } catch {
+        return { ...defaults };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem("openscadCardBoxBuilder", JSON.stringify(state));
+    }
+
+    function numberValue(id) {
+      const value = parseFloat(els[id].value);
+      return Number.isFinite(value) ? value : defaults[id];
+    }
+
+    function isIncompleteNumberInput(el) {
+      if (!el || el.type !== "number") return false;
+      return el.value === "" || el.value === "-" || el.value === "." || el.value === "-.";
+    }
+
+    function round(value, places = 2) {
+      const scale = Math.pow(10, places);
+      return Math.round((value + Number.EPSILON) * scale) / scale;
+    }
+
+    function fmt(value) {
+      return `${round(value, 2)} mm`;
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function textFaceBounds(s, face) {
+      const d = dimensions(s);
+      const topW = Math.max(8, d.actualLidW - 8);
+      const topL = Math.max(8, d.actualLidL - 8);
+      const bottomW = Math.max(8, d.bottomOuterW - 8);
+      const bottomL = Math.max(8, d.bottomOuterL - 8);
+      const bottomH = Math.max(6, d.bottomTotalH - 4);
+      const lidH = Math.max(6, d.actualLidH - 3);
+      if (face === "lid_top") return { w: topW, h: topL };
+      if (face === "bottom_inside" || face === "bottom_under") return { w: bottomW, h: bottomL };
+      if (face === "lid_front" || face === "lid_back") return { w: topL, h: lidH };
+      if (face === "lid_left" || face === "lid_right") return { w: topW, h: lidH };
+      if (face === "bottom_front" || face === "bottom_back") return { w: bottomL, h: bottomH };
+      if (face === "bottom_left" || face === "bottom_right") return { w: bottomW, h: bottomH };
+      return { w: topW, h: topL };
+    }
+
+    function autoTextSize(s, face, text, requestedSize) {
+      const explicit = Number(requestedSize);
+      if (Number.isFinite(explicit) && explicit > 0) return explicit;
+      const bounds = textFaceBounds(s, face);
+      const chars = Math.max(1, String(text || "").length);
+      const byWidth = bounds.w / (chars * 0.62);
+      const byHeight = bounds.h * 0.38;
+      return round(clamp(Math.min(byWidth, byHeight), 2, 18), 2);
+    }
+
+    function styleInfo(styleValue = state.boxStyle) {
+      const value = legacyStyleMap[styleValue] || styleValue;
+      return boxStyles.find((style) => style.value === value) || boxStyles[0];
+    }
+
+    function syncCardPreset() {
+      const preset = cardPresets[state.cardPreset] || cardPresets.standard;
+      if (state.cardPreset !== "custom") {
+        state.cardW = preset.w;
+        state.cardL = preset.l;
+        state.cardThickness = preset.thickness;
+        state.cardClearance = preset.clearance;
+      }
+    }
+
+    function applyCardSizing() {
+      if (state.sizingMode === "cards") {
+        state.innerW = round(state.cardW + state.cardClearance * 2, 3);
+        state.innerL = round(state.cardL + state.cardClearance * 2, 3);
+        state.stackH = round(Math.max(1, state.cardCount) * state.cardThickness, 3);
+      }
+    }
+
+    function readState() {
+      ids.forEach((id) => {
+        if (!els[id]) return;
+        if (els[id].type === "checkbox") {
+          state[id] = els[id].checked;
+        } else if (els[id].tagName === "SELECT") {
+          state[id] = els[id].value;
+        } else if (els[id].type === "text") {
+          state[id] = els[id].value;
+        } else {
+          state[id] = numberValue(id);
+        }
+      });
+      state.textOn = true;
+      syncCardPreset();
+      applyCardSizing();
+    }
+
+    function writeState() {
+      state.boxStyle = legacyStyleMap[state.boxStyle] || state.boxStyle;
+      state.textOn = true;
+      syncCardPreset();
+      applyCardSizing();
+      ids.forEach((id) => {
+        if (!els[id]) return;
+        if (els[id].type === "checkbox") {
+          els[id].checked = Boolean(state[id]);
+        } else {
+          els[id].value = state[id];
+        }
+      });
+      document.querySelectorAll("[data-part]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.part === state.part);
+      });
+      document.querySelectorAll("[data-shape]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.shape === state.holeShape);
+      });
+      document.querySelectorAll("[data-style]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.style === state.boxStyle);
+      });
+      const cardDriven = state.sizingMode === "cards";
+      ["innerW", "innerL", "stackH"].forEach((id) => {
+        els[id].readOnly = cardDriven;
+      });
+      manualHint.textContent = cardDriven ? "calculated" : "editable";
+    }
+
+    function dimensions(s) {
+      const innerH = s.stackH + s.topGap + s.bottomGap;
+      const bottomBodyH = s.floor + innerH;
+      const bottomOuterW = s.innerW + 2 * s.wall;
+      const bottomOuterL = s.innerL + 2 * s.wall;
+      const bottomTotalH = bottomBodyH + s.lipH;
+      const lidInnerW = bottomOuterW + 2 * s.lidGap;
+      const lidInnerL = bottomOuterL + 2 * s.lidGap;
+      const lidOuterW = lidInnerW + 2 * s.lidWall;
+      const lidOuterL = lidInnerL + 2 * s.lidWall;
+      const lidH = s.skirtH + s.lidTop;
+      const recommendedSkirtH = s.lipH + s.zGap;
+      const recommendedLipCapture = Math.max(0, Math.min(s.lipH, s.skirtH - s.zGap));
+      const capacity = Math.max(1, Math.floor(s.stackH / Math.max(s.cardThickness, 0.01)));
+      const normalizedStyle = legacyStyleMap[s.boxStyle] || s.boxStyle;
+      const isSliding = normalizedStyle === "sliding_rail_lid" || normalizedStyle === "vault_door_slider";
+      const isSleeve = normalizedStyle === "drawer_sleeve";
+      const sleeveInnerH = bottomTotalH + 2 * s.lidGap;
+      const sleeveOuterH = sleeveInnerH + 2 * s.lidWall;
+      const actualLidW = isSliding ? bottomOuterW + 2 * s.railWidth + 2 * s.lidGap : lidOuterW;
+      const actualLidL = isSliding ? bottomOuterL + 2 * s.lidGap : lidOuterL;
+      const actualLidH = isSliding ? s.lidTop : (isSleeve ? sleeveOuterH : lidH);
+      return {
+        innerH,
+        bottomBodyH,
+        bottomOuterW,
+        bottomOuterL,
+        bottomTotalH,
+        lidInnerW,
+        lidInnerL,
+        lidOuterW,
+        lidOuterL,
+        lidH,
+        actualLidW,
+        actualLidL,
+        actualLidH,
+        sleeveOuterH,
+        recommendedSkirtH,
+        recommendedLipCapture,
+        capacity
+      };
+    }
+
+    function scadBool(value) {
+      return value ? "true" : "false";
+    }
+
+    function scadNum(value) {
+      return String(round(value, 3));
+    }
+
+    function scadString(value) {
+      return String(value ?? "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+    }
+
+    function generateScad(s) {
+      const d = dimensions(s);
+      const style = styleInfo(s.boxStyle);
+      const textSize = autoTextSize(s, s.textTarget, s.textValue, s.textSize);
+      const text2Size = autoTextSize(s, s.text2Target, s.text2Value, s.text2Size);
+      const maxHoleR = Math.max(0.2, Math.min(s.holeRound, Math.min(s.holeW, s.holeL) / 2));
+      return `// Generated by OpenSCAD Card Box Builder
+// Paste this into OpenSCAD, render, then export STL.
+// Units: millimeters
+
+$fn = ${Math.max(16, Math.round(s.fn))};
+
+show_part = "${s.part}"; // "both", "bottom", or "lid"
+box_style = "${s.boxStyle}"; // sliding_rail_lid, telescoping_lid_base, drawer_sleeve, hinge_clamshell, friction_fit_case, snap_on_lid, twist_lock_bayonet, vault_door_slider, display_lid, tray_only
+// ${style.label}: ${style.pieces} printed ${style.pieces === 1 ? "piece" : "pieces"}; practical answer: ${style.practical}
+
+// Style extras
+sliding_rail_width = ${scadNum(s.railWidth)};
+sliding_rail_height = ${scadNum(s.railHeight)};
+snap_bead_depth = ${scadNum(s.snapDepth)};
+thumb_notch_enabled = ${scadBool(s.thumbNotch)};
+thumb_notch_radius = ${scadNum(s.thumbRadius)};
+
+// Card math
+sizing_mode = "${s.sizingMode}";
+card_count = ${Math.max(1, Math.round(s.cardCount))};
+card_width = ${scadNum(s.cardW)};
+card_length = ${scadNum(s.cardL)};
+card_thickness = ${scadNum(s.cardThickness)};
+card_side_clearance = ${scadNum(s.cardClearance)};
+
+// Box/card space
+inner_width = ${scadNum(s.innerW)};
+inner_length = ${scadNum(s.innerL)};
+card_stack_height = ${scadNum(s.stackH)};
+top_card_gap = ${scadNum(s.topGap)};       // recommended FDM: 1.0 to 1.5
+bottom_card_gap = ${scadNum(s.bottomGap)}; // recommended FDM: 0.6 to 1.0
+
+// Print walls and rounded corners
+wall_thickness = ${scadNum(s.wall)};
+bottom_thickness = ${scadNum(s.floor)};
+lid_top_thickness = ${scadNum(s.lidTop)};
+corner_radius = ${scadNum(s.cornerR)};
+
+// Lip and lid fit
+bottom_lip_height = ${scadNum(s.lipH)};
+bottom_lip_thickness = ${scadNum(s.lipT)};
+lid_skirt_height = ${scadNum(s.skirtH)};
+lid_wall_thickness = ${scadNum(s.lidWall)};
+lid_fit_gap = ${scadNum(s.lidGap)};        // XY clearance per side
+lid_vertical_gap = ${scadNum(s.zGap)};     // target Z clearance above bottom lip
+
+// Top cutout in the lid
+top_hole_enabled = ${scadBool(s.holeOn)};
+top_hole_target = "${s.holeTarget}"; // lid, bottom, or both
+top_hole_shape = "${s.holeShape}";
+top_hole_width = ${scadNum(s.holeW)};
+top_hole_length = ${scadNum(s.holeL)};
+top_hole_offset_y = ${scadNum(s.holeY)};
+top_hole_radius = ${scadNum(maxHoleR)};
+
+// Engraved text labels
+text_enabled = ${scadBool(s.textOn)};
+text_value = "${scadString(s.textValue)}";
+text_target = "${s.textTarget}";
+text_font = "${scadString(s.textFont)}";
+text_size = ${scadNum(textSize)}; // auto when UI size is 0
+text_depth = ${scadNum(s.textDepth)};
+text_offset_x = ${scadNum(s.textX)};
+text_offset_y = ${scadNum(s.textY)};
+text_rotation = ${scadNum(s.textRotate)};
+text_mirror = "${s.textMirror}";
+
+text2_enabled = ${scadBool(s.text2On)};
+text2_value = "${scadString(s.text2Value)}";
+text2_target = "${s.text2Target}";
+text2_size = ${scadNum(text2Size)};
+
+// Derived dimensions
+inner_height = card_stack_height + top_card_gap + bottom_card_gap;
+bottom_body_height = bottom_thickness + inner_height;
+bottom_outer_width = inner_width + 2 * wall_thickness;
+bottom_outer_length = inner_length + 2 * wall_thickness;
+bottom_total_height = bottom_body_height + bottom_lip_height;
+
+lid_inner_width = bottom_outer_width + 2 * lid_fit_gap;
+lid_inner_length = bottom_outer_length + 2 * lid_fit_gap;
+lid_outer_width = lid_inner_width + 2 * lid_wall_thickness;
+lid_outer_length = lid_inner_length + 2 * lid_wall_thickness;
+lid_total_height = lid_skirt_height + lid_top_thickness;
+recommended_lid_skirt_height = bottom_lip_height + lid_vertical_gap;
+is_sliding_style = box_style == "sliding_rail_lid" || box_style == "vault_door_slider";
+is_sleeve_style = box_style == "drawer_sleeve";
+sleeve_inner_height = bottom_total_height + 2 * lid_fit_gap;
+sleeve_outer_height = sleeve_inner_height + 2 * lid_wall_thickness;
+actual_lid_width = is_sliding_style ? bottom_outer_width + 2 * sliding_rail_width + 2 * lid_fit_gap : lid_outer_width;
+actual_lid_length = is_sliding_style ? bottom_outer_length + 2 * lid_fit_gap : lid_outer_length;
+actual_lid_height = is_sliding_style ? lid_top_thickness : (is_sleeve_style ? sleeve_outer_height : lid_total_height);
+
+module rounded_rect_2d(w, l, r) {
+  safe_r = min(max(r, 0.01), min(w, l) / 2 - 0.01);
+  hull() {
+    translate([ w / 2 - safe_r,  l / 2 - safe_r]) circle(r = safe_r);
+    translate([-w / 2 + safe_r,  l / 2 - safe_r]) circle(r = safe_r);
+    translate([ w / 2 - safe_r, -l / 2 + safe_r]) circle(r = safe_r);
+    translate([-w / 2 + safe_r, -l / 2 + safe_r]) circle(r = safe_r);
+  }
+}
+
+module rounded_box_xy(w, l, h, r) {
+  linear_extrude(height = h)
+    rounded_rect_2d(w, l, r);
+}
+
+module capsule_2d(w, l) {
+  r = min(w, l) / 2;
+  x_offset = w > l ? w / 2 - r : 0;
+  y_offset = l >= w ? l / 2 - r : 0;
+  hull() {
+    translate([ x_offset,  y_offset]) circle(r = r);
+    translate([-x_offset, -y_offset]) circle(r = r);
+  }
+}
+
+module ellipse_2d(w, l) {
+  scale([w / 2, l / 2]) circle(r = 1);
+}
+
+module regular_ngon_2d(sides, w, l) {
+  polygon(points = [for (i = [0 : sides - 1]) [cos(360 * i / sides) * w / 2, sin(360 * i / sides) * l / 2]]);
+}
+
+module star_2d(w, l) {
+  polygon(points = [for (i = [0 : 9]) [
+    cos(90 + 36 * i) * (i % 2 == 0 ? w / 2 : w / 4),
+    sin(90 + 36 * i) * (i % 2 == 0 ? l / 2 : l / 4)
+  ]]);
+}
+
+module plus_2d(w, l) {
+  arm_w = w * 0.34;
+  arm_l = l * 0.34;
+  union() {
+    square([arm_w, l], center = true);
+    square([w, arm_l], center = true);
+  }
+}
+
+module double_circle_2d(w, l) {
+  r = min(w / 5, l / 2);
+  offset_x = max(0, w / 2 - r);
+  union() {
+    translate([-offset_x, 0]) circle(r = r);
+    translate([ offset_x, 0]) circle(r = r);
+  }
+}
+
+module dogbone_2d(w, l) {
+  r = min(w / 4, l / 2);
+  offset_x = max(0, w / 2 - r);
+  union() {
+    translate([-offset_x, 0]) circle(r = r);
+    translate([ offset_x, 0]) circle(r = r);
+    square([2 * offset_x, r * 1.25], center = true);
+  }
+}
+
+module hole_2d(w, l, r, shape) {
+  if (shape == "capsule") capsule_2d(w, l);
+  else if (shape == "rounded_rect") rounded_rect_2d(w, l, r);
+  else if (shape == "rectangle") square([w, l], center = true);
+  else if (shape == "circle") circle(r = min(w, l) / 2);
+  else if (shape == "oval") ellipse_2d(w, l);
+  else if (shape == "diamond") regular_ngon_2d(4, w, l);
+  else if (shape == "hexagon") regular_ngon_2d(6, w, l);
+  else if (shape == "octagon") regular_ngon_2d(8, w, l);
+  else if (shape == "star") star_2d(w, l);
+  else if (shape == "plus") plus_2d(w, l);
+  else if (shape == "double_circle") double_circle_2d(w, l);
+  else if (shape == "dogbone") dogbone_2d(w, l);
+  else rounded_rect_2d(w, l, r);
+}
+
+module cutout_shape_3d(h) {
+  linear_extrude(height = h)
+    hole_2d(
+      min(top_hole_width, bottom_outer_width - 2),
+      min(top_hole_length, bottom_outer_length - 2),
+      min(top_hole_radius, min(top_hole_width, top_hole_length) / 2),
+      top_hole_shape
+    );
+}
+
+module text_2d(txt, size_value, font_value, mirror_text) {
+  if (mirror_text == "yes")
+    mirror([1, 0, 0]) text(txt, size = size_value, font = font_value, halign = "center", valign = "center");
+  else
+    text(txt, size = size_value, font = font_value, halign = "center", valign = "center");
+}
+
+module print_text_3d(txt, size_value, font_value, depth_value, mirror_text) {
+  linear_extrude(height = depth_value)
+    text_2d(txt, size_value, font_value, mirror_text);
+}
+
+module label_on_face(face, txt, size_value, font_value, depth_value, ox, oy, rot, mirror_text) {
+  if (len(txt) > 0) {
+    if (face == "lid_top")
+      translate([ox, oy, actual_lid_height])
+        rotate([0, 0, rot])
+          print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "lid_front")
+      translate([ox, actual_lid_length / 2, actual_lid_height / 2 + oy])
+        rotate([-90, 0, 0])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "lid_back")
+      translate([-ox, -actual_lid_length / 2, actual_lid_height / 2 + oy])
+        rotate([90, 0, 180])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "lid_left")
+      translate([-actual_lid_width / 2, ox, actual_lid_height / 2 + oy])
+        rotate([90, 0, -90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "lid_right")
+      translate([actual_lid_width / 2, -ox, actual_lid_height / 2 + oy])
+        rotate([90, 0, 90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "bottom_front")
+      translate([ox, bottom_outer_length / 2, bottom_total_height / 2 + oy])
+        rotate([-90, 0, 0])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "bottom_back")
+      translate([-ox, -bottom_outer_length / 2, bottom_total_height / 2 + oy])
+        rotate([90, 0, 180])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "bottom_left")
+      translate([-bottom_outer_width / 2, ox, bottom_total_height / 2 + oy])
+        rotate([90, 0, -90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "bottom_right")
+      translate([bottom_outer_width / 2, -ox, bottom_total_height / 2 + oy])
+        rotate([90, 0, 90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "bottom_inside")
+      translate([ox, oy, bottom_thickness])
+        rotate([0, 0, rot])
+          print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+    else if (face == "bottom_under")
+      translate([ox, oy, 0])
+        rotate([180, 0, rot])
+          print_text_3d(txt, size_value, font_value, depth_value, mirror_text);
+  }
+}
+
+module engrave_on_face(face, txt, size_value, font_value, depth_value, ox, oy, rot, mirror_text) {
+  cut_depth = depth_value + 0.08;
+  if (len(txt) > 0) {
+    if (face == "lid_top")
+      translate([ox, oy, actual_lid_height - depth_value - 0.02])
+        rotate([0, 0, rot])
+          print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "lid_front")
+      translate([ox, actual_lid_length / 2 - depth_value - 0.02, actual_lid_height / 2 + oy])
+        rotate([-90, 0, 0])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "lid_back")
+      translate([-ox, -actual_lid_length / 2 + depth_value + 0.02, actual_lid_height / 2 + oy])
+        rotate([90, 0, 180])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "lid_left")
+      translate([-actual_lid_width / 2 + depth_value + 0.02, ox, actual_lid_height / 2 + oy])
+        rotate([90, 0, -90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "lid_right")
+      translate([actual_lid_width / 2 - depth_value - 0.02, -ox, actual_lid_height / 2 + oy])
+        rotate([90, 0, 90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "bottom_front")
+      translate([ox, bottom_outer_length / 2 - depth_value - 0.02, bottom_total_height / 2 + oy])
+        rotate([-90, 0, 0])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "bottom_back")
+      translate([-ox, -bottom_outer_length / 2 + depth_value + 0.02, bottom_total_height / 2 + oy])
+        rotate([90, 0, 180])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "bottom_left")
+      translate([-bottom_outer_width / 2 + depth_value + 0.02, ox, bottom_total_height / 2 + oy])
+        rotate([90, 0, -90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "bottom_right")
+      translate([bottom_outer_width / 2 - depth_value - 0.02, -ox, bottom_total_height / 2 + oy])
+        rotate([90, 0, 90])
+          rotate([0, 0, rot])
+            print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "bottom_inside")
+      translate([ox, oy, bottom_thickness - depth_value - 0.02])
+        rotate([0, 0, rot])
+          print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+    else if (face == "bottom_under")
+      translate([ox, oy, depth_value + 0.02])
+        rotate([180, 0, rot])
+          print_text_3d(txt, size_value, font_value, cut_depth, mirror_text);
+  }
+}
+
+function is_bottom_face(face) =
+  face == "bottom_front" || face == "bottom_back" || face == "bottom_left" ||
+  face == "bottom_right" || face == "bottom_inside" || face == "bottom_under";
+
+function is_lid_face(face) =
+  face == "lid_top" || face == "lid_front" || face == "lid_back" ||
+  face == "lid_left" || face == "lid_right";
+
+module bottom_text_labels() {
+  if (text_enabled && is_bottom_face(text_target))
+    engrave_on_face(text_target, text_value, text_size, text_font, text_depth, text_offset_x, text_offset_y, text_rotation, text_mirror);
+  if (text2_enabled && is_bottom_face(text2_target))
+    engrave_on_face(text2_target, text2_value, text2_size, text_font, text_depth, 0, 0, 0, "no");
+}
+
+module lid_text_labels() {
+  if (text_enabled && is_lid_face(text_target))
+    engrave_on_face(text_target, text_value, text_size, text_font, text_depth, text_offset_x, text_offset_y, text_rotation, text_mirror);
+  if (text2_enabled && is_lid_face(text2_target))
+    engrave_on_face(text2_target, text2_value, text2_size, text_font, text_depth, 0, 0, 0, "no");
+}
+
+module bottom_shell() {
+  difference() {
+    union() {
+      difference() {
+        rounded_box_xy(bottom_outer_width, bottom_outer_length, bottom_body_height, corner_radius);
+        translate([0, 0, bottom_thickness])
+          rounded_box_xy(inner_width, inner_length, inner_height + 0.2, max(corner_radius - wall_thickness, 0.1));
+      }
+
+      if (bottom_lip_height > 0) {
+        translate([0, 0, bottom_body_height - 0.01])
+          difference() {
+            rounded_box_xy(bottom_outer_width, bottom_outer_length, bottom_lip_height + 0.01, corner_radius);
+            translate([0, 0, -0.1])
+              rounded_box_xy(
+                bottom_outer_width - 2 * bottom_lip_thickness,
+                bottom_outer_length - 2 * bottom_lip_thickness,
+                bottom_lip_height + 0.3,
+                max(corner_radius - bottom_lip_thickness, 0.1)
+              );
+          }
+      }
+    }
+
+    if (top_hole_enabled && (top_hole_target == "bottom" || top_hole_target == "both")) {
+      translate([0, top_hole_offset_y, -0.1])
+        cutout_shape_3d(bottom_thickness + 0.3);
+    }
+  }
+}
+
+module sliding_bottom_rails() {
+  rail_z = bottom_body_height + sliding_rail_height / 2 - 0.01;
+  translate([-(bottom_outer_width / 2 + sliding_rail_width / 2), 0, rail_z])
+    cube([sliding_rail_width, bottom_outer_length, sliding_rail_height], center = true);
+  translate([(bottom_outer_width / 2 + sliding_rail_width / 2), 0, rail_z])
+    cube([sliding_rail_width, bottom_outer_length, sliding_rail_height], center = true);
+}
+
+module snap_beads_bottom() {
+  if (snap_bead_depth > 0) {
+    bead_z = bottom_body_height + bottom_lip_height * 0.45;
+    translate([0, bottom_outer_length / 2 + snap_bead_depth / 2, bead_z])
+      cube([bottom_outer_width * 0.48, snap_bead_depth, snap_bead_depth], center = true);
+    translate([0, -bottom_outer_length / 2 - snap_bead_depth / 2, bead_z])
+      cube([bottom_outer_width * 0.48, snap_bead_depth, snap_bead_depth], center = true);
+  }
+}
+
+module bottom_box() {
+  difference() {
+    union() {
+      bottom_shell();
+      if (is_sliding_style)
+        sliding_bottom_rails();
+      if (box_style == "snap_on_lid")
+        snap_beads_bottom();
+      if (box_style == "twist_lock_bayonet")
+        bayonet_tabs_bottom();
+    }
+    bottom_text_labels();
+  }
+}
+
+module covered_lid_shell() {
+  difference() {
+    rounded_box_xy(lid_outer_width, lid_outer_length, lid_total_height, corner_radius + lid_wall_thickness + lid_fit_gap);
+
+    translate([0, 0, -0.1])
+      rounded_box_xy(
+        lid_inner_width,
+        lid_inner_length,
+        lid_skirt_height + 0.1,
+        max(corner_radius + lid_fit_gap, 0.1)
+      );
+
+    if (top_hole_enabled && (top_hole_target == "lid" || top_hole_target == "both")) {
+      translate([0, top_hole_offset_y, lid_skirt_height - 0.1])
+        linear_extrude(height = lid_top_thickness + 0.3)
+          hole_2d(
+            min(top_hole_width, lid_inner_width - 2),
+            min(top_hole_length, lid_inner_length - 2),
+            min(top_hole_radius, min(top_hole_width, top_hole_length) / 2),
+            top_hole_shape
+          );
+    }
+
+    if (thumb_notch_enabled) {
+      translate([0, lid_outer_length / 2 - thumb_notch_radius * 0.45, lid_skirt_height - 0.1])
+        linear_extrude(height = lid_top_thickness + 0.3)
+          circle(r = thumb_notch_radius);
+    }
+
+    if (box_style == "twist_lock_bayonet")
+      bayonet_slots_lid();
+  }
+}
+
+module sliding_lid_shell() {
+  slide_w = bottom_outer_width + 2 * sliding_rail_width + 2 * lid_fit_gap;
+  slide_l = bottom_outer_length + 2 * lid_fit_gap;
+  difference() {
+    union() {
+      rounded_box_xy(slide_w, slide_l, lid_top_thickness, max(corner_radius, 0.1));
+      translate([-(slide_w / 2 - sliding_rail_width / 2), 0, -sliding_rail_height / 2 + 0.01])
+        cube([sliding_rail_width, slide_l, sliding_rail_height], center = true);
+      translate([(slide_w / 2 - sliding_rail_width / 2), 0, -sliding_rail_height / 2 + 0.01])
+        cube([sliding_rail_width, slide_l, sliding_rail_height], center = true);
+      if (box_style == "vault_door_slider") {
+        translate([0, slide_l / 2 - 3, lid_top_thickness])
+          rounded_box_xy(slide_w * 0.52, 4, 2, 1);
+        translate([0, 0, lid_top_thickness])
+          linear_extrude(height = 0.7)
+            rounded_rect_2d(slide_w * 0.7, slide_l * 0.66, max(corner_radius * 0.7, 1));
+      }
+    }
+
+    if (top_hole_enabled && (top_hole_target == "lid" || top_hole_target == "both")) {
+      translate([0, top_hole_offset_y, -0.1])
+        cutout_shape_3d(lid_top_thickness + 0.3);
+    }
+
+    if (thumb_notch_enabled) {
+      translate([0, slide_l / 2 - thumb_notch_radius * 0.45, -0.1])
+        linear_extrude(height = lid_top_thickness + 0.3)
+          circle(r = thumb_notch_radius);
+    }
+  }
+}
+
+module bayonet_tabs_bottom() {
+  if (snap_bead_depth > 0) {
+    tab_w = bottom_outer_width * 0.24;
+    tab_l = max(snap_bead_depth * 2.4, 1.2);
+    tab_h = max(snap_bead_depth * 1.4, 0.8);
+    tab_z = bottom_body_height + bottom_lip_height * 0.62;
+    translate([0, bottom_outer_length / 2 + tab_l / 2, tab_z])
+      cube([tab_w, tab_l, tab_h], center = true);
+    translate([0, -bottom_outer_length / 2 - tab_l / 2, tab_z])
+      cube([tab_w, tab_l, tab_h], center = true);
+    translate([bottom_outer_width / 2 + tab_l / 2, 0, tab_z])
+      cube([tab_l, tab_w, tab_h], center = true);
+    translate([-bottom_outer_width / 2 - tab_l / 2, 0, tab_z])
+      cube([tab_l, tab_w, tab_h], center = true);
+  }
+}
+
+module bayonet_slots_lid() {
+  if (snap_bead_depth > 0) {
+    slot_w = lid_outer_width * 0.26;
+    slot_l = max(snap_bead_depth * 3.2, 1.7);
+    slot_h = max(snap_bead_depth * 2.2, 1.2);
+    slot_z = lid_skirt_height * 0.58;
+    translate([0, lid_outer_length / 2 - lid_wall_thickness / 2, slot_z])
+      cube([slot_w, slot_l, slot_h], center = true);
+    translate([0, -lid_outer_length / 2 + lid_wall_thickness / 2, slot_z])
+      cube([slot_w, slot_l, slot_h], center = true);
+    translate([lid_outer_width / 2 - lid_wall_thickness / 2, 0, slot_z])
+      cube([slot_l, slot_w, slot_h], center = true);
+    translate([-lid_outer_width / 2 + lid_wall_thickness / 2, 0, slot_z])
+      cube([slot_l, slot_w, slot_h], center = true);
+  }
+}
+
+module sleeve_shell() {
+  difference() {
+    rounded_box_xy(lid_outer_width, lid_outer_length, sleeve_outer_height, corner_radius + lid_wall_thickness + lid_fit_gap);
+    translate([0, 0, sleeve_outer_height / 2])
+      cube([lid_inner_width, lid_outer_length + 0.6, sleeve_inner_height], center = true);
+    if (thumb_notch_enabled) {
+      translate([0, lid_outer_length / 2 - thumb_notch_radius * 0.45, sleeve_outer_height - lid_wall_thickness - 0.1])
+        linear_extrude(height = lid_wall_thickness + 0.3)
+          circle(r = thumb_notch_radius);
+    }
+  }
+}
+
+module lid_box() {
+  if (box_style != "tray_only") {
+    difference() {
+      union() {
+        if (is_sliding_style)
+          sliding_lid_shell();
+        else if (box_style == "drawer_sleeve")
+          sleeve_shell();
+        else
+          covered_lid_shell();
+      }
+      lid_text_labels();
+    }
+  }
+}
+
+module hinge_barrel(x, y, z, len) {
+  translate([x, y, z])
+    rotate([0, 90, 0])
+      cylinder(h = len, r = max(sliding_rail_height * 0.42, 0.9), center = true);
+}
+
+module clamshell_case() {
+  bottom_box();
+  lid_y = -(bottom_outer_length + lid_outer_length) / 2 - 7;
+  hinge_y = -bottom_outer_length / 2 - 3.5;
+  hinge_z = bottom_total_height - bottom_lip_height * 0.35;
+  translate([0, lid_y, 0])
+    lid_box();
+  hinge_barrel(-bottom_outer_width * 0.29, hinge_y, hinge_z, bottom_outer_width * 0.22);
+  hinge_barrel(0, hinge_y, hinge_z, bottom_outer_width * 0.22);
+  hinge_barrel(bottom_outer_width * 0.29, hinge_y, hinge_z, bottom_outer_width * 0.22);
+  translate([0, hinge_y, hinge_z])
+    cube([bottom_outer_width * 0.72, max(snap_bead_depth, 0.45), max(snap_bead_depth, 0.45)], center = true);
+}
+
+if (box_style == "hinge_clamshell") {
+  clamshell_case();
+} else {
+  if (show_part == "bottom" || show_part == "both") {
+    bottom_box();
+  }
+
+  if (box_style != "tray_only" && (show_part == "lid" || show_part == "both")) {
+    translate([bottom_outer_width + actual_lid_width / 2 + 16, 0, 0])
+      lid_box();
+  }
+}
+
+// Current key dimensions:
+// Box style: ${style.label}
+// Printed pieces: ${style.pieces} (${style.practical})
+// Bottom outer: ${fmt(d.bottomOuterW)} W x ${fmt(d.bottomOuterL)} L x ${fmt(d.bottomTotalH)} H
+// Lid/cover outer: ${fmt(d.actualLidW)} W x ${fmt(d.actualLidL)} L x ${fmt(d.actualLidH)} H
+// Internal height: ${fmt(d.innerH)}
+// Estimated capacity at current card thickness: ${d.capacity} cards
+// Cutout target: ${s.holeTarget}
+// Text label: ${s.textOn ? `${s.textValue} on ${s.textTarget}` : "off"}
+// Recommended lid skirt height for current lip/gap: ${fmt(d.recommendedSkirtH)}
+`;
+    }
+
+    function updateRecommendations(s) {
+      const style = styleInfo(s.boxStyle);
+      const topOk = s.topGap >= 1 && s.topGap <= 1.8;
+      const bottomOk = s.bottomGap >= 0.6 && s.bottomGap <= 1.2;
+      const lidOk = s.lidGap >= 0.25 && s.lidGap <= 0.45;
+      const verticalOk = s.zGap >= 0.2 && s.zGap <= 0.5;
+      const skirtDelta = Math.abs(s.skirtH - (s.lipH + s.zGap));
+      const skirtOk = skirtDelta <= 0.5;
+      const status = [
+        `${style.label}: ${style.pieces} printed ${style.pieces === 1 ? "piece" : "pieces"}; ${style.practical}.`,
+        topOk ? "Top gap is in the FDM range." : "Top gap: 1.0-1.5 mm is a good FDM start.",
+        bottomOk ? "Bottom gap is in the FDM range." : "Bottom gap: 0.6-1.0 mm keeps the stack from rubbing.",
+        lidOk ? "Lid fit gap is in the FDM range." : "Lid fit gap: 0.25-0.40 mm per side is the usual FDM starting point.",
+        verticalOk ? "Vertical lid gap is in the FDM range." : "Vertical lid gap: 0.20-0.35 mm avoids the lid bottoming out.",
+        skirtOk ? "Lid skirt is close to lip height plus vertical gap." : `For a flush stop, set lid skirt near ${fmt(s.lipH + s.zGap)}.`
+      ];
+      recommendBox.innerHTML = status.map((item) => `<div>${item}</div>`).join("");
+    }
+
+    function updateCardMath(s) {
+      const d = dimensions(s);
+      const modeText = s.sizingMode === "cards"
+        ? `${Math.round(s.cardCount)} cards x ${fmt(s.cardThickness)} = ${fmt(s.stackH)} stack height.`
+        : `Manual stack height estimates ${d.capacity} cards at ${fmt(s.cardThickness)} each.`;
+      const boxText = `Internal box: ${fmt(s.innerW)} x ${fmt(s.innerL)} x ${fmt(d.innerH)}.`;
+      const preset = cardPresets[s.cardPreset] || cardPresets.custom;
+      cardMath.innerHTML = `<div>${modeText}</div><div>${boxText}</div><div>${preset.label}; side clearance is ${fmt(s.cardClearance)} per side.</div>`;
+    }
+
+    function updateMetrics(s) {
+      const d = dimensions(s);
+      const style = styleInfo(s.boxStyle);
+      const primaryTextSize = autoTextSize(s, s.textTarget, s.textValue, s.textSize);
+      const metrics = [
+        ["Card capacity", `${d.capacity} cards`],
+        ["Box style", style.label],
+        ["Printed pieces", `${style.pieces} - ${style.practical}`],
+        ["Internal box", `${fmt(s.innerW)} x ${fmt(s.innerL)}`],
+        ["Bottom outer", `${fmt(d.bottomOuterW)} x ${fmt(d.bottomOuterL)}`],
+        ["Lid/cover outer", `${fmt(d.actualLidW)} x ${fmt(d.actualLidL)} x ${fmt(d.actualLidH)}`],
+        ["Cutout", s.holeOn ? `${s.holeTarget} ${s.holeShape.replaceAll("_", " ")}` : "off"],
+        ["Engraving", s.textOn ? `${fmt(primaryTextSize)} on ${s.textTarget.replaceAll("_", " ")}` : "off"]
+      ];
+      metricsEl.innerHTML = metrics
+        .map(([label, value]) => `<div class="metric"><b>${label}</b><span>${value}</span></div>`)
+        .join("");
+      outerBadge.textContent = `Outer: ${round(d.bottomOuterW, 1)} x ${round(d.bottomOuterL, 1)} x ${round(d.bottomTotalH, 1)} mm`;
+      fitBadge.textContent = `Fit: ${round(s.lidGap, 2)} mm/side, ${round(s.zGap, 2)} mm Z`;
+      capacityBadge.textContent = `Cards: ${d.capacity}`;
+      previewLabel.textContent = `${round(s.cardW, 1)} x ${round(s.cardL, 1)} mm card footprint`;
+      heightLabel.textContent = `${fmt(s.stackH)} stack, ${fmt(s.topGap + s.bottomGap)} air gap`;
+    }
+
+    function holeClip(shape) {
+      const clips = {
+        capsule: "inset(0 round 999px)",
+        rounded_rect: "inset(0 round 8px)",
+        rectangle: "inset(0)",
+        circle: "circle(50% at 50% 50%)",
+        oval: "ellipse(50% 50% at 50% 50%)",
+        diamond: "polygon(50% 0, 100% 50%, 50% 100%, 0 50%)",
+        hexagon: "polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)",
+        octagon: "polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)",
+        star: "polygon(50% 0, 61% 34%, 98% 34%, 68% 55%, 79% 91%, 50% 69%, 21% 91%, 32% 55%, 2% 34%, 39% 34%)",
+        plus: "polygon(36% 0, 64% 0, 64% 34%, 100% 34%, 100% 66%, 64% 66%, 64% 100%, 36% 100%, 36% 66%, 0 66%, 0 34%, 36% 34%)",
+        double_circle: "polygon(0 16%, 42% 16%, 42% 0, 58% 0, 58% 16%, 100% 16%, 100% 84%, 58% 84%, 58% 100%, 42% 100%, 42% 84%, 0 84%)",
+        dogbone: "inset(0 round 999px)"
+      };
+      return clips[shape] || clips.capsule;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function partTile(label, classes, options = {}) {
+      const text = options.text ? `<span class="preview-text">${escapeHtml(options.text)}</span>` : "";
+      const cutout = options.cutout ? `<span class="preview-cutout"></span>` : "";
+      const scale = options.textScale ? ` style="--preview-text-scale:${options.textScale}"` : "";
+      return `
+        <div class="part-tile">
+          <div class="part3d ${classes}"${scale}>${cutout}${text}</div>
+          <span>${label}</span>
+        </div>
+      `;
+    }
+
+    function buildPartsPreview(s) {
+      const style = styleInfo(s.boxStyle);
+      const labelText = s.textOn ? s.textValue : "";
+      const textScale = clamp(autoTextSize(s, s.textTarget, labelText, s.textSize) / 9, 0.72, 1.32);
+      const lidText = s.textOn && isLidFaceName(s.textTarget) ? labelText : "";
+      const bottomText = s.textOn && isBottomFaceName(s.textTarget) ? labelText : "";
+      const lidCutout = s.holeOn && (s.holeTarget === "lid" || s.holeTarget === "both");
+      const bottomCutout = s.holeOn && (s.holeTarget === "bottom" || s.holeTarget === "both");
+
+      if (s.boxStyle === "tray_only") {
+        return partTile("open tray", "bottom", { text: bottomText, textScale, cutout: bottomCutout });
+      }
+      if (s.boxStyle === "hinge_clamshell") {
+        return partTile("one-piece hinged case", "bottom hinge snap", { text: lidText || bottomText, textScale, cutout: lidCutout || bottomCutout });
+      }
+      if (s.boxStyle === "drawer_sleeve") {
+        return [
+          partTile("inner drawer", "bottom", { text: bottomText, textScale, cutout: bottomCutout }),
+          partTile("outer sleeve", "sleeve", { text: lidText, textScale, cutout: lidCutout })
+        ].join("");
+      }
+      if (s.boxStyle === "sliding_rail_lid" || s.boxStyle === "vault_door_slider") {
+        return [
+          partTile("box with rails", "bottom", { text: bottomText, textScale, cutout: bottomCutout }),
+          partTile(s.boxStyle === "vault_door_slider" ? "vault slider door" : "sliding lid", "slider", { text: lidText, textScale, cutout: lidCutout })
+        ].join("");
+      }
+      if (s.boxStyle === "twist_lock_bayonet") {
+        return [
+          partTile("base with tabs", "bottom bayonet", { text: bottomText, textScale, cutout: bottomCutout }),
+          partTile("twist cap", "lid bayonet", { text: lidText, textScale, cutout: lidCutout })
+        ].join("");
+      }
+      if (s.boxStyle === "snap_on_lid") {
+        return [
+          partTile("box with snap bead", "bottom snap", { text: bottomText, textScale, cutout: bottomCutout }),
+          partTile("snap lid", "lid snap", { text: lidText, textScale, cutout: lidCutout })
+        ].join("");
+      }
+      return [
+        partTile("bottom tray", "bottom", { text: bottomText, textScale, cutout: bottomCutout }),
+        partTile(style.practical.includes("press-fit") ? "press-fit lid" : "top cover", "lid", { text: lidText, textScale, cutout: lidCutout })
+      ].join("");
+    }
+
+    function isLidFaceName(face) {
+      return ["lid_top", "lid_front", "lid_back", "lid_left", "lid_right"].includes(face);
+    }
+
+    function isBottomFaceName(face) {
+      return ["bottom_front", "bottom_back", "bottom_left", "bottom_right", "bottom_inside", "bottom_under"].includes(face);
+    }
+
+    function updatePreview(s) {
+      const d = dimensions(s);
+      const radiusPx = clamp((s.cornerR / Math.max(s.innerW, s.innerL)) * 190, 7, 30);
+      const wallPx = clamp((s.wall / Math.min(s.innerW, s.innerL)) * 180, 6, 22);
+      const cardInset = clamp((s.cardClearance / Math.min(s.innerW, s.innerL)) * 240 + wallPx, 10, 42);
+      const holeW = clamp((s.holeW / (s.innerW + 2 * s.wall)) * 100, 7, 82);
+      const holeH = clamp((s.holeL / (s.innerL + 2 * s.wall)) * 100, 7, 78);
+      const holeY = clamp((s.holeY / Math.max(s.innerL, 1)) * 220, -68, 68);
+      const totalSide = Math.max(d.innerH + s.floor, 1);
+      const floorPct = clamp((s.floor / totalSide) * 100, 4, 28);
+      const bottomPct = clamp((s.bottomGap / totalSide) * 100, 2, 30);
+      const cardPct = clamp((s.stackH / totalSide) * 100, 8, 82);
+      const topPct = clamp((s.topGap / totalSide) * 100, 2, 30);
+
+      modelPreview.style.setProperty("--box-ratio", `${clamp(s.innerW / s.innerL, 0.54, 1.2)}`);
+      modelPreview.style.setProperty("--preview-radius", `${radiusPx}px`);
+      modelPreview.style.setProperty("--wall-preview", `${wallPx}px`);
+      modelPreview.style.setProperty("--card-inset", `${cardInset}px`);
+      modelPreview.style.setProperty("--hole-w", `${holeW}%`);
+      modelPreview.style.setProperty("--hole-h", `${holeH}%`);
+      modelPreview.style.setProperty("--hole-y", `${holeY}px`);
+      modelPreview.style.setProperty("--hole-clip", holeClip(s.holeShape));
+      modelPreview.style.setProperty("--hole-radius", s.holeShape === "rounded_rect" ? `${clamp(s.holeRound * 1.3, 2, 20)}px` : "0");
+      sidePreview.style.setProperty("--floor-band", `${floorPct}%`);
+      sidePreview.style.setProperty("--bottom-gap-band", `${bottomPct}%`);
+      sidePreview.style.setProperty("--cards-band", `${cardPct}%`);
+      sidePreview.style.setProperty("--top-gap-band", `${topPct}%`);
+      previewHole.style.display = s.holeOn && (s.holeTarget === "lid" || s.holeTarget === "both") ? "block" : "none";
+      partsPreview.innerHTML = buildPartsPreview(s);
+    }
+
+    function update() {
+      readState();
+      writeState();
+      saveState();
+      updateRecommendations(state);
+      updateCardMath(state);
+      updateMetrics(state);
+      updatePreview(state);
+      output.value = generateScad(state);
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+      window.clearTimeout(setStatus.timer);
+      setStatus.timer = window.setTimeout(() => {
+        statusEl.textContent = "";
+      }, 2400);
+    }
+
+    buildShapeGrid();
+    buildStyleGrid();
+
+    ids.forEach((id) => {
+      if (!els[id]) return;
+      els[id].addEventListener("input", (event) => {
+        if (isIncompleteNumberInput(event.target)) return;
+        update();
+      });
+      els[id].addEventListener("change", update);
+    });
+
+    document.querySelectorAll("[data-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-tab]").forEach((tab) => tab.classList.toggle("active", tab === button));
+        document.querySelectorAll("[data-page]").forEach((page) => page.classList.toggle("active", page.dataset.page === button.dataset.tab));
+      });
+    });
+
+    document.querySelectorAll("[data-part]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.part = button.dataset.part;
+        update();
+      });
+    });
+
+    shapeGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-shape]");
+      if (!button) return;
+      state.holeShape = button.dataset.shape;
+      update();
+    });
+
+    styleGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-style]");
+      if (!button) return;
+      state.boxStyle = button.dataset.style;
+      if (state.boxStyle !== "tray_only" && state.part === "bottom") {
+        state.part = "both";
+      }
+      if (state.boxStyle === "display_lid") {
+        state.holeOn = true;
+        state.holeTarget = "lid";
+        state.holeShape = "rounded_rect";
+        state.holeW = round(state.innerW * 0.62, 1);
+        state.holeL = round(state.innerL * 0.48, 1);
+      }
+      if (state.boxStyle === "friction_fit_case") {
+        state.lidGap = Math.min(state.lidGap, 0.3);
+      }
+      if (state.boxStyle === "sliding_rail_lid" || state.boxStyle === "vault_door_slider" || state.boxStyle === "drawer_sleeve") {
+        state.holeTarget = "lid";
+      }
+      if (state.boxStyle === "tray_only") {
+        state.part = "bottom";
+      }
+      update();
+    });
+
+    document.querySelectorAll("[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state = { ...state, ...presets[button.dataset.preset] };
+        update();
+        setStatus(`${button.textContent} gaps applied`);
+      });
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+        setStatus("OpenSCAD copied");
+      } catch {
+        output.select();
+        document.execCommand("copy");
+        setStatus("OpenSCAD copied");
+      }
+    });
+
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      const blob = new Blob([output.value], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "generated-card-box.scad";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+      setStatus("SCAD file downloaded");
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      state = { ...defaults };
+      localStorage.removeItem("openscadCardBoxBuilder");
+      writeState();
+      update();
+      setStatus("Defaults restored");
+    });
+
+    writeState();
+    update();
+  </script>
+</body>
+</html>
