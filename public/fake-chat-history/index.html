@@ -31,72 +31,8 @@
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside>
-      <h1>Fake Chat History</h1>
-      <input id="search" class="search" placeholder="Search chats..." />
-      <div id="chatList"></div>
-    </aside>
-    <main>
-      <header><h2 id="title">No chats yet</h2><p id="meta">The daily job will add the next fake chat.</p></header>
-      <section id="messages"></section>
-      <form id="composer"><input id="input" placeholder="Type a fake reply..." /><button>Send</button></form>
-    </main>
-  </div>
-  <script>
-    const chats = [];
-    let selected = 0;
-    const chatList = document.getElementById('chatList');
-    const search = document.getElementById('search');
-    const title = document.getElementById('title');
-    const meta = document.getElementById('meta');
-    const messages = document.getElementById('messages');
-    const form = document.getElementById('composer');
-    const input = document.getElementById('input');
-    function renderList() {
-      const term = search.value.toLowerCase();
-      chatList.innerHTML = '';
-      chats.forEach((chat, index) => {
-        if (!chat.title.toLowerCase().includes(term) && !chat.preview.toLowerCase().includes(term)) return;
-        const btn = document.createElement('button');
-        btn.className = 'chat' + (index === selected ? ' active' : '');
-        btn.innerHTML = `<strong>${chat.title}</strong><span>${chat.date} · ${chat.preview}</span>`;
-        btn.onclick = () => { selected = index; render(); };
-        chatList.appendChild(btn);
-      });
-      if (!chatList.innerHTML) chatList.innerHTML = '<div class="empty">No fake chats yet.</div>';
-    }
-    function renderMessages() {
-      const chat = chats[selected];
-      messages.innerHTML = '';
-      if (!chat) {
-        title.textContent = 'No chats yet';
-        meta.textContent = 'The daily job will add the next fake chat.';
-        messages.innerHTML = '<div class="empty">Empty chat log.</div>';
-        return;
-      }
-      title.textContent = chat.title;
-      meta.textContent = `${chat.date} · ${chat.messages.length} fake messages`;
-      chat.messages.forEach(([role, text]) => {
-        const div = document.createElement('div');
-        div.className = `msg ${role}`;
-        div.textContent = text;
-        messages.appendChild(div);
-      });
-      messages.scrollTop = messages.scrollHeight;
-    }
-    function render() { renderList(); renderMessages(); }
-    search.oninput = renderList;
-    form.onsubmit = event => {
-      event.preventDefault();
-      const text = input.value.trim();
-      if (!text) return;
-      if (!chats[selected]) chats.push({ title: 'Local Test Chat', preview: 'Temporary local-only chat', date: 'Now', messages: [] });
-      chats[selected].messages.push(['user', text], ['bot', 'Fake reply saved until refresh ✅']);
-      input.value = '';
-      render();
-    };
-    render();
-  </script>
-</body>
-</html>
+<div class="app"><aside><h1>Fake Chat History</h1><input id="search" class="search" placeholder="Search chats..." /><div id="chatList"></div></aside><main><header><h2 id="title">No chats yet</h2><p id="meta">The daily job will add the next fake chat.</p></header><section id="messages"></section><form id="composer"><input id="input" placeholder="Type a fake reply..." /><button>Send</button></form></main></div>
+<script>
+const chats=[{title:'Parker Weather Check',preview:'Warm June morning ☀️',date:'2026-06-21',messages:[['user','What is the weather in Parker today?'],['bot','Parker is looking warm and pleasant today, around the low 80s°F with sunshine and a few clouds. ☀️']]}];
+let selected=0;const chatList=document.getElementById('chatList');const search=document.getElementById('search');const title=document.getElementById('title');const meta=document.getElementById('meta');const messages=document.getElementById('messages');const form=document.getElementById('composer');const input=document.getElementById('input');function renderList(){const term=search.value.toLowerCase();chatList.innerHTML='';chats.forEach((chat,index)=>{if(!chat.title.toLowerCase().includes(term)&&!chat.preview.toLowerCase().includes(term))return;const btn=document.createElement('button');btn.className='chat'+(index===selected?' active':'');btn.innerHTML=`<strong>${chat.title}</strong><span>${chat.date} · ${chat.preview}</span>`;btn.onclick=()=>{selected=index;render();};chatList.appendChild(btn);});if(!chatList.innerHTML)chatList.innerHTML='<div class="empty">No fake chats yet.</div>';}function renderMessages(){const chat=chats[selected];messages.innerHTML='';if(!chat){title.textContent='No chats yet';meta.textContent='The daily job will add the next fake chat.';messages.innerHTML='<div class="empty">Empty chat log.</div>';return;}title.textContent=chat.title;meta.textContent=`${chat.date} · ${chat.messages.length} fake messages`;chat.messages.forEach(([role,text])=>{const div=document.createElement('div');div.className=`msg ${role}`;div.textContent=text;messages.appendChild(div);});messages.scrollTop=messages.scrollHeight;}function render(){renderList();renderMessages();}search.oninput=renderList;form.onsubmit=event=>{event.preventDefault();const text=input.value.trim();if(!text)return;chats[selected].messages.push(['user',text],['bot','Fake reply saved until refresh ✅']);input.value='';render();};render();
+</script></body></html>
