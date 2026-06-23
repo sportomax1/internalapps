@@ -5,123 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fake Chat History</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --panel2: #1f2937;
-      --line: #334155;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --accent: #38bdf8;
-      --user: #2563eb;
-      --bot: #374151;
-    }
+    :root { --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --line:#334155; --text:#e5e7eb; --muted:#9ca3af; --accent:#38bdf8; --user:#2563eb; --bot:#374151; }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-    .app {
-      display: grid;
-      grid-template-columns: 330px 1fr;
-      height: 100vh;
-    }
-    aside {
-      background: var(--panel);
-      border-right: 1px solid var(--line);
-      padding: 18px;
-      overflow-y: auto;
-    }
-    main {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-    h1 { margin: 0 0 12px; font-size: 22px; }
-    .count { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
-    .search {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: #020617;
-      color: var(--text);
-      margin-bottom: 14px;
-      outline: none;
-    }
-    .chat {
-      width: 100%;
-      text-align: left;
-      background: transparent;
-      color: var(--text);
-      border: 1px solid transparent;
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
-    .chat:hover, .chat.active { background: var(--panel2); border-color: var(--line); }
-    .chat-title { display: flex; justify-content: space-between; gap: 8px; font-weight: 750; }
-    .chat-date, .preview, .empty { color: var(--muted); font-size: 13px; }
-    header {
-      padding: 18px 22px;
-      background: #020617;
-      border-bottom: 1px solid var(--line);
-    }
-    header h2 { margin: 0 0 4px; }
-    header p { margin: 0; color: var(--muted); }
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .msg {
-      max-width: 760px;
-      padding: 13px 15px;
-      border-radius: 18px;
-      line-height: 1.45;
-      white-space: pre-wrap;
-    }
-    .user { align-self: flex-end; background: var(--user); }
-    .bot { align-self: flex-start; background: var(--bot); }
-    .empty { padding: 18px; text-align: center; }
-    form {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      padding: 16px 22px;
-      background: #020617;
-      border-top: 1px solid var(--line);
-    }
-    form input {
-      padding: 13px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: #0f172a;
-      color: var(--text);
-      outline: none;
-    }
-    form button {
-      border: 0;
-      border-radius: 14px;
-      padding: 0 18px;
-      background: var(--accent);
-      color: #082f49;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    @media (max-width: 760px) {
-      .app { grid-template-columns: 1fr; }
-      aside { height: 38vh; border-right: 0; border-bottom: 1px solid var(--line); }
-      main { height: 62vh; }
-      .msg { max-width: 92%; }
-    }
+    body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    .app { display:grid; grid-template-columns:330px 1fr; height:100vh; }
+    aside { background:var(--panel); border-right:1px solid var(--line); padding:18px; overflow-y:auto; }
+    main { display:flex; flex-direction:column; min-width:0; }
+    h1 { margin:0 0 12px; font-size:22px; }
+    .count { color:var(--muted); font-size:13px; margin-bottom:14px; }
+    .search { width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:#020617; color:var(--text); margin-bottom:14px; outline:none; }
+    .chat { width:100%; text-align:left; background:transparent; color:var(--text); border:1px solid transparent; border-radius:14px; padding:12px; margin-bottom:8px; cursor:pointer; }
+    .chat:hover,.chat.active { background:var(--panel2); border-color:var(--line); }
+    .chat-title { display:flex; justify-content:space-between; gap:8px; font-weight:750; }
+    .chat-date,.preview,.empty { color:var(--muted); font-size:13px; }
+    header { padding:18px 22px; background:#020617; border-bottom:1px solid var(--line); }
+    header h2 { margin:0 0 4px; }
+    header p { margin:0; color:var(--muted); }
+    #messages { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:14px; }
+    .msg { max-width:760px; padding:13px 15px; border-radius:18px; line-height:1.45; white-space:pre-wrap; }
+    .user { align-self:flex-end; background:var(--user); }
+    .bot { align-self:flex-start; background:var(--bot); }
+    .empty { padding:18px; text-align:center; }
+    form { display:grid; grid-template-columns:1fr auto; gap:10px; padding:16px 22px; background:#020617; border-top:1px solid var(--line); }
+    form input { padding:13px; border-radius:14px; border:1px solid var(--line); background:#0f172a; color:var(--text); outline:none; }
+    form button { border:0; border-radius:14px; padding:0 18px; background:var(--accent); color:#082f49; font-weight:800; cursor:pointer; }
+    @media (max-width:760px) { .app{grid-template-columns:1fr;} aside{height:38vh;border-right:0;border-bottom:1px solid var(--line);} main{height:62vh;} .msg{max-width:92%;} }
   </style>
 </head>
 <body>
@@ -132,17 +40,10 @@
       <input id="search" class="search" placeholder="Search chats..." />
       <div id="chatList"></div>
     </aside>
-
     <main>
-      <header>
-        <h2 id="title">Loading...</h2>
-        <p id="meta">Loading fake chat history.</p>
-      </header>
+      <header><h2 id="title">Loading...</h2><p id="meta">Loading fake chat history.</p></header>
       <section id="messages"></section>
-      <form id="composer">
-        <input id="input" placeholder="Type a fake reply..." autocomplete="off" />
-        <button type="submit">Send</button>
-      </form>
+      <form id="composer"><input id="input" placeholder="Type a fake reply..." autocomplete="off" /><button type="submit">Send</button></form>
     </main>
   </div>
 
@@ -150,10 +51,12 @@
     Only edit the chat objects inside CHAT_DATA_START / CHAT_DATA_END.
     Do not remove the app shell, CSS, render functions, form handler, or closing HTML.
     New chats should be inserted at the beginning of the chats array.
+    Preserve prior chats. Do not create or update any other fake-chat-history files.
   -->
   <script>
     // CHAT_DATA_START
     const chats = [
+      {title:'AI Advice Hour 27',preview:'Ask for the hidden assumption 🧲',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to name the hidden assumption your request depends on most. Finding that one assumption can save you from confidently building on sand. 🧲']]},
       {title:'AI Advice Hour 26',preview:'Ask for a fallback plan 🛟',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to include a fallback plan in case the first recommendation fails. Plan B turns surprises into smaller speed bumps. 🛟']]},
       {title:'AI Advice Hour 25',preview:'Ask for a scorecard 🚀',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to make a tiny scorecard for your options with weighted criteria. It turns vague preferences into a clearer decision. 🚀']]},
       {title:'AI Advice Hour 24',preview:'Ask for a checklist 🐝',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to turn a messy goal into a short checklist with the very next action highlighted. Checklists make big tasks less buzzy and more doable. 🐝']]},
@@ -184,35 +87,21 @@
 
     function getFilteredChats() {
       const term = search.value.trim().toLowerCase();
-      return chats
-        .map((chat, index) => ({ chat, index }))
-        .filter(({ chat }) =>
-          !term ||
-          chat.title.toLowerCase().includes(term) ||
-          chat.preview.toLowerCase().includes(term) ||
-          chat.date.toLowerCase().includes(term) ||
-          chat.messages.some(([role, text]) => role.toLowerCase().includes(term) || text.toLowerCase().includes(term))
-        );
+      return chats.map((chat, index) => ({ chat, index })).filter(({ chat }) =>
+        !term || chat.title.toLowerCase().includes(term) || chat.preview.toLowerCase().includes(term) || chat.date.toLowerCase().includes(term) || chat.messages.some(([role, text]) => role.toLowerCase().includes(term) || text.toLowerCase().includes(term))
+      );
     }
 
     function renderList() {
       const filtered = getFilteredChats();
       count.textContent = `${chats.length} fake chats`;
       chatList.innerHTML = '';
-
-      if (!filtered.length) {
-        chatList.innerHTML = '<div class="empty">No fake chats found.</div>';
-        return;
-      }
-
+      if (!filtered.length) { chatList.innerHTML = '<div class="empty">No fake chats found.</div>'; return; }
       filtered.forEach(({ chat, index }) => {
         const btn = document.createElement('button');
         btn.className = 'chat' + (index === selected ? ' active' : '');
         btn.innerHTML = `<div class="chat-title"><span>${escapeHtml(chat.title)}</span><span class="chat-date">${escapeHtml(chat.date)}</span></div><div class="preview">${escapeHtml(chat.preview)}</div>`;
-        btn.addEventListener('click', () => {
-          selected = index;
-          render();
-        });
+        btn.addEventListener('click', () => { selected = index; render(); });
         chatList.appendChild(btn);
       });
     }
@@ -220,17 +109,9 @@
     function renderMessages() {
       const chat = chats[selected];
       messages.innerHTML = '';
-
-      if (!chat) {
-        title.textContent = 'No chats yet';
-        meta.textContent = 'The next automation run will add a fake chat.';
-        messages.innerHTML = '<div class="empty">Empty chat log.</div>';
-        return;
-      }
-
+      if (!chat) { title.textContent = 'No chats yet'; meta.textContent = 'The next automation run will add a fake chat.'; messages.innerHTML = '<div class="empty">Empty chat log.</div>'; return; }
       title.textContent = chat.title;
       meta.textContent = `${chat.date} · ${chat.messages.length} fake messages`;
-
       chat.messages.forEach(([role, text]) => {
         const div = document.createElement('div');
         div.className = `msg ${role === 'user' ? 'user' : 'bot'}`;
@@ -240,20 +121,8 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
-    function render() {
-      if (selected >= chats.length) selected = 0;
-      renderList();
-      renderMessages();
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-    }
+    function render() { if (selected >= chats.length) selected = 0; renderList(); renderMessages(); }
+    function escapeHtml(value) { return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
 
     search.addEventListener('input', renderList);
     form.addEventListener('submit', event => {
@@ -264,7 +133,6 @@
       input.value = '';
       render();
     });
-
     render();
   </script>
 </body>
