@@ -14,8 +14,7 @@
     h1 { margin:0 0 12px; font-size:22px; }
     .count { color:var(--muted); font-size:13px; margin-bottom:14px; }
     .search { width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:#020617; color:var(--text); margin-bottom:14px; outline:none; }
-    .chat { width:100%; text-align:left; background:transparent; color:var(--text); border:1px solid transparent; border-radius:14px; padding:12px; margin-bottom:8px; cursor:pointer; }
-    .chat:hover,.chat.active { background:var(--panel2); border-color:var(--line); }
+    .chat { width:100%; text-align:left; background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:8px; cursor:pointer; }
     .chat-title { display:flex; justify-content:space-between; gap:8px; font-weight:750; }
     .chat-date,.preview,.empty { color:var(--muted); font-size:13px; }
     header { padding:18px 22px; background:#020617; border-bottom:1px solid var(--line); }
@@ -29,7 +28,7 @@
     form { display:grid; grid-template-columns:1fr auto; gap:10px; padding:16px 22px; background:#020617; border-top:1px solid var(--line); }
     form input { padding:13px; border-radius:14px; border:1px solid var(--line); background:#0f172a; color:var(--text); outline:none; }
     form button { border:0; border-radius:14px; padding:0 18px; background:var(--accent); color:#082f49; font-weight:800; cursor:pointer; }
-    @media (max-width:760px) { .app{grid-template-columns:1fr;} aside{height:38vh;border-right:0;border-bottom:1px solid var(--line);} main{height:62vh;} .msg{max-width:92%;} }
+    @media (max-width:760px) { .app{grid-template-columns:1fr;} aside{height:30vh;border-right:0;border-bottom:1px solid var(--line);} main{height:70vh;} .msg{max-width:92%;} }
   </style>
 </head>
 <body>
@@ -37,7 +36,7 @@
     <aside>
       <h1>Fake Chat History</h1>
       <div class="count" id="count"></div>
-      <input id="search" class="search" placeholder="Search chats..." />
+      <input id="search" class="search" placeholder="Search messages..." />
       <div id="chatList"></div>
     </aside>
     <main>
@@ -48,30 +47,55 @@
   </div>
 
   <!-- AUTOMATION NOTE:
-    Only edit the chat objects inside CHAT_DATA_START / CHAT_DATA_END.
-    Do not remove the app shell, CSS, render functions, form handler, or closing HTML.
-    New chats should be inserted at the beginning of the chats array.
-    Preserve prior chats. Do not create or update any other fake-chat-history files.
+    Keep exactly ONE chat object in the chats array.
+    Add new hourly AI advice by appending two message rows to chats[0].messages only:
+      ['user','Any new AI tip today?'],
+      ['bot','<AI tip with random emoji>']
+    Do not create new chat objects. Do not replace the app shell, CSS, render functions, form handler, body, or HTML.
+    Do not create or update any other fake-chat-history files.
   -->
   <script>
     // CHAT_DATA_START
     const chats = [
-      {title:'AI Advice Hour 27',preview:'Ask for the hidden assumption 🧲',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to name the hidden assumption your request depends on most. Finding that one assumption can save you from confidently building on sand. 🧲']]},
-      {title:'AI Advice Hour 26',preview:'Ask for a fallback plan 🛟',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to include a fallback plan in case the first recommendation fails. Plan B turns surprises into smaller speed bumps. 🛟']]},
-      {title:'AI Advice Hour 25',preview:'Ask for a scorecard 🚀',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to make a tiny scorecard for your options with weighted criteria. It turns vague preferences into a clearer decision. 🚀']]},
-      {title:'AI Advice Hour 24',preview:'Ask for a checklist 🐝',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to turn a messy goal into a short checklist with the very next action highlighted. Checklists make big tasks less buzzy and more doable. 🐝']]},
-      {title:'AI Advice Hour 23',preview:'Ask for a simpler version 🐢',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','When an AI answer feels too complex, ask it to rewrite the plan as the smallest useful next step. Tiny steps beat giant foggy plans. 🐢']]},
-      {title:'AI Advice Hour 22',preview:'Ask for a sanity check 🦊',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to do a quick sanity check on your plan before you start. It can catch missing steps, vague goals, and sneaky assumptions. 🦊']]},
-      {title:'AI Advice Hour 21',preview:'Ask for risks 🧭',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Before using an AI answer, ask it to identify the biggest risks, unknowns, and what would change its recommendation. 🧭']]},
-      {title:'AI Advice Hour 20',preview:'Ask for reusable templates 🧰',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to turn a good answer into a reusable template you can paste next time. It saves time and keeps your prompts consistent. 🧰']]},
-      {title:'AI Advice Hour 19',preview:'Ask for tradeoffs 🌟',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to explain the tradeoffs between two good options instead of only picking a winner. Better decisions usually come from seeing what you give up. 🌟']]},
-      {title:'AI Advice Hour 18',preview:'Name the audience 🦉',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Tell AI who the answer is for before asking it to explain or recommend something. A beginner, expert, manager, or customer may need totally different wording. 🦉']]},
-      {title:'AI Advice Hour 17',preview:'Request examples 💡',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to provide concrete examples alongside explanations. Examples make it easier to spot gaps and turn ideas into action. 💡']]},
-      {title:'AI Advice Hour 16',preview:'Generate tests 🧪',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Before writing code, ask AI to generate test cases first. It often reveals edge cases and requirements you might miss. 🧪']]},
-      {title:'AI Advice Hour 15',preview:'Find counterexamples 🔬',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI for counterexamples that would break its recommendation before you implement it. 🔬']]},
-      {title:'AI Advice Hour 14',preview:'Use constraints 🎯',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Give AI explicit constraints like budget, time, and priorities before asking for recommendations. Results are usually much better. 🎯']]},
-      {title:'AI Advice Hour 13',preview:'Question your answer 🧠',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','After getting an answer, ask AI what the strongest argument against its recommendation would be. This often surfaces blind spots. 🧠']]},
-      {title:'AI Advice Hour 12',preview:'Challenge assumptions 🧩',date:'2026-06-23',messages:[['user','Any new AI tip today?'],['bot','Ask AI to list the assumptions behind its answer and identify which assumptions are most likely to be wrong. 🧩']]}
+      {
+        title: 'AI Advice Feed',
+        preview: 'Ongoing single-thread AI advice chat',
+        date: '2026-06-23',
+        messages: [
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to list the assumptions behind its answer and identify which assumptions are most likely to be wrong. 🧩'],
+          ['user','Any new AI tip today?'],
+          ['bot','After getting an answer, ask AI what the strongest argument against its recommendation would be. This often surfaces blind spots. 🧠'],
+          ['user','Any new AI tip today?'],
+          ['bot','Give AI explicit constraints like budget, time, and priorities before asking for recommendations. Results are usually much better. 🎯'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI for counterexamples that would break its recommendation before you implement it. 🔬'],
+          ['user','Any new AI tip today?'],
+          ['bot','Before writing code, ask AI to generate test cases first. It often reveals edge cases and requirements you might miss. 🧪'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to provide concrete examples alongside explanations. Examples make it easier to spot gaps and turn ideas into action. 💡'],
+          ['user','Any new AI tip today?'],
+          ['bot','Tell AI who the answer is for before asking it to explain or recommend something. A beginner, expert, manager, or customer may need totally different wording. 🦉'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to explain the tradeoffs between two good options instead of only picking a winner. Better decisions usually come from seeing what you give up. 🌟'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to turn a good answer into a reusable template you can paste next time. It saves time and keeps your prompts consistent. 🧰'],
+          ['user','Any new AI tip today?'],
+          ['bot','Before using an AI answer, ask it to identify the biggest risks, unknowns, and what would change its recommendation. 🧭'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to do a quick sanity check on your plan before you start. It can catch missing steps, vague goals, and sneaky assumptions. 🦊'],
+          ['user','Any new AI tip today?'],
+          ['bot','When an AI answer feels too complex, ask it to rewrite the plan as the smallest useful next step. Tiny steps beat giant foggy plans. 🐢'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to turn a messy goal into a short checklist with the very next action highlighted. Checklists make big tasks less buzzy and more doable. 🐝'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to make a tiny scorecard for your options with weighted criteria. It turns vague preferences into a clearer decision. 🚀'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to include a fallback plan in case the first recommendation fails. Plan B turns surprises into smaller speed bumps. 🛟'],
+          ['user','Any new AI tip today?'],
+          ['bot','Ask AI to name the hidden assumption your request depends on most. Finding that one assumption can save you from confidently building on sand. 🧲']
+        ]
+      }
     ];
     // CHAT_DATA_END
 
@@ -85,34 +109,26 @@
     const input = document.getElementById('input');
     const count = document.getElementById('count');
 
-    function getFilteredChats() {
-      const term = search.value.trim().toLowerCase();
-      return chats.map((chat, index) => ({ chat, index })).filter(({ chat }) =>
-        !term || chat.title.toLowerCase().includes(term) || chat.preview.toLowerCase().includes(term) || chat.date.toLowerCase().includes(term) || chat.messages.some(([role, text]) => role.toLowerCase().includes(term) || text.toLowerCase().includes(term))
-      );
-    }
+    function escapeHtml(value) { return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
 
     function renderList() {
-      const filtered = getFilteredChats();
-      count.textContent = `${chats.length} fake chats`;
-      chatList.innerHTML = '';
-      if (!filtered.length) { chatList.innerHTML = '<div class="empty">No fake chats found.</div>'; return; }
-      filtered.forEach(({ chat, index }) => {
-        const btn = document.createElement('button');
-        btn.className = 'chat' + (index === selected ? ' active' : '');
-        btn.innerHTML = `<div class="chat-title"><span>${escapeHtml(chat.title)}</span><span class="chat-date">${escapeHtml(chat.date)}</span></div><div class="preview">${escapeHtml(chat.preview)}</div>`;
-        btn.addEventListener('click', () => { selected = index; render(); });
-        chatList.appendChild(btn);
-      });
+      const chat = chats[0];
+      count.textContent = `${chat.messages.length} messages in 1 chat`;
+      chatList.innerHTML = `<button class="chat active"><div class="chat-title"><span>${escapeHtml(chat.title)}</span><span class="chat-date">${escapeHtml(chat.date)}</span></div><div class="preview">${escapeHtml(chat.preview)}</div></button>`;
     }
 
     function renderMessages() {
-      const chat = chats[selected];
+      const chat = chats[0];
+      const term = search.value.trim().toLowerCase();
+      const visibleMessages = term ? chat.messages.filter(([role, text]) => role.toLowerCase().includes(term) || text.toLowerCase().includes(term)) : chat.messages;
       messages.innerHTML = '';
-      if (!chat) { title.textContent = 'No chats yet'; meta.textContent = 'The next automation run will add a fake chat.'; messages.innerHTML = '<div class="empty">Empty chat log.</div>'; return; }
       title.textContent = chat.title;
-      meta.textContent = `${chat.date} · ${chat.messages.length} fake messages`;
-      chat.messages.forEach(([role, text]) => {
+      meta.textContent = `${chat.date} · ${chat.messages.length} messages · single chat thread`;
+      if (!visibleMessages.length) {
+        messages.innerHTML = '<div class="empty">No matching messages found.</div>';
+        return;
+      }
+      visibleMessages.forEach(([role, text]) => {
         const div = document.createElement('div');
         div.className = `msg ${role === 'user' ? 'user' : 'bot'}`;
         div.textContent = text;
@@ -121,15 +137,13 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
-    function render() { if (selected >= chats.length) selected = 0; renderList(); renderMessages(); }
-    function escapeHtml(value) { return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
-
-    search.addEventListener('input', renderList);
+    function render() { renderList(); renderMessages(); }
+    search.addEventListener('input', renderMessages);
     form.addEventListener('submit', event => {
       event.preventDefault();
       const text = input.value.trim();
-      if (!text || !chats[selected]) return;
-      chats[selected].messages.push(['user', text], ['bot', 'Fake reply saved locally until refresh ✅']);
+      if (!text) return;
+      chats[0].messages.push(['user', text], ['bot', 'Fake reply saved locally until refresh ✅']);
       input.value = '';
       render();
     });
