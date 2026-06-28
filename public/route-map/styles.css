@@ -1,0 +1,119 @@
+:root {
+  --bg: #0f172a; --panel: #111827; --card: #1f2937; --card-hover: #263449;
+  --text: #e5e7eb; --muted: #9ca3af; --accent: #38bdf8; --border: #374151;
+  --danger: #f87171; --success: #34d399;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+.app-header { min-height: 66px; padding: 11px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.title-group, .header-actions, .file-title, .metric { display: flex; align-items: center; }
+.title-group { gap: 12px; }
+.title-icon { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(135deg, #0284c7, #4f46e5); box-shadow: 0 8px 24px rgb(14 165 233 / 25%); }
+h1 { margin: 0; font-size: 19px; letter-spacing: -0.02em; }
+.subtitle, .privacy-note, .file-meta, .empty-state, .format-note, .status { color: var(--muted); }
+.subtitle { font-size: 12px; margin-top: 2px; }
+.header-actions { gap: 8px; }
+.button { border: 1px solid var(--border); background: #334155; color: var(--text); border-radius: 10px; min-height: 38px; padding: 8px 12px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.button:hover { background: #475569; }
+.button.primary { background: var(--accent); color: #082f49; border-color: transparent; }
+.button.primary:hover { background: #7dd3fc; }
+.button.danger { color: #fecaca; }
+.button:disabled { opacity: 0.4; cursor: not-allowed; }
+.app-layout { height: calc(100vh - 66px); display: grid; grid-template-columns: 370px minmax(0, 1fr); }
+.sidebar { overflow-y: auto; padding: 13px; border-right: 1px solid var(--border); background: var(--panel); }
+.upload-zone { border: 1.5px dashed #64748b; border-radius: 15px; padding: 22px 14px; text-align: center; background: rgb(15 23 42 / 70%); transition: 160ms ease; }
+.upload-zone.dragging, .upload-zone:hover { border-color: var(--accent); background: rgb(14 165 233 / 9%); }
+.upload-zone svg { color: var(--accent); margin-bottom: 8px; }
+.upload-zone h2 { font-size: 15px; margin: 0 0 5px; }
+.upload-zone p { font-size: 12px; color: var(--muted); margin: 0 0 13px; }
+.privacy-note, .format-note, .status { font-size: 11px; line-height: 1.45; }
+.privacy-note { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 10px; }
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+.metric { flex-direction: column; gap: 2px; padding: 9px 5px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.metric strong { font-size: 18px; }
+.metric span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.section-heading { margin: 15px 2px 8px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.file-list { display: grid; gap: 8px; }
+.file-card { padding: 10px; border: 1px solid var(--border); border-radius: 13px; background: var(--card); }
+.file-card:hover { background: var(--card-hover); }
+.file-title { gap: 8px; min-width: 0; }
+.file-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.file-color { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 3px rgb(255 255 255 / 7%); }
+.file-meta { font-size: 11px; margin: 5px 0 8px 17px; }
+.file-controls { display: flex; gap: 6px; margin-left: 17px; }
+.icon-button { min-width: 32px; height: 30px; padding: 0 8px; border: 1px solid var(--border); border-radius: 8px; background: #0f172a; color: var(--muted); display: grid; place-items: center; }
+.icon-button:hover { color: var(--text); border-color: #64748b; }
+.icon-button.active { color: var(--accent); }
+.icon-button.remove { margin-left: auto; }
+.icon-button.remove:hover { color: var(--danger); }
+.status { min-height: 32px; margin: 12px 2px 4px; }
+.status.error { color: #fca5a5; }
+.status.success { color: var(--success); }
+.empty-state { padding: 20px 8px; text-align: center; font-size: 12px; }
+.map-shell { position: relative; min-width: 0; }
+#map { width: 100%; height: 100%; background: #0b1220; }
+.map-toolbar { position: absolute; z-index: 600; top: 10px; right: 10px; display: flex; gap: 7px; padding: 7px; border: 1px solid var(--border); border-radius: 12px; background: rgb(17 24 39 / 92%); box-shadow: 0 8px 24px rgb(0 0 0 / 25%); }
+.map-toolbar .button { min-height: 34px; padding: 6px 9px; font-size: 12px; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #111827; color: var(--text); }
+.leaflet-popup-content { margin: 10px 12px; font-size: 12px; }
+.leaflet-bar a { background: #111827; color: var(--text); border-color: var(--border); }
+.leaflet-bar a:hover { background: #1f2937; }
+
+/* Leaflet's essential layout rules are kept locally so the map remains usable
+   when a browser blocks the cross-origin CDN stylesheet. */
+.leaflet-pane, .leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow,
+.leaflet-tile-container, .leaflet-pane > svg, .leaflet-pane > canvas {
+  position: absolute; left: 0; top: 0;
+}
+.leaflet-container { overflow: hidden; -webkit-tap-highlight-color: transparent; }
+.leaflet-container .leaflet-overlay-pane svg,
+.leaflet-container .leaflet-tile-pane img { max-width: none !important; max-height: none !important; }
+.leaflet-zoom-animated { transform-origin: 0 0; }
+.leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow { user-select: none; -webkit-user-drag: none; }
+.leaflet-tile { visibility: hidden; }
+.leaflet-tile-loaded { visibility: inherit; }
+.leaflet-pane { z-index: 400; }
+.leaflet-tile-pane { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane { z-index: 500; }
+.leaflet-marker-pane { z-index: 600; }
+.leaflet-tooltip-pane { z-index: 650; }
+.leaflet-popup-pane { z-index: 700; }
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg { z-index: 200; }
+.leaflet-control { position: relative; z-index: 800; pointer-events: auto; }
+.leaflet-top, .leaflet-bottom { position: absolute; z-index: 1000; pointer-events: none; }
+.leaflet-top { top: 0; }
+.leaflet-right { right: 0; }
+.leaflet-bottom { bottom: 0; }
+.leaflet-left { left: 0; }
+.leaflet-control { float: left; clear: both; }
+.leaflet-right .leaflet-control { float: right; }
+.leaflet-top .leaflet-control { margin-top: 10px; }
+.leaflet-bottom .leaflet-control { margin-bottom: 10px; }
+.leaflet-left .leaflet-control { margin-left: 10px; }
+.leaflet-right .leaflet-control { margin-right: 10px; }
+.leaflet-bar { border: 2px solid rgb(0 0 0 / 20%); border-radius: 4px; }
+.leaflet-bar a { display: block; width: 30px; height: 30px; line-height: 30px; text-align: center; text-decoration: none; }
+.leaflet-bar a + a { border-top: 1px solid var(--border); }
+.leaflet-control-attribution { margin: 0; padding: 0 5px; background: rgb(255 255 255 / 80%); color: #334155; font-size: 11px; }
+.leaflet-control-attribution a { color: #0369a1; }
+.leaflet-popup { position: absolute; text-align: center; margin-bottom: 20px; }
+.leaflet-popup-content-wrapper { border-radius: 10px; padding: 1px; box-shadow: 0 3px 14px rgb(0 0 0 / 40%); }
+.leaflet-popup-tip-container { width: 40px; height: 20px; position: absolute; left: 50%; margin-left: -20px; overflow: hidden; pointer-events: none; }
+.leaflet-popup-tip { width: 17px; height: 17px; padding: 1px; margin: -10px auto 0; transform: rotate(45deg); box-shadow: 3px 3px 15px rgb(0 0 0 / 20%); }
+@media (max-width: 800px) {
+  body { overflow: auto; }
+  .app-header { align-items: flex-start; } .subtitle { display: none; }
+  .app-layout { height: auto; min-height: calc(100vh - 66px); grid-template-columns: 1fr; }
+  .sidebar { border-right: 0; border-bottom: 1px solid var(--border); }
+  .map-shell { height: 58vh; min-height: 420px; }
+  .header-actions .button span { display: none; }
+}
+@media (max-width: 430px) {
+  .app-header { padding-inline: 10px; } .title-icon { width: 36px; height: 36px; }
+  h1 { font-size: 16px; } .sidebar { padding: 10px; }
+}
