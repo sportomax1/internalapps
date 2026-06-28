@@ -20,6 +20,7 @@ let playback = {
   playing: false,
   frame: null,
   lastTime: 0,
+  lastFollowTime: 0,
   renderedIndex: -1,
   marker: null,
   trail: null,
@@ -36,7 +37,12 @@ const elementIds = [
 ];
 const elements = Object.fromEntries(elementIds.map((id) => [id, document.getElementById(id)]));
 
-const map = L.map("map", { preferCanvas: true }).setView([39.5, -104.8], 8);
+const map = L.map("map", {
+  preferCanvas: true,
+  zoomAnimation: false,
+  fadeAnimation: false,
+  markerZoomAnimation: false,
+}).setView([39.5, -104.8], 8);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "&copy; OpenStreetMap contributors",
@@ -318,7 +324,7 @@ function datasetBounds(dataset) {
 function fitData(dataset = null) {
   const source = dataset ? [dataset] : datasets.filter((item) => item.visible);
   const points = source.flatMap(datasetBounds);
-  if (points.length) map.fitBounds(points, { paddingTopLeft: [35, 35], paddingBottomRight: [35, 185], maxZoom: 16 });
+  if (points.length) map.fitBounds(points, { paddingTopLeft: [35, 35], paddingBottomRight: [35, 185], maxZoom: 16, animate: false });
 }
 
 function setStatus(message, type = "") {
@@ -333,7 +339,7 @@ function availableTracks() {
       dataset,
       track,
       points: filteredPoints(track.points),
-    })));
+    })).filter((entry) => entry.points.length > 1));
 }
 
 function selectedTrack() {
@@ -357,15 +363,16 @@ function setPlayButtonIcon() {
 function pausePlayback() {
   playback.playing = false;
   playback.lastTime = 0;
+  playback.lastFollowTime = 0;
   if (playback.frame) cancelAnimationFrame(playback.frame);
   playback.frame = null;
   setPlayButtonIcon();
 }
 
-function updatePlaybackPosition(index, follow = false) {
+function updatePlaybackPosition(index, follow = false, preserveProgress = false) {
   if (!playback.points.length) return;
   const safeIndex = Math.max(0, Math.min(playback.points.length - 1, Math.round(index)));
-  playback.position = safeIndex;
+  if (!preserveProgress) playback.position = safeIndex;
   elements.timelineInput.value = String(safeIndex);
   const point = playback.points[safeIndex];
   elements.playbackTime.textContent = point.time
@@ -373,6 +380,7 @@ function updatePlaybackPosition(index, follow = false) {
     : `Point ${safeIndex + 1} of ${playback.points.length}`;
 
   if (playback.renderedIndex === safeIndex) return;
+  const previousIndex = playback.renderedIndex;
   playback.renderedIndex = safeIndex;
   if (!playback.marker) {
     playback.marker = L.circleMarker([point.lat, point.lon], {
@@ -384,11 +392,20 @@ function updatePlaybackPosition(index, follow = false) {
   const trailPoints = playback.points.slice(0, safeIndex + 1).map((item) => [item.lat, item.lon]);
   if (!playback.trail) {
     playback.trail = L.polyline(trailPoints, { color: "#fff", weight: 3, opacity: 0.75 }).addTo(map);
-  } else {
+  } else if (safeIndex < previousIndex || safeIndex - previousIndex > 25) {
     playback.trail.setLatLngs(trailPoints);
+  } else {
+    for (let pointIndex = previousIndex + 1; pointIndex <= safeIndex; pointIndex += 1) {
+      const trailPoint = playback.points[pointIndex];
+      playback.trail.addLatLng([trailPoint.lat, trailPoint.lon]);
+    }
   }
   playback.marker.bringToFront();
-  if (follow && elements.followToggle.checked) map.panTo([point.lat, point.lon], { animate: true, duration: 0.25 });
+  const now = performance.now();
+  if (follow && elements.followToggle.checked && now - playback.lastFollowTime >= 500) {
+    playback.lastFollowTime = now;
+    map.panTo([point.lat, point.lon], { animate: false });
+  }
 }
 
 function playbackFrame(timestamp) {
@@ -404,7 +421,7 @@ function playbackFrame(timestamp) {
     pausePlayback();
     return;
   }
-  updatePlaybackPosition(playback.position, true);
+  updatePlaybackPosition(playback.position, true, true);
   playback.frame = requestAnimationFrame(playbackFrame);
 }
 
@@ -413,6 +430,7 @@ function startPlayback() {
   if (playback.position >= playback.points.length - 1) updatePlaybackPosition(0);
   playback.playing = true;
   playback.lastTime = 0;
+  playback.lastFollowTime = 0;
   setPlayButtonIcon();
   playback.frame = requestAnimationFrame(playbackFrame);
 }
@@ -438,7 +456,7 @@ function setSelectedTrack(key, fit = false) {
   elements.playbackTime.textContent = enabled ? "Ready to play" : "No timeline";
   if (enabled) {
     updatePlaybackPosition(0);
-    if (fit) map.fitBounds(playback.points.map((point) => [point.lat, point.lon]), { padding: [50, 150], maxZoom: 16 });
+    if (fit) map.fitBounds(playback.points.map((point) => [point.lat, point.lon]), { padding: [50, 150], maxZoom: 16, animate: false });
   }
 }
 
