@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Map Pins + Lines</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root{--bg:#0f172a;--panel:#111827;--card:#1f2937;--text:#e5e7eb;--muted:#9ca3af;--accent:#38bdf8;--border:#374151;--bad:#f97316}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    h1{font-size:20px;margin:0}.sub{color:var(--muted);font-size:13px}.app{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 65px)}
+    aside{background:var(--panel);border-right:1px solid var(--border);padding:12px;overflow:auto}.mapwrap{min-height:520px;position:relative}#map{height:100%;min-height:calc(100vh - 65px);width:100%}
+    textarea,input{width:100%;background:#020617;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font:inherit}textarea{min-height:150px;resize:vertical}.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.row>*{flex:1}
+    button{border:0;border-radius:10px;padding:10px 12px;background:var(--accent);color:#001018;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:var(--text)}button.danger{background:#ef4444;color:white}button:disabled{opacity:.45;cursor:not-allowed}
+    .help{font-size:12px;color:var(--muted);line-height:1.35}.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px;margin:10px 0}.status{font-size:12px;color:var(--muted);margin-top:6px}.active{outline:2px solid var(--accent)}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}th,td{border-bottom:1px solid var(--border);padding:7px 5px;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:700}td button{padding:6px 8px;border-radius:8px;font-size:12px}.num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:999px;color:white;font-weight:900}
+    .pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;border:2px solid white;box-shadow:0 2px 8px #0008}.pin span{transform:rotate(45deg);color:white;font-weight:900;font-size:13px;text-shadow:0 1px 2px #000}
+    .toolbar{position:absolute;top:10px;right:10px;z-index:600;background:#111827e8;border:1px solid var(--border);border-radius:12px;padding:8px;max-width:260px}.toolbar label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+    @media(max-width:850px){.app{grid-template-columns:1fr}.mapwrap{height:55vh;min-height:420px}#map{min-height:420px}aside{border-right:0;border-bottom:1px solid var(--border)}}
+  </style>
+</head>
+<body>
+  <header><div><h1>Map Pins + Direct Lines</h1><div class="sub">Paste up to 10 stops, manually place pins, and connect them in order.</div></div><div class="sub">No backend. Saved in this browser only.</div></header>
+  <main class="app">
+    <aside>
+      <div class="card">
+        <b>Paste addresses / labels</b>
+        <p class="help">One per line, or CSV with columns like <code>Name,Address,Lat,Lng</code>. Without Lat/Lng, the address is kept as a label until you place it manually.</p>
+        <textarea id="pasteBox" placeholder="Home, 123 Main St Parker CO\nStop 2, Some address\nStore, ,39.518,-104.761"></textarea>
+        <div class="row"><button id="loadBtn">Load Stops</button><button class="secondary" id="sampleBtn">Sample</button></div>
+      </div>
+      <div class="card">
+        <b>Add one stop</b>
+        <input id="nameInput" placeholder="Name / label" style="margin:8px 0" />
+        <input id="addrInput" placeholder="Address notes, optional" />
+        <div class="row"><button id="addBtn">Add Stop</button><button class="secondary" id="saveBtn">Save</button></div>
+        <div class="row"><button class="secondary" id="exportBtn">Export CSV</button><button class="danger" id="clearBtn">Clear</button></div>
+        <div class="status" id="status">Click “Set Pin”, then tap the map.</div>
+      </div>
+      <div class="card">
+        <b>Stops</b>
+        <table><thead><tr><th>#</th><th>Name</th><th>Pin</th><th></th></tr></thead><tbody id="stopRows"></tbody></table>
+      </div>
+    </aside>
+    <section class="mapwrap">
+      <div class="toolbar"><label>Start map near</label><button class="secondary" id="parkerBtn">Parker, CO</button><button class="secondary" id="fitBtn" style="margin-left:6px">Fit Pins</button></div>
+      <div id="map"></div>
+    </section>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const colors=['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#64748b'];
+    const key='internalapps-map-pins-v1';
+    let stops=[], markers=[], line=null, activeId=null;
+    const map=L.map('map').setView([39.5186,-104.7614],11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+    const $=id=>document.getElementById(id);
+    function csvSplit(line){const out=[];let cur='',q=false;for(const ch of line){if(ch==='"'){q=!q}else if(ch===','&&!q){out.push(cur.trim());cur=''}else cur+=ch}out.push(cur.trim());return out}
+    function parsePaste(text){const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,10);if(!lines.length)return[];let start=0,headers=[];const first=csvSplit(lines[0]).map(x=>x.toLowerCase());if(first.some(x=>['name','address','lat','lng','lon','longitude'].includes(x))){headers=first;start=1}return lines.slice(start).map((line,i)=>{const parts=csvSplit(line);let name='',address='',lat='',lng='';if(headers.length){const get=n=>parts[headers.indexOf(n)]||'';name=get('name')||get('label')||`Stop ${i+1}`;address=get('address')||get('addr')||'';lat=get('lat');lng=get('lng')||get('lon')||get('longitude')}else{name=parts[0]||`Stop ${i+1}`;address=parts[1]||'';lat=parts[2]||'';lng=parts[3]||''}return {id:crypto.randomUUID(),name,address,lat:numOrNull(lat),lng:numOrNull(lng)}})}
+    function numOrNull(v){const n=parseFloat(v);return Number.isFinite(n)?n:null}
+    function addStop(name,address='',lat=null,lng=null){if(stops.length>=10)return setStatus('Max 10 stops. Tiny app, not a clown car.');stops.push({id:crypto.randomUUID(),name:name||`Stop ${stops.length+1}`,address,lat,lng});render();save()}
+    function iconFor(i){return L.divIcon({className:'',html:`<div class="pin" style="background:${colors[i%colors.length]}"><span>${i+1}</span></div>`,iconSize:[30,30],iconAnchor:[15,30],popupAnchor:[0,-30]})}
+    function render(){markers.forEach(m=>map.removeLayer(m));markers=[];if(line)map.removeLayer(line);const pts=[];$('stopRows').innerHTML='';stops.forEach((s,i)=>{const tr=document.createElement('tr');tr.className=s.id===activeId?'active':'';tr.innerHTML=`<td><span class="num" style="background:${colors[i%colors.length]}">${i+1}</span></td><td><b>${escapeHtml(s.name)}</b><div class="help">${escapeHtml(s.address||'No address')}</div>${s.lat?`<div class="help">${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}</div>`:''}</td><td>${s.lat?'Placed':'Needed'}</td><td><button data-set="${s.id}">Set Pin</button><br><button class="secondary" data-del="${s.id}" style="margin-top:4px">Del</button></td>`;$('stopRows').appendChild(tr);if(s.lat&&s.lng){const m=L.marker([s.lat,s.lng],{icon:iconFor(i),draggable:true}).addTo(map).bindPopup(`<b>${i+1}. ${escapeHtml(s.name)}</b><br>${escapeHtml(s.address||'')}`);m.on('dragend',e=>{const p=e.target.getLatLng();s.lat=p.lat;s.lng=p.lng;render();save()});markers.push(m);pts.push([s.lat,s.lng])}});if(pts.length>1)line=L.polyline(pts,{weight:4,opacity:.85}).addTo(map);document.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{activeId=b.dataset.set;setStatus('Tap the map to place/update this pin.');render()});document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{stops=stops.filter(s=>s.id!==b.dataset.del);render();save()})}
+    function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+    function fitPins(){const pts=stops.filter(s=>s.lat&&s.lng).map(s=>[s.lat,s.lng]);if(pts.length)map.fitBounds(pts,{padding:[35,35]})}
+    function save(){localStorage.setItem(key,JSON.stringify(stops))}
+    function load(){try{stops=JSON.parse(localStorage.getItem(key)||'[]')}catch{stops=[]}render();setTimeout(()=>{map.invalidateSize();fitPins()},200)}
+    function setStatus(t){$('status').textContent=t}
+    function exportCsv(){const rows=[['Name','Address','Lat','Lng'],...stops.map(s=>[s.name,s.address||'',s.lat??'',s.lng??''])];const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='map-pins.csv';a.click();URL.revokeObjectURL(a.href)}
+    map.on('click',e=>{if(!activeId)return;const s=stops.find(x=>x.id===activeId);if(!s)return;s.lat=e.latlng.lat;s.lng=e.latlng.lng;activeId=null;setStatus('Pin placed.');render();save();fitPins()});
+    $('loadBtn').onclick=()=>{const parsed=parsePaste($('pasteBox').value);stops=parsed;render();save();fitPins();setStatus(`Loaded ${stops.length} stop(s).`)};
+    $('sampleBtn').onclick=()=>{$('pasteBox').value='Name,Address,Lat,Lng\nHome,Parker CO,39.5186,-104.7614\nStop 2,Place manually,,\nStop 3,Place manually,,'};
+    $('addBtn').onclick=()=>{addStop($('nameInput').value,$('addrInput').value);$('nameInput').value='';$('addrInput').value=''};
+    $('saveBtn').onclick=()=>{save();setStatus('Saved locally in this browser.')};$('exportBtn').onclick=exportCsv;$('clearBtn').onclick=()=>{if(confirm('Clear all stops?')){stops=[];save();render();setStatus('Cleared.')}};
+    $('parkerBtn').onclick=()=>map.setView([39.5186,-104.7614],11);$('fitBtn').onclick=fitPins;
+    load();
+  </script>
+</body>
+</html>
