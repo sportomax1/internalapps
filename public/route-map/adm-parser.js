@@ -1,4 +1,5 @@
 const COORDINATE_SCALE = 2 ** 32 / 360;
+const ADM_UNIX_OFFSET_SECONDS = 631065600;
 
 function ensureRange(view, offset, length = 1) {
   if (offset < 0 || offset + length > view.byteLength) {
@@ -20,6 +21,20 @@ function validPoint(lat, lon) {
 function mapCoordinate(view, offset) {
   ensureRange(view, offset, 4);
   return view.getInt32(offset, true) / COORDINATE_SCALE;
+}
+
+function admTime(view, offset) {
+  ensureRange(view, offset, 4);
+  const value = view.getInt32(offset, true);
+  if (value <= 0) return null;
+  const date = new Date((value + ADM_UNIX_OFFSET_SECONDS) * 1000);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function admFloat(view, offset) {
+  ensureRange(view, offset, 4);
+  const value = view.getFloat32(offset, true);
+  return Number.isFinite(value) && Math.abs(value) < 100000 ? value : null;
 }
 
 function findDataBlocks(view, blockSize) {
@@ -64,6 +79,10 @@ function parseWaypoints(view, block) {
       lon,
       name: ascii(view, offset + 8, nameLength) || `Waypoint ${index + 1}`,
       comment: ascii(view, offset + 8 + nameLength, commentLength),
+      depth: admFloat(view, offset + step - 13),
+      temperature: admFloat(view, offset + step - 9),
+      time: admTime(view, offset + step - 5),
+      sourceIndex: index,
     });
   }
   return waypoints;
@@ -109,6 +128,8 @@ function parseRoutes(view, block, fixedRoutePoints) {
         lat,
         lon,
         name: ascii(view, nameOffset, pointNameLength) || `Point ${index + 1}`,
+        time: fixedRoutePoints ? null : admTime(view, offset + pointStep - 5),
+        sourceIndex: index,
       });
     }
     routes.push({ name, points });
@@ -144,7 +165,16 @@ function parseTracks(view, block) {
       ensureRange(view, offset, 21);
       const lat = mapCoordinate(view, offset);
       const lon = mapCoordinate(view, offset + 4);
-      if (validPoint(lat, lon)) points.push({ lat, lon });
+      if (validPoint(lat, lon)) {
+        points.push({
+          lat,
+          lon,
+          time: admTime(view, offset + 8),
+          depth: admFloat(view, offset + 12),
+          temperature: admFloat(view, offset + 17),
+          sourceIndex: index,
+        });
+      }
     }
     tracks.push({ name, points });
     trackStart += 8 + pointCount * 21;
