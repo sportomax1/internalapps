@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>Places Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQz7r7dDXQ9W1o4xyP5b7/6mQ3uVI3c=" crossorigin="" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(15, 23, 42, 0.92);
+      --panel-2: rgba(30, 41, 59, 0.92);
+      --line: rgba(148, 163, 184, 0.25);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --shadow: 0 24px 70px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, rgba(56,189,248,.22), transparent 34%), var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      height: 100%;
+      min-height: 100vh;
+    }
+
+    aside {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 18px;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+      z-index: 500;
+    }
+
+    main { position: relative; min-width: 0; }
+    #map { width: 100%; height: 100%; background: #111827; }
+
+    .topbar {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 450;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.86);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      backdrop-filter: blur(12px);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    h1 { margin: 0; font-size: 24px; letter-spacing: -0.04em; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.35; }
+    a.back { color: var(--primary); text-decoration: none; font-size: 13px; white-space: nowrap; }
+
+    .card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    }
+
+    label { display: block; font-weight: 700; font-size: 12px; margin-bottom: 7px; color: #cbd5e1; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(2, 6, 23, 0.65);
+      color: var(--text);
+      padding: 11px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    input:focus, textarea:focus, select:focus { border-color: rgba(56,189,248,.75); box-shadow: 0 0 0 3px rgba(56,189,248,.12); }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stack { display: grid; gap: 10px; }
+    .buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #06121f;
+      background: var(--primary);
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button.secondary { background: #334155; color: var(--text); border: 1px solid var(--line); }
+    button.good { background: var(--good); color: #04130a; }
+    button.bad { background: var(--bad); color: #fff; }
+    button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .results, .places { display: grid; gap: 8px; }
+    .result, .place {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(15, 23, 42, 0.7);
+    }
+    .result { cursor: pointer; }
+    .result:hover, .place:hover { border-color: rgba(56,189,248,.55); }
+    .title { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+    .meta { color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .tag { font-size: 11px; border-radius: 999px; padding: 4px 7px; background: rgba(56,189,248,.15); color: #bae6fd; border: 1px solid rgba(56,189,248,.22); }
+    .place-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .place-actions button { padding: 7px 9px; font-size: 12px; border-radius: 9px; }
+
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      z-index: 800;
+      box-shadow: var(--shadow);
+      display: none;
+    }
+    .toast.show { display: block; }
+
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0f172a; color: #f8fafc; }
+    .leaflet-control-attribution { font-size: 10px; }
+
+    @media (max-width: 860px) {
+      body { overflow: auto; }
+      .shell { grid-template-columns: 1fr; grid-template-rows: auto 62vh; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); max-height: none; }
+      .topbar { top: 10px; right: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <header>
+        <div>
+          <h1>📌 Places Map</h1>
+          <div class="sub">Search city, ZIP, address, park, stadium, airport — then save it to Supabase.</div>
+        </div>
+        <a class="back" href="/">Home</a>
+      </header>
+
+      <section class="card stack">
+        <div>
+          <label for="searchInput">Search location</label>
+          <input id="searchInput" placeholder="Chicago IL, 80134, Yellowstone, Lambeau Field..." autocomplete="off" />
+        </div>
+        <div class="buttons">
+          <button id="searchBtn">Search</button>
+          <button id="useMapBtn" class="secondary">Use map click</button>
+          <button id="loadBtn" class="secondary">Refresh saved</button>
+        </div>
+        <div class="hint">Tip: click a search result or click the map to stage a pin before saving.</div>
+        <div id="results" class="results"></div>
+      </section>
+
+      <section class="card stack">
+        <div>
+          <label for="labelInput">Label</label>
+          <input id="labelInput" placeholder="My friendly name" />
+        </div>
+        <div>
+          <label for="displayInput">Display name</label>
+          <textarea id="displayInput" placeholder="Selected search result"></textarea>
+        </div>
+        <div class="row">
+          <div>
+            <label for="latInput">Latitude</label>
+            <input id="latInput" inputmode="decimal" placeholder="39.7392" />
+          </div>
+          <div>
+            <label for="lngInput">Longitude</label>
+            <input id="lngInput" inputmode="decimal" placeholder="-104.9903" />
+          </div>
+        </div>
+        <div>
+          <label for="tagsInput">Tags</label>
+          <input id="tagsInput" placeholder="visited, ticket-to-ride, city" />
+        </div>
+        <div class="buttons">
+          <button id="saveBtn" class="good">Save place</button>
+          <button id="clearBtn" class="secondary">Clear</button>
+        </div>
+      </section>
+
+      <section class="card stack">
+        <div class="row">
+          <div>
+            <label for="filterInput">Filter saved</label>
+            <input id="filterInput" placeholder="tag or label" />
+          </div>
+          <div>
+            <label for="countBox">Saved</label>
+            <input id="countBox" readonly value="0" />
+          </div>
+        </div>
+        <div id="places" class="places"></div>
+      </section>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="chip">Leaflet + Supabase</div>
+        <div class="chip" id="statusChip">Not connected</div>
+      </div>
+      <div id="map"></div>
+      <div id="toast" class="toast"></div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
