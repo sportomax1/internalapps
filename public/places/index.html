@@ -9,7 +9,7 @@
   <style>
     :root {
       --bg: #0b1020;
-      --panel: rgba(15, 23, 42, 0.92);
+      --panel: rgba(15, 23, 42, 0.94);
       --panel-2: rgba(30, 41, 59, 0.92);
       --line: rgba(148, 163, 184, 0.25);
       --text: #f8fafc;
@@ -18,6 +18,7 @@
       --good: #22c55e;
       --bad: #ef4444;
       --shadow: 0 24px 70px rgba(0,0,0,0.4);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     * { box-sizing: border-box; }
@@ -31,8 +32,8 @@
 
     .shell {
       display: grid;
-      grid-template-columns: 390px 1fr;
-      height: 100%;
+      grid-template-columns: minmax(340px, 410px) minmax(0, 1fr);
+      height: 100dvh;
       min-height: 100vh;
     }
 
@@ -41,12 +42,14 @@
       border-right: 1px solid var(--line);
       padding: 18px;
       overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
       box-shadow: var(--shadow);
       z-index: 500;
     }
 
-    main { position: relative; min-width: 0; }
-    #map { width: 100%; height: 100%; background: #111827; }
+    main { position: relative; min-width: 0; min-height: 0; }
+    #map { width: 100%; height: 100%; min-height: 320px; background: #111827; }
 
     .topbar {
       position: absolute;
@@ -57,6 +60,8 @@
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+      max-width: calc(100% - 32px);
+      pointer-events: none;
     }
 
     .chip {
@@ -67,19 +72,20 @@
       padding: 8px 12px;
       font-size: 12px;
       backdrop-filter: blur(12px);
+      pointer-events: auto;
     }
 
     header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
       margin-bottom: 18px;
     }
 
     h1 { margin: 0; font-size: 24px; letter-spacing: -0.04em; }
     .sub { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.35; }
-    a.back { color: var(--primary); text-decoration: none; font-size: 13px; white-space: nowrap; }
+    a.back { color: var(--primary); text-decoration: none; font-size: 13px; white-space: nowrap; padding-top: 5px; }
 
     .card {
       background: var(--panel-2);
@@ -98,7 +104,7 @@
       background: rgba(2, 6, 23, 0.65);
       color: var(--text);
       padding: 11px 12px;
-      font-size: 14px;
+      font-size: 16px;
       outline: none;
     }
     textarea { min-height: 70px; resize: vertical; }
@@ -111,11 +117,13 @@
       border: 0;
       border-radius: 12px;
       padding: 11px 13px;
+      min-height: 42px;
       font-weight: 800;
       cursor: pointer;
       color: #06121f;
       background: var(--primary);
       transition: transform .15s ease, opacity .15s ease;
+      touch-action: manipulation;
     }
     button:hover { transform: translateY(-1px); }
     button.secondary { background: #334155; color: var(--text); border: 1px solid var(--line); }
@@ -129,6 +137,7 @@
       border-radius: 14px;
       padding: 10px;
       background: rgba(15, 23, 42, 0.7);
+      overflow-wrap: anywhere;
     }
     .result { cursor: pointer; }
     .result:hover, .place:hover { border-color: rgba(56,189,248,.55); }
@@ -136,14 +145,14 @@
     .meta { color: var(--muted); font-size: 12px; line-height: 1.35; }
     .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
     .tag { font-size: 11px; border-radius: 999px; padding: 4px 7px; background: rgba(56,189,248,.15); color: #bae6fd; border: 1px solid rgba(56,189,248,.22); }
-    .place-actions { display: flex; gap: 6px; margin-top: 8px; }
-    .place-actions button { padding: 7px 9px; font-size: 12px; border-radius: 9px; }
+    .place-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .place-actions button { padding: 7px 9px; font-size: 12px; border-radius: 9px; min-height: 34px; }
 
     .hint { color: var(--muted); font-size: 12px; line-height: 1.4; }
     .toast {
       position: absolute;
       left: 50%;
-      bottom: 24px;
+      bottom: calc(24px + var(--safe-bottom));
       transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.94);
       border: 1px solid var(--line);
@@ -153,22 +162,63 @@
       z-index: 800;
       box-shadow: var(--shadow);
       display: none;
+      max-width: min(90vw, 620px);
+      text-align: center;
     }
     .toast.show { display: block; }
 
     .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0f172a; color: #f8fafc; }
     .leaflet-control-attribution { font-size: 10px; }
 
-    @media (max-width: 860px) {
+    @media (max-width: 900px) {
       body { overflow: auto; }
-      .shell { grid-template-columns: 1fr; grid-template-rows: auto 62vh; }
-      aside { border-right: 0; border-bottom: 1px solid var(--line); max-height: none; }
-      .topbar { top: 10px; right: 10px; }
+      .shell {
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+        height: auto;
+      }
+      aside {
+        order: 2;
+        border-right: 0;
+        border-top: 1px solid var(--line);
+        max-height: none;
+        overflow: visible;
+        padding: 14px 14px calc(18px + var(--safe-bottom));
+      }
+      main {
+        order: 1;
+        height: 58dvh;
+        min-height: 360px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .topbar { top: 10px; right: 10px; max-width: calc(100% - 20px); }
+      .chip { font-size: 11px; padding: 7px 10px; }
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 22px; }
+      header { align-items: flex-start; }
+      .row { grid-template-columns: 1fr; }
+      .buttons button { flex: 1 1 140px; }
+      main { height: 52dvh; min-height: 310px; }
+      .card { border-radius: 16px; padding: 12px; }
     }
   </style>
 </head>
 <body>
   <div class="shell">
+    <main>
+      <div class="topbar">
+        <div class="chip">Leaflet + Supabase</div>
+        <div class="chip" id="statusChip">Loading config...</div>
+      </div>
+      <div id="map"></div>
+      <div id="toast" class="toast"></div>
+    </main>
+
     <aside>
       <header>
         <div>
@@ -235,15 +285,6 @@
         <div id="places" class="places"></div>
       </section>
     </aside>
-
-    <main>
-      <div class="topbar">
-        <div class="chip">Leaflet + Supabase</div>
-        <div class="chip" id="statusChip">Not connected</div>
-      </div>
-      <div id="map"></div>
-      <div id="toast" class="toast"></div>
-    </main>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
