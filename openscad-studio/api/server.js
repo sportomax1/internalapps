@@ -1,16 +1,15 @@
 /**
  * OpenSCAD Studio — api/server.js
  *
- * Express backend that compiles OpenSCAD source code to binary STL.
- * Deployed on Render as a Docker Web Service.
+ * Express backend.  Deployed on Render as a Docker Web Service.
  *
  * Endpoints:
  *   GET  /         → service info
  *   GET  /health   → { status: "ok" }
- *   POST /compile  { code: string } → binary STL (application/octet-stream)
+ *   POST /preview  { code: string } → PNG image bytes  (fast, ~20 s timeout)
+ *   POST /compile  { code: string } → binary STL       (full render, ~55 s timeout)
  *
  * Stubbed future endpoints (return 501):
- *   POST /render-png
  *   POST /analyze
  *   POST /slice
  *   POST /estimate-print
@@ -29,10 +28,12 @@ const { v4: uuidv4 }  = require('uuid');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Compile limits ────────────────────────────────────────────────
+// ── Limits ───────────────────────────────────────────────────────
 const MAX_CODE_BYTES    = 500_000;      // 500 KB source limit
-const OPENSCAD_TIMEOUT  = 55_000;       // 55 s (leave headroom vs 60 s client)
+const OPENSCAD_TIMEOUT  = 55_000;       // 55 s STL compile  (client allows 60 s)
+const PREVIEW_TIMEOUT   = 18_000;       // 18 s PNG preview   (client allows 25 s)
 const MIN_STL_BYTES     = 84;           // minimum valid binary STL (header + count)
+const PREVIEW_IMG_SIZE  = '1000,1000';  // width,height for --imgsize
 
 // ── CORS ──────────────────────────────────────────────────────────
 // Allow any origin so the GitHub Pages frontend can reach this API.
@@ -51,13 +52,13 @@ app.use(express.json({ limit: '2mb' }));
 app.get('/', (_req, res) => {
   res.json({
     service:   'OpenSCAD Studio API',
-    version:   '1.0.0',
+    version:   '1.1.0',
     endpoints: [
-      'POST /compile',
+      'POST /preview        { code } → PNG image (fast preview)',
+      'POST /compile        { code } → binary STL (full render)',
       'GET  /health',
-      'POST /render-png  (coming soon)',
-      'POST /analyze     (coming soon)',
-      'POST /slice       (coming soon)',
+      'POST /analyze        (coming soon)',
+      'POST /slice          (coming soon)',
       'POST /estimate-print (coming soon)',
     ],
   });
@@ -108,24 +109,75 @@ app.post('/compile', async (req, res) => {
     res.send(stlBuffer);
 
   } catch (err) {
-    // Parse OpenSCAD error output into structured errors
     const errors = parseOpenSCADErrors(err.stderr ?? err.message ?? '');
     console.error('[compile] failed:', err.message?.slice(0, 200));
+    console.error('[compile] stderr:', (err.stderr ?? '').slice(0, 500));
 
     res.status(422).json({
       error:  'Compilation failed',
       errors,
-      stderr: (err.stderr ?? '').slice(0, 4000), // cap stderr in response
+      stderr: (err.stderr ?? '').slice(0, 4000),
     });
 
   } finally {
-    // Always clean up temp files — do not await to avoid delaying response
+    setImmediate(() => cleanup(tempDir));
+  }
+});
+
+// ── POST /preview ─────────────────────────────────────────────────
+// Runs OpenSCAD's image export (--imgsize) to produce a PNG preview
+// quickly without full CSG evaluation.  Much faster than /compile.
+app.post('/preview', async (req, res) => {
+  const { code } = req.body ?? {};
+
+  if (typeof code !== 'string' || code.trim().length === 0) {
+    return res.status(400).json({
+      error:  'Invalid request',
+      errors: [{ type: 'ERROR', line: null, message: 'Missing or empty "code" field.' }],
+    });
+  }
+
+  if (Buffer.byteLength(code, 'utf8') > MAX_CODE_BYTES) {
+    return res.status(400).json({
+      error:  'Payload too large',
+      errors: [{ type: 'ERROR', line: null, message: `Code exceeds maximum allowed size (${MAX_CODE_BYTES / 1000} KB).` }],
+    });
+  }
+
+  const tempDir    = path.join(os.tmpdir(), `openscad-prev-${uuidv4()}`);
+  const inputFile  = path.join(tempDir, 'input.scad');
+  const outputFile = path.join(tempDir, 'preview.png');
+
+  try {
+    fs.mkdirSync(tempDir, { recursive: true });
+    fs.writeFileSync(inputFile, code, 'utf8');
+
+    const pngBuffer = await runOpenSCADPreview(inputFile, outputFile);
+
+    res.set({
+      'Content-Type':   'image/png',
+      'Content-Length': pngBuffer.length,
+    });
+    res.send(pngBuffer);
+
+  } catch (err) {
+    const errors = parseOpenSCADErrors(err.stderr ?? err.message ?? '');
+    console.error('[preview] failed:', err.message?.slice(0, 200));
+    console.error('[preview] stderr:', (err.stderr ?? '').slice(0, 500));
+
+    res.status(422).json({
+      error:  'Preview failed',
+      errors,
+      stderr: (err.stderr ?? '').slice(0, 4000),
+    });
+
+  } finally {
     setImmediate(() => cleanup(tempDir));
   }
 });
 
 // ── Future endpoints (stubbed) ────────────────────────────────────
-['render-png', 'analyze', 'slice', 'estimate-print'].forEach(ep => {
+['analyze', 'slice', 'estimate-print'].forEach(ep => {
   app.post(`/${ep}`, (_req, res) =>
     res.status(501).json({ error: `/${ep} is not yet implemented.` })
   );
@@ -135,7 +187,7 @@ app.post('/compile', async (req, res) => {
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 
 // ═════════════════════════════════════════════════════════════════
-// OpenSCAD runner
+// OpenSCAD runners
 // ═════════════════════════════════════════════════════════════════
 
 /**
@@ -187,6 +239,49 @@ function runOpenSCAD(inputFile, outputFile) {
       }
 
       resolve(stl);
+    });
+  });
+}
+
+/**
+ * Run OpenSCAD to render input.scad → preview.png.
+ *
+ * Uses OpenSCAD's built-in image export (--imgsize) via Xvfb.
+ * This is faster than STL export because OpenSCAD uses its OpenGL
+ * preview renderer rather than full CGAL geometry evaluation.
+ *
+ * @param {string} inputFile   Absolute path to input.scad
+ * @param {string} outputFile  Absolute path for preview.png
+ * @returns {Promise<Buffer>}  PNG file contents
+ */
+function runOpenSCADPreview(inputFile, outputFile) {
+  return new Promise((resolve, reject) => {
+    const useXvfb = process.env.USE_XVFB !== 'false';
+    const cmd     = useXvfb ? 'xvfb-run' : 'openscad';
+    const args    = useXvfb
+      ? ['-a', 'openscad', '-o', outputFile, `--imgsize=${PREVIEW_IMG_SIZE}`, inputFile]
+      : ['-o', outputFile, `--imgsize=${PREVIEW_IMG_SIZE}`, inputFile];
+
+    execFile(cmd, args, {
+      timeout:   PREVIEW_TIMEOUT,
+      maxBuffer: 10 * 1024 * 1024,
+    }, (err, _stdout, stderr) => {
+      if (err) {
+        err.stderr = stderr;
+        return reject(err);
+      }
+      if (!fs.existsSync(outputFile)) {
+        const e = new Error('OpenSCAD exited without producing a PNG file.');
+        e.stderr = stderr;
+        return reject(e);
+      }
+      const png = fs.readFileSync(outputFile);
+      if (png.length < 8) {
+        const e = new Error('Output PNG is empty or too small to be valid.');
+        e.stderr = stderr;
+        return reject(e);
+      }
+      resolve(png);
     });
   });
 }

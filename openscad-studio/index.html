@@ -52,11 +52,15 @@
         <input type="file" id="file-open-input" accept=".scad,.stl" style="display:none" />
       </div>
 
-      <!-- Compile / Download -->
+      <!-- Preview / Render / Download -->
       <div class="toolbar-group">
-        <button id="btn-compile" class="primary" title="Compile to STL (F5 or Ctrl+Enter)">
+        <button id="btn-preview" title="Fast preview image (F5)">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Preview</span>
+        </button>
+        <button id="btn-compile" class="primary" title="Render full STL (F6)">
           <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <span>Compile STL</span>
+          <span>Render STL</span>
         </button>
         <button id="btn-download" title="Download STL (Ctrl+D)" disabled>
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -163,12 +167,16 @@
         <div id="viewer-container">
           <canvas id="viewer-canvas"></canvas>
 
-          <!-- Shown before first compile -->
+          <!-- PNG preview image (shown after Preview click) -->
+          <img id="preview-img" class="hidden" alt="OpenSCAD preview" />
+
+          <!-- Shown before first action -->
           <div id="viewer-empty">
             <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.2">
               <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
             </svg>
-            <p>Press <kbd>F5</kbd> or click <strong>Compile STL</strong> to preview</p>
+            <p>Press <kbd>F5</kbd> for a fast <strong>Preview</strong></p>
+            <p style="font-size:12px;opacity:.6">or <kbd>F6</kbd> to <strong>Render STL</strong> for a printable model</p>
           </div>
 
           <!-- Compile-in-progress overlay -->

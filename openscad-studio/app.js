@@ -4,7 +4,8 @@
  * Handles:
  *  - CodeMirror 5 editor (syntax highlighting, keyboard shortcuts)
  *  - Three.js 3D STL viewer (orbit, grid, axes, bounding box, wireframe)
- *  - Compile workflow: POST /compile → binary STL → viewer
+ *  - Preview workflow:  POST /preview → PNG image → viewer  (fast, F5)
+ *  - Render workflow:   POST /compile → binary STL → viewer  (full, F6)
  *  - File I/O (open/save .scad, download .stl, drag-and-drop)
  *  - Board game template library
  *  - Dark / light theme
@@ -25,7 +26,8 @@ const LS_API_URL  = 'openscad_api_url';
 const LS_AUTOSAVE = 'openscad_autosave_code';
 const LS_FILENAME = 'openscad_filename';
 const LS_THEME    = 'openscad_theme';
-const COMPILE_TIMEOUT_MS = 60_000;
+const COMPILE_TIMEOUT_MS = 60_000;  // STL render
+const PREVIEW_TIMEOUT_MS = 25_000;  // PNG preview
 
 /**
  * Default example: parametric dice tray.
@@ -383,6 +385,11 @@ let currentSTLBlob = null;  // last compiled STL as Blob
 let compileTimeMs  = null;  // ms
 let isDirty        = false; // unsaved changes flag
 
+// Current right-panel mode: 'empty' | 'png' | 'stl'
+let viewerMode = 'empty';
+// Object URL for the current preview PNG (revoke on next preview)
+let previewBlobUrl = null;
+
 /* ════════════════════════════════════════════════════════════════
    DOM HELPERS
    ════════════════════════════════════════════════════════════════ */
@@ -409,9 +416,14 @@ const editor = CodeMirror($('editor-container'), {
   extraKeys: {
     'Ctrl-/':       cm => cm.execCommand('toggleComment'),
     'Cmd-/':        cm => cm.execCommand('toggleComment'),
-    'F5':           ()  => handleCompile(),
-    'Ctrl-Enter':   ()  => handleCompile(),
-    'Cmd-Enter':    ()  => handleCompile(),
+    // F5 = fast preview  (mirrors desktop OpenSCAD)
+    'F5':           ()  => handlePreview(),
+    'Ctrl-Enter':   ()  => handlePreview(),
+    'Cmd-Enter':    ()  => handlePreview(),
+    // F6 = full STL render  (mirrors desktop OpenSCAD)
+    'F6':           ()  => handleCompile(),
+    'Ctrl-Shift-Enter': () => handleCompile(),
+    'Cmd-Shift-Enter':  () => handleCompile(),
     'Ctrl-S':       ()  => handleSave(),
     'Cmd-S':        ()  => handleSave(),
     'Ctrl-N':       ()  => handleNew(),
@@ -558,6 +570,7 @@ function loadSTL(buffer) {
 
   // Reveal canvas, hide empty state
   $('viewer-empty').classList.add('hidden');
+  setViewerMode('stl');
 }
 
 /**
@@ -584,7 +597,73 @@ function fitCamera(bbox) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   COMPILE
+   PREVIEW
+   ════════════════════════════════════════════════════════════════ */
+
+/**
+ * POST /preview → PNG blob → display in viewer panel.
+ * Uses OpenSCAD's fast OpenGL preview renderer, not full CSG.
+ * Does NOT produce a printable STL; use handleCompile() for that.
+ */
+async function handlePreview() {
+  if (!apiUrl) {
+    openSettings();
+    setStatusMsg('⚠ Set your backend API URL in Settings first.');
+    return;
+  }
+
+  clearErrors();
+  showOverlay(true, 'Generating preview…');
+
+  const code = editor.getValue();
+  const t0   = performance.now();
+
+  try {
+    const res = await fetchWithTimeout(
+      `${apiUrl}/preview`,
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ code }),
+      },
+      PREVIEW_TIMEOUT_MS,
+    );
+
+    if (!res.ok) {
+      const ct = res.headers.get('content-type') ?? '';
+      if (ct.includes('application/json')) {
+        const errBody = await res.json();
+        const errors  = errBody.errors ?? [{ message: errBody.error ?? `HTTP ${res.status}`, line: null }];
+        displayErrors(errors);
+        setStatusMsg(`Preview failed — ${errors.length} error(s)`);
+      } else {
+        const text = await res.text();
+        displayErrors([{ message: text || `HTTP ${res.status}`, line: null }]);
+        setStatusMsg(`Preview failed (HTTP ${res.status})`);
+      }
+      return;
+    }
+
+    const blob    = await res.blob();
+    const elapsed = Math.round(performance.now() - t0);
+    showPreviewImage(blob);
+    setStatusMsg(`Preview ready in ${elapsed} ms — press F6 to Render STL for a printable model`);
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      displayErrors([{ message: 'Preview timed out (25 s). Try simplifying your model.', line: null }]);
+      setStatusMsg('Preview timed out');
+    } else {
+      displayErrors([{ message: `Network error: ${err.message}`, line: null }]);
+      setStatusMsg('Preview failed — check the console for details');
+    }
+  } finally {
+    showOverlay(false);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RENDER STL (full compile)
    ════════════════════════════════════════════════════════════════ */
 
 async function handleCompile() {
@@ -595,7 +674,7 @@ async function handleCompile() {
   }
 
   clearErrors();
-  showOverlay(true, 'Compiling…');
+  showOverlay(true, 'Rendering STL…');
   $('btn-download').disabled = true;
   currentSTLBlob = null;
 
@@ -631,9 +710,10 @@ async function handleCompile() {
     compileTimeMs = Math.round(performance.now() - t0);
     const buffer  = await res.arrayBuffer();
     currentSTLBlob = new Blob([buffer], { type: 'application/octet-stream' });
+    // Switch viewer to STL mode (hides any PNG preview)
     loadSTL(buffer);
     $('btn-download').disabled = false;
-    setStatusMsg(`Compiled successfully in ${compileTimeMs} ms`);
+    setStatusMsg(`STL rendered in ${compileTimeMs} ms — ready to download`);
 
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -659,6 +739,7 @@ function handleNew() {
   setDirty(false);
   currentSTLBlob = null;
   $('btn-download').disabled = true;
+  setViewerMode('empty');
   setStatusMsg('New file');
 }
 
@@ -701,6 +782,7 @@ function handleOpenFile(file) {
       editor.setValue(e.target.result);
       setFileName(file.name);
       setDirty(false);
+      setViewerMode('empty');
       setStatusMsg(`Opened ${file.name}`);
     };
     reader.readAsText(file);
@@ -837,6 +919,36 @@ function showOverlay(visible, text = '') {
   if (text) $('compile-status-text').textContent = text;
 }
 
+/**
+ * Display a PNG blob in the viewer panel, replacing the Three.js canvas view.
+ * The canvas keeps rendering underneath; the img simply overlays it.
+ * @param {Blob} blob
+ */
+function showPreviewImage(blob) {
+  // Revoke previous object URL to free memory
+  if (previewBlobUrl) {
+    URL.revokeObjectURL(previewBlobUrl);
+    previewBlobUrl = null;
+  }
+  previewBlobUrl = URL.createObjectURL(blob);
+  const img = $('preview-img');
+  img.src = previewBlobUrl;
+  setViewerMode('png');
+}
+
+/**
+ * Switch the right-panel display mode.
+ * @param {'empty'|'png'|'stl'} mode
+ */
+function setViewerMode(mode) {
+  viewerMode = mode;
+  $('viewer-empty').classList.toggle('hidden', mode !== 'empty');
+  $('preview-img').classList.toggle('hidden', mode !== 'png');
+  // Update viewer header title to reflect what's being shown
+  const titles = { empty: '3D Preview', png: 'Preview Image', stl: '3D Model' };
+  $('viewer-title').textContent = titles[mode] ?? '3D Preview';
+}
+
 function setFileName(name) {
   $('file-name').textContent = name;
   localStorage.setItem(LS_FILENAME, name);
@@ -922,6 +1034,7 @@ function debounce(fn, delay) {
    ════════════════════════════════════════════════════════════════ */
 
 // Toolbar buttons
+$('btn-preview').addEventListener('click', handlePreview);
 $('btn-new').addEventListener('click', handleNew);
 $('btn-open').addEventListener('click', () => $('file-open-input').click());
 $('btn-save').addEventListener('click', handleSave);
@@ -974,6 +1087,8 @@ document.addEventListener('click', () => $('templates-menu').classList.remove('o
 document.addEventListener('keydown', e => {
   const tag = document.activeElement.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement.classList.contains('CodeMirror-code')) return;
+  if (e.key === 'F5')  { e.preventDefault(); handlePreview();   }
+  if (e.key === 'F6')  { e.preventDefault(); handleCompile();   }
   if (e.key === 'r' && !e.ctrlKey && !e.metaKey) handleResetCamera();
   if (e.key === 'w' && !e.ctrlKey && !e.metaKey) toggleWireframe();
   if (e.key === 'b' && !e.ctrlKey && !e.metaKey) setBBox();
@@ -1132,7 +1247,10 @@ window.openscadStudio = Object.freeze({
   /** Set the filename. */
   setFileName,
 
-  /** Trigger a compile. Returns a Promise. */
+  /** Trigger a fast PNG preview. Returns a Promise. */
+  preview: handlePreview,
+
+  /** Trigger a full STL render. Returns a Promise. */
   compile: handleCompile,
 
   /** Download the last compiled STL (no-op if nothing compiled). */
