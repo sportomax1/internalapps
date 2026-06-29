@@ -182,20 +182,33 @@ button.active {
   border-color: var(--accent);
 }
 
+/* Preview button — teal/cyan tint to visually distinguish from Render (blue) */
+button.secondary {
+  background: transparent;
+  color: var(--accent-2);
+  border-color: var(--accent-2);
+}
+button.secondary:hover {
+  background: rgba(116,199,236,.15);
+  color: var(--accent-2);
+}
+button.secondary svg { stroke: var(--accent-2); }
+
 /* ── Dropdown ───────────────────────────────────────────────────── */
 .dropdown { position: relative; }
 .dropdown-menu {
   display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  min-width: 210px;
+  /* position: fixed breaks out of the toolbar's overflow context so the
+     menu is never clipped. Top/left are set by JS on every open. */
+  position: fixed;
+  min-width: 220px;
+  max-height: 70vh;
+  overflow-y: auto;
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  z-index: 500;
-  overflow: hidden;
+  z-index: 9500;
 }
 .dropdown-menu.open { display: block; }
 

@@ -54,11 +54,11 @@
 
       <!-- Preview / Render / Download -->
       <div class="toolbar-group">
-        <button id="btn-preview" title="Fast preview image (F5)">
+        <button id="btn-preview" class="secondary" title="Fast OpenGL preview image — no STL (F5)">
           <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           <span>Preview</span>
         </button>
-        <button id="btn-compile" class="primary" title="Render full STL (F6)">
+        <button id="btn-compile" class="primary" title="Full CGAL render → STL → 3D viewer (F6)">
           <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           <span>Render STL</span>
         </button>
@@ -76,6 +76,12 @@
             <span>Templates ▾</span>
           </button>
           <div class="dropdown-menu" id="templates-menu">
+            <div class="dropdown-section">Simple Shapes</div>
+            <button class="dropdown-item" data-template="simple-sphere">🔵 Sphere</button>
+            <button class="dropdown-item" data-template="simple-cube">🟫 Cube / Box</button>
+            <button class="dropdown-item" data-template="simple-cylinder">🥫 Cylinder</button>
+            <button class="dropdown-item" data-template="basic-union">➕ Boolean Union</button>
+            <button class="dropdown-item" data-template="basic-difference">➖ Boolean Difference</button>
             <div class="dropdown-section">Board Game Components</div>
             <button class="dropdown-item" data-template="dice-tray">🎲 Dice Tray</button>
             <button class="dropdown-item" data-template="dice-tower">🏰 Dice Tower</button>

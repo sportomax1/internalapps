@@ -374,6 +374,85 @@ translate([box_w + 12, 0, 0]) {
         cube([box_w-wall*2-tol*2, wall+tol, snap]);
 }
 `,
+
+  // ──────────────────────── Simple Shapes ────────────────────────
+
+  'simple-sphere': `// Simple Sphere
+// A good starting point \u2014 just edit the radius and hit F5 to preview.
+
+/* [Sphere] */
+radius = 20;   // mm
+$fn    = 64;   // smoothness (higher = rounder, slower)
+
+sphere(r = radius);
+`,
+
+  'simple-cube': `// Simple Cube / Box
+// A solid rectangular box.  Resize by changing width, depth, height.
+
+/* [Dimensions] */
+width  = 40;  // X axis, mm
+depth  = 30;  // Y axis, mm
+height = 20;  // Z axis, mm
+
+cube([width, depth, height]);
+`,
+
+  'simple-cylinder': `// Simple Cylinder
+// A solid cylinder.  Good for coins, tokens, standees, handles.
+
+/* [Cylinder] */
+radius = 15;   // mm
+height = 30;   // mm
+$fn    = 64;   // smoothness
+
+cylinder(h = height, r = radius);
+`,
+
+  'basic-union': `// Boolean Union
+// Merges two shapes into one solid object.
+// union() is the default \u2014 shapes outside any operator are also unioned.
+
+$fn = 40;
+
+union() {
+    // Base plate
+    cube([50, 50, 8]);
+
+    // Dome centred on the plate
+    translate([25, 25, 0])
+        sphere(r = 18);
+
+    // Side pillar
+    translate([0, 0, 0])
+        cylinder(h = 30, r = 6);
+}
+`,
+
+  'basic-difference': `// Boolean Difference
+// Subtracts one shape from another \u2014 the most common 3D printing trick.
+// First child is the base; all subsequent children are subtracted.
+
+$fn = 48;
+
+difference() {
+    // Start solid: a box
+    cube([50, 50, 20]);
+
+    // Drill a large central hole
+    translate([25, 25, -1])
+        cylinder(h = 22, r = 14);
+
+    // Drill four corner holes
+    for (x = [7, 43], y = [7, 43])
+        translate([x, y, -1])
+            cylinder(h = 22, r = 3);
+
+    // Cut a slot in the front face
+    translate([15, -1, 12])
+        cube([20, 8, 10]);
+}
+`,
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -1070,9 +1149,19 @@ $('chk-grid').addEventListener('change', e => { gridHelper.visible = e.target.ch
 $('chk-axes').addEventListener('change', e => { axesHelper.visible = e.target.checked; });
 $('chk-bbox-chk').addEventListener('change', e => { setBBox(e.target.checked); });
 
-// Templates dropdown
+// Templates dropdown — position: fixed so it breaks out of toolbar overflow
 $('btn-templates').addEventListener('click', e => {
-  $('templates-menu').classList.toggle('open');
+  const menu   = $('templates-menu');
+  const isOpen = menu.classList.contains('open');
+  if (isOpen) {
+    menu.classList.remove('open');
+    return;
+  }
+  // Calculate position relative to viewport
+  const rect = $('btn-templates').getBoundingClientRect();
+  menu.style.top  = (rect.bottom + 4) + 'px';
+  menu.style.left = rect.left + 'px';
+  menu.classList.add('open');
   e.stopPropagation();
 });
 document.querySelectorAll('.dropdown-item[data-template]').forEach(btn => {
@@ -1082,6 +1171,9 @@ document.querySelectorAll('.dropdown-item[data-template]').forEach(btn => {
   });
 });
 document.addEventListener('click', () => $('templates-menu').classList.remove('open'));
+// Close dropdown when the page scrolls or resizes (position would be stale)
+window.addEventListener('resize', () => $('templates-menu').classList.remove('open'));
+window.addEventListener('scroll', () => $('templates-menu').classList.remove('open'), true);
 
 // Global keyboard shortcuts (when focus is NOT in an input)
 document.addEventListener('keydown', e => {
