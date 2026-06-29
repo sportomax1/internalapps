@@ -2,53 +2,73 @@
 # OpenSCAD Studio API — Dockerfile
 #
 # Builds a production Docker image that:
-#   1. Installs OpenSCAD on Ubuntu 22.04
-#   2. Installs Xvfb (virtual framebuffer — required for headless STL export)
-#   3. Installs Node.js 20 LTS
-#   4. Runs the Express API server
+#   1. Installs Node.js 20 LTS (via NodeSource)
+#   2. Installs OpenSCAD (Ubuntu 22.04 repos)
+#   3. Installs Xvfb — virtual X display required for headless STL export
+#   4. Pre-warms the system font cache so OpenSCAD doesn't crash on first run
+#   5. Runs the Express API server
 #
-# Deploy this image to Render as a Web Service (Docker runtime).
-# Render automatically injects the $PORT environment variable.
+# Render configuration:
+#   Root Directory:     openscad-studio
+#   Dockerfile Path:    api/Dockerfile
+#   Docker Build Context: api
+#   Health Check Path:  /health
 # ══════════════════════════════════════════════════════════════════
 
 FROM ubuntu:22.04
 
-# ── Prevent interactive apt prompts ───────────────────────────────
+# Prevent interactive apt prompts (timezone selection etc.)
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NODE_ENV=production
-# Set to "false" only when running locally without Xvfb (e.g. macOS)
+# Set USE_XVFB=false only when running locally on macOS/Windows (no Xvfb needed)
 ENV USE_XVFB=true
 
-# ── System packages: OpenSCAD + Xvfb ──────────────────────────────
-# openscad    – the 3D compiler
-# xvfb        – virtual X display (required for headless STL export)
-# curl        – needed to fetch the NodeSource setup script
-# ca-certificates – HTTPS trust for the NodeSource script
+# ── Install everything in one layer ───────────────────────────────
+# We must install curl+ca-certificates first, then run the NodeSource
+# setup script (which modifies apt sources), then install the rest —
+# all in a single RUN to keep the apt cache valid throughout and
+# produce a single cacheable layer with a clean /var/lib/apt/lists.
+#
+# Extra packages beyond the obvious:
+#   libglu1-mesa      – OpenGL utility library; OpenSCAD needs it for
+#                       geometry operations even when exporting STL
+#   fonts-liberation  – Provides common fonts so OpenSCAD can build its
+#                       font cache without errors on first compile
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-        openscad \
-        xvfb \
         curl \
         ca-certificates \
+ && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y --no-install-recommends \
+        nodejs \
+        openscad \
+        xvfb \
+        libglu1-mesa \
+        fonts-liberation \
  && rm -rf /var/lib/apt/lists/*
 
-# ── Node.js 20 LTS (via NodeSource) ───────────────────────────────
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
- && apt-get install -y --no-install-recommends nodejs \
- && rm -rf /var/lib/apt/lists/*
+# Pre-warm the system font cache.
+# Without this, OpenSCAD regenerates it on every cold compile,
+# which can add several seconds and occasionally causes silent crashes
+# in a minimal Docker environment.
+RUN fc-cache -f
 
-# ── App ───────────────────────────────────────────────────────────
+# ── Node app ──────────────────────────────────────────────────────
 WORKDIR /app
 
-# Copy dependency manifest first for layer caching
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+# Copy only the manifest first so Docker caches the npm install layer
+# independently of source changes.
+# We use "npm install --omit=dev" instead of "npm ci" because there is
+# no package-lock.json in the repository.  --omit=dev is the modern
+# replacement for the deprecated --only=production flag.
+COPY package.json ./
+RUN npm install --omit=dev
 
-# Copy application source
+# Copy application source (after npm install to preserve cache)
 COPY server.js ./
 
-# Render injects $PORT at runtime; we listen on 0.0.0.0:$PORT
+# Render injects $PORT at runtime; server.js reads process.env.PORT
+# and binds to 0.0.0.0 — both required by Render.
 EXPOSE 3000
 
-# Start the API server
 CMD ["node", "server.js"]
