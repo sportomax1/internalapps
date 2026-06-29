@@ -245,7 +245,8 @@
     <main>
       <div class="topbar">
         <button class="chip" id="lockBtn" type="button" hidden>Lock</button>
-        <div class="chip">Leaflet + Supabase</div>
+        <button class="chip" id="retryMapBtn" type="button">Retry map</button>
+        <div class="chip" id="mapStatusChip">Loading map…</div>
         <div class="chip" id="statusChip">Starting…</div>
       </div>
       <div id="map"></div>
@@ -278,7 +279,7 @@
         <div class="buttons">
           <button id="searchBtn">Search</button>
           <button id="useMapBtn" class="secondary">Use map click</button>
-          <button id="loadBtn" class="secondary">Refresh saved</button>
+          <button id="loadBtn" class="secondary">Load saved places</button>
           <button id="fitBtn" class="secondary">Frame all pins</button>
         </div>
         <div class="hint">Tip: click a search result or click the map to stage a pin before saving.</div>

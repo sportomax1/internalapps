@@ -3,6 +3,7 @@
 const DEFAULT_CENTER = [39.5186, -104.7614];
 const DEFAULT_ZOOM = 5;
 const PASSWORD_KEY = 'places-app-password';
+const CACHE_KEY = 'places-last-known-good-v1';
 
 const els = {
   authCard: document.getElementById('authCard'),
@@ -14,6 +15,8 @@ const els = {
   useMapBtn: document.getElementById('useMapBtn'),
   loadBtn: document.getElementById('loadBtn'),
   fitBtn: document.getElementById('fitBtn'),
+  retryMapBtn: document.getElementById('retryMapBtn'),
+  mapStatusChip: document.getElementById('mapStatusChip'),
   results: document.getElementById('results'),
   labelInput: document.getElementById('labelInput'),
   displayInput: document.getElementById('displayInput'),
@@ -35,13 +38,72 @@ let savedLayer = null;
 let savedPlaces = [];
 let mapClickMode = false;
 let editingPlaceId = null;
+let hasFramedInitialPlaces = false;
+let tileLayer = null;
+let tileErrors = 0;
+let tileSourceIndex = 0;
 
-const map = L.map('map', { zoomControl: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors',
-}).addTo(map);
+const TILE_SOURCES = [
+  {
+    name: 'OpenStreetMap',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap contributors',
+  },
+  {
+    name: 'CARTO fallback',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  },
+];
+
+const map = L.map('map', {
+  zoomControl: true,
+  fadeAnimation: false,
+  zoomAnimation: false,
+  markerZoomAnimation: false,
+}).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 savedLayer = L.layerGroup().addTo(map);
+
+function setMapStatus(text, state = 'neutral') {
+  els.mapStatusChip.textContent = text;
+  els.mapStatusChip.dataset.state = state;
+}
+
+function mountTileLayer(index = 0) {
+  tileSourceIndex = index;
+  tileErrors = 0;
+  if (tileLayer) tileLayer.remove();
+  const source = TILE_SOURCES[tileSourceIndex];
+  tileLayer = L.tileLayer(source.url, {
+    maxZoom: 19,
+    attribution: source.attribution,
+    crossOrigin: true,
+    updateWhenIdle: false,
+    updateWhenZooming: false,
+    keepBuffer: 4,
+  });
+  tileLayer.on('loading', () => setMapStatus(`Loading ${source.name}…`));
+  tileLayer.on('load', () => setMapStatus('Map ready', 'good'));
+  tileLayer.on('tileerror', () => {
+    tileErrors += 1;
+    if (tileErrors >= 3 && tileSourceIndex === 0) {
+      setMapStatus('Switching map source…');
+      mountTileLayer(1);
+      toast('OpenStreetMap was slow, so the fallback map is loading.');
+    } else if (tileErrors >= 3) {
+      setMapStatus('Map needs retry', 'bad');
+    }
+  });
+  tileLayer.addTo(map);
+}
+
+function retryBaseMap() {
+  setMapStatus('Retrying map…');
+  map.invalidateSize({ animate: false, pan: false });
+  mountTileLayer(tileSourceIndex);
+}
+
+mountTileLayer();
 
 function esc(value = '') {
   return String(value)
@@ -96,7 +158,7 @@ async function api(path = '', options = {}) {
     ...(options.body ? { 'Content-Type': 'application/json' } : {}),
     ...options.headers,
   };
-  const response = await fetch(`/api/places${path}`, { ...options, headers });
+  const response = await fetch(`/api/places/${path}`, { ...options, headers });
   const payload = response.status === 204
     ? {}
     : await response.json().catch(() => ({}));
@@ -112,6 +174,26 @@ async function api(path = '', options = {}) {
   return payload;
 }
 
+function readPlacesCache() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    return Array.isArray(parsed?.places) ? parsed.places : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePlacesCache(places) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      places,
+      savedAt: new Date().toISOString(),
+    }));
+  } catch {
+    // Storage may be disabled; Supabase remains the source of truth.
+  }
+}
+
 async function unlock() {
   const candidate = els.passwordInput.value.trim();
   if (!candidate) return toast('Enter the app password first.');
@@ -123,7 +205,7 @@ async function unlock() {
     sessionStorage.setItem(PASSWORD_KEY, appPassword);
     els.passwordInput.value = '';
     setLocked(false);
-    toast('Unlocked. Your pins are ready.');
+    toast(`Unlocked. Loaded ${savedPlaces.length} saved ${savedPlaces.length === 1 ? 'place' : 'places'}.`);
   } catch (error) {
     toast(error.message);
   } finally {
@@ -278,11 +360,25 @@ async function loadPlaces() {
   try {
     const { places } = await api();
     savedPlaces = places || [];
+    writePlacesCache(savedPlaces);
     setStatus('Connected', 'good');
     renderPlaces(savedPlaces);
     renderSavedMarkers(savedPlaces);
+    if (savedPlaces.length && !hasFramedInitialPlaces) {
+      hasFramedInitialPlaces = true;
+      fitSavedPlaces();
+    }
   } catch (error) {
     setStatus(error.message.includes('password') ? 'Locked' : 'Sync failed', 'bad');
+    const cachedPlaces = readPlacesCache();
+    if (appPassword && cachedPlaces.length) {
+      savedPlaces = cachedPlaces;
+      renderPlaces(savedPlaces);
+      renderSavedMarkers(savedPlaces);
+      setStatus(`Cached · ${cachedPlaces.length}`, 'neutral');
+      toast('Supabase was unavailable, so the last saved copy was loaded.');
+      return;
+    }
     throw error;
   }
 }
@@ -410,14 +506,15 @@ els.useMapBtn.addEventListener('click', () => {
 });
 els.loadBtn.addEventListener('click', () => loadPlaces().catch((error) => toast(error.message)));
 els.fitBtn.addEventListener('click', fitSavedPlaces);
+els.retryMapBtn.addEventListener('click', retryBaseMap);
 els.saveBtn.addEventListener('click', savePlace);
 els.clearBtn.addEventListener('click', () => clearForm(true));
 els.filterInput.addEventListener('input', () => renderPlaces(savedPlaces));
 window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 150));
 
 setLocked(!appPassword);
-requestAnimationFrame(() => map.invalidateSize());
-setTimeout(() => map.invalidateSize(), 250);
+requestAnimationFrame(() => map.invalidateSize({ animate: false, pan: false }));
+setTimeout(() => map.invalidateSize({ animate: false, pan: false }), 250);
 if (appPassword) {
   loadPlaces()
     .then(() => setLocked(false))
