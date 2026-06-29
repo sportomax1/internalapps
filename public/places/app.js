@@ -1,14 +1,11 @@
 // Places Map — Leaflet + Supabase
-// Fill these in after creating/configuring your Supabase project.
-// This uses the public anon key, so keep RLS policies intentional.
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// Supabase config is loaded from /api/supabase-config, which reads Vercel env vars.
 
 const DEFAULT_CENTER = [39.5186, -104.7614]; // Parker, CO-ish
 const DEFAULT_ZOOM = 5;
 
-const { createClient } = window.supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sb = null;
+let configReady = false;
 
 const els = {
   searchInput: document.getElementById('searchInput'),
@@ -75,11 +72,31 @@ function getLabelFromDisplay(displayName) {
   return String(displayName || '').split(',')[0]?.trim() || 'Untitled place';
 }
 
-function isConfigured() {
-  return SUPABASE_URL.includes('.supabase.co') &&
-    !SUPABASE_URL.includes('YOUR_PROJECT_ID') &&
-    SUPABASE_ANON_KEY &&
-    SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+async function initSupabase() {
+  setStatus('Loading config...');
+  try {
+    const res = await fetch('/api/supabase-config', { headers: { Accept: 'application/json' } });
+    const cfg = await res.json();
+    if (!res.ok || !cfg.ok) throw new Error(cfg.error || `Config request failed: ${res.status}`);
+
+    const { createClient } = window.supabase;
+    sb = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    configReady = true;
+    setStatus('Connected', true);
+    await loadPlaces();
+  } catch (err) {
+    console.error(err);
+    configReady = false;
+    setStatus('Supabase config needed');
+    els.places.innerHTML = '<div class="hint">Could not load Supabase config from <strong>/api/supabase-config</strong>. Check Vercel env vars: <strong>SUPABASE_URL</strong> and <strong>SUPABASE_ANON_KEY</strong>.</div>';
+    toast('Supabase config not loaded yet.');
+  }
+}
+
+function requireSupabase() {
+  if (configReady && sb) return true;
+  toast('Supabase config is not loaded yet.');
+  return false;
 }
 
 function stagePlace({ label, display_name, lat, lng, tags = [] }) {
@@ -179,10 +196,7 @@ function guessTags(result) {
 }
 
 async function savePlace() {
-  if (!isConfigured()) {
-    toast('Add your Supabase URL + anon key in public/places/app.js first.');
-    return;
-  }
+  if (!requireSupabase()) return;
 
   const label = els.labelInput.value.trim();
   const display_name = els.displayInput.value.trim();
@@ -214,13 +228,9 @@ async function savePlace() {
 }
 
 async function loadPlaces() {
-  if (!isConfigured()) {
-    setStatus('Supabase config needed');
-    renderPlaces([]);
-    return;
-  }
+  if (!requireSupabase()) return;
 
-  setStatus('Loading...');
+  setStatus('Loading...', true);
   const { data, error } = await sb
     .from('places')
     .select('id,label,display_name,lat,lng,tags,created_at')
@@ -298,6 +308,7 @@ function zoomToPlace(place) {
 }
 
 async function deletePlace(id) {
+  if (!requireSupabase()) return;
   if (!confirm('Delete this saved place?')) return;
   const { error } = await sb.from('places').delete().eq('id', id);
   if (error) {
@@ -348,9 +359,6 @@ els.saveBtn.addEventListener('click', savePlace);
 els.clearBtn.addEventListener('click', () => clearForm(true));
 els.filterInput.addEventListener('input', () => renderPlaces(savedPlaces));
 
-if (!isConfigured()) {
-  setStatus('Supabase config needed');
-  els.places.innerHTML = '<div class="hint">Update SUPABASE_URL and SUPABASE_ANON_KEY in <strong>public/places/app.js</strong>, then saved pins will load here.</div>';
-} else {
-  loadPlaces();
-}
+window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 150));
+
+initSupabase();
