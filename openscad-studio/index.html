@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>OpenSCAD Studio</title>
+
+  <!-- CodeMirror CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/material-darker.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/foldgutter.min.css" />
+
+  <!-- App stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Three.js import map (ES modules) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ═══════════════════════ TOOLBAR ═══════════════════════ -->
+    <header id="toolbar">
+      <div class="toolbar-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+        <span class="brand-name">OpenSCAD Studio</span>
+      </div>
+
+      <!-- File operations -->
+      <div class="toolbar-group">
+        <button id="btn-new" title="New file (Ctrl+N)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>New</span>
+        </button>
+        <button id="btn-open" title="Open .scad or .stl (Ctrl+O)">
+          <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Open</span>
+        </button>
+        <button id="btn-save" title="Save .scad (Ctrl+S)">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span>Save</span>
+        </button>
+        <input type="file" id="file-open-input" accept=".scad,.stl" style="display:none" />
+      </div>
+
+      <!-- Compile / Download -->
+      <div class="toolbar-group">
+        <button id="btn-compile" class="primary" title="Compile to STL (F5 or Ctrl+Enter)">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Compile STL</span>
+        </button>
+        <button id="btn-download" title="Download STL (Ctrl+D)" disabled>
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download STL</span>
+        </button>
+      </div>
+
+      <!-- Templates -->
+      <div class="toolbar-group">
+        <div class="dropdown">
+          <button id="btn-templates" title="Board game component templates">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            <span>Templates ▾</span>
+          </button>
+          <div class="dropdown-menu" id="templates-menu">
+            <div class="dropdown-section">Board Game Components</div>
+            <button class="dropdown-item" data-template="dice-tray">🎲 Dice Tray</button>
+            <button class="dropdown-item" data-template="dice-tower">🏰 Dice Tower</button>
+            <button class="dropdown-item" data-template="deck-box">🃏 Deck Box</button>
+            <button class="dropdown-item" data-template="card-tray">📋 Card Tray</button>
+            <button class="dropdown-item" data-template="token-tray">🪙 Token Tray</button>
+            <button class="dropdown-item" data-template="insert-box">📦 Insert Box</button>
+            <button class="dropdown-item" data-template="card-divider">📑 Card Divider</button>
+            <button class="dropdown-item" data-template="tile-holder">🔲 Tile Holder</button>
+            <div class="dropdown-section">Utility</div>
+            <button class="dropdown-item" data-template="parametric-box">📐 Parametric Box</button>
+            <button class="dropdown-item" data-template="snap-lid">🔒 Snap-Fit Lid</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Viewer controls -->
+      <div class="toolbar-group" id="viewer-toolbar-group">
+        <button id="btn-reset-cam" title="Reset camera (R)">
+          <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          <span>Reset</span>
+        </button>
+        <button id="btn-wireframe" title="Toggle wireframe (W)">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <span>Wireframe</span>
+        </button>
+        <button id="btn-bbox" title="Toggle bounding box (B)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          <span>Bounds</span>
+        </button>
+      </div>
+
+      <!-- Right side: settings / theme -->
+      <div class="toolbar-group ml-auto">
+        <button id="btn-settings" title="API Settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          <span>Settings</span>
+        </button>
+        <button id="btn-theme" title="Toggle dark / light mode">
+          <svg viewBox="0 0 24 24" id="theme-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════ WORKSPACE ═══════════════════════ -->
+    <main id="workspace">
+
+      <!-- Left panel: code editor -->
+      <section id="editor-panel">
+        <div id="editor-header">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span id="file-name">untitled.scad</span>
+          <span id="dirty-indicator" class="hidden" title="Unsaved changes">●</span>
+        </div>
+
+        <div id="editor-container"></div>
+
+        <!-- Compiler error panel -->
+        <div id="error-panel" class="hidden">
+          <div id="error-header">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Compiler Output</span>
+            <button id="btn-close-errors" title="Dismiss">✕</button>
+          </div>
+          <div id="error-list"></div>
+        </div>
+      </section>
+
+      <!-- Drag-to-resize handle -->
+      <div id="panel-resizer" aria-hidden="true"></div>
+
+      <!-- Right panel: 3D viewer -->
+      <section id="viewer-panel">
+        <div id="viewer-header">
+          <span id="viewer-title">3D Preview</span>
+          <div class="viewer-toggles">
+            <label class="toggle-label">
+              <input type="checkbox" id="chk-grid" checked /> Grid
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="chk-axes" checked /> Axes
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="chk-bbox-chk" /> Bounds
+            </label>
+          </div>
+        </div>
+
+        <div id="viewer-container">
+          <canvas id="viewer-canvas"></canvas>
+
+          <!-- Shown before first compile -->
+          <div id="viewer-empty">
+            <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+            <p>Press <kbd>F5</kbd> or click <strong>Compile STL</strong> to preview</p>
+          </div>
+
+          <!-- Compile-in-progress overlay -->
+          <div id="compile-overlay" class="hidden">
+            <div class="spinner"></div>
+            <span id="compile-status-text">Compiling…</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ═══════════════════════ STATUS BAR ═══════════════════════ -->
+    <footer id="statusbar">
+      <span id="status-dims" title="Model dimensions">—</span>
+      <span class="status-sep">│</span>
+      <span id="status-tris" title="Triangle count">—</span>
+      <span class="status-sep">│</span>
+      <span id="status-time" title="Compile time">—</span>
+      <span class="status-sep">│</span>
+      <span id="status-size" title="STL file size">—</span>
+      <span id="status-msg" class="status-right">Ready — set API URL in Settings before compiling</span>
+    </footer>
+
+  </div><!-- /#app -->
+
+  <!-- ═══════════════════════ SETTINGS MODAL ═══════════════════════ -->
+  <div id="modal-settings" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="modal-settings-title">API Settings</h2>
+        <button class="modal-close" id="btn-settings-close" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label for="api-url-input">Backend URL (Render deployment)</label>
+        <input type="url" id="api-url-input"
+               placeholder="https://your-openscad-api.onrender.com"
+               autocomplete="off" spellcheck="false" />
+        <p class="hint">
+          Deploy the <code>api/</code> folder to Render as a Web Service (Docker runtime).<br>
+          Paste the service URL above — e.g. <code>https://my-app.onrender.com</code>.<br>
+          See <code>README.md</code> for full instructions.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-settings-save" class="primary">Save</button>
+        <button id="btn-settings-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+  <!-- CodeMirror core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
+  <!-- C-like syntax mode (works well for OpenSCAD) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/clike/clike.min.js"></script>
+  <!-- Addons -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/comment/comment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/brace-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/search/search.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/display/autorefresh.min.js"></script>
+
+  <!-- App (ES module — must come after CodeMirror globals) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
