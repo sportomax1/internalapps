@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1020" />
-  <title>Places Map</title>
+  <title>Places — Saved Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQz7r7dDXQ9W1o4xyP5b7/6mQ3uVI3c=" crossorigin="" />
   <style>
     :root {
@@ -38,6 +38,8 @@
     }
 
     aside {
+      grid-column: 1;
+      grid-row: 1;
       background: var(--panel);
       border-right: 1px solid var(--line);
       padding: 18px;
@@ -48,7 +50,13 @@
       z-index: 500;
     }
 
-    main { position: relative; min-width: 0; min-height: 0; }
+    main {
+      grid-column: 2;
+      grid-row: 1;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+    }
     #map { width: 100%; height: 100%; min-height: 320px; background: #111827; }
 
     .topbar {
@@ -74,6 +82,8 @@
       backdrop-filter: blur(12px);
       pointer-events: auto;
     }
+    .chip[data-state="good"] { border-color: rgba(34,197,94,.6); color: #bbf7d0; }
+    .chip[data-state="bad"] { border-color: rgba(239,68,68,.6); color: #fecaca; }
 
     header {
       display: flex;
@@ -130,6 +140,7 @@
     button.good { background: var(--good); color: #04130a; }
     button.bad { background: var(--bad); color: #fff; }
     button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    [hidden] { display: none !important; }
 
     .results, .places { display: grid; gap: 8px; }
     .result, .place {
@@ -139,7 +150,15 @@
       background: rgba(15, 23, 42, 0.7);
       overflow-wrap: anywhere;
     }
-    .result { cursor: pointer; }
+    .result {
+      display: grid;
+      width: 100%;
+      min-height: 0;
+      color: var(--text);
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+    }
     .result:hover, .place:hover { border-color: rgba(56,189,248,.55); }
     .title { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
     .meta { color: var(--muted); font-size: 12px; line-height: 1.35; }
@@ -149,6 +168,19 @@
     .place-actions button { padding: 7px 9px; font-size: 12px; border-radius: 9px; min-height: 34px; }
 
     .hint { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .empty {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      padding: 14px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .auth-card {
+      border-color: rgba(56,189,248,.45);
+      background: linear-gradient(145deg, rgba(14,116,144,.22), var(--panel-2));
+    }
     .toast {
       position: absolute;
       left: 50%;
@@ -212,8 +244,9 @@
   <div class="shell">
     <main>
       <div class="topbar">
+        <button class="chip" id="lockBtn" type="button" hidden>Lock</button>
         <div class="chip">Leaflet + Supabase</div>
-        <div class="chip" id="statusChip">Loading config...</div>
+        <div class="chip" id="statusChip">Starting…</div>
       </div>
       <div id="map"></div>
       <div id="toast" class="toast"></div>
@@ -222,11 +255,20 @@
     <aside>
       <header>
         <div>
-          <h1>📌 Places Map</h1>
-          <div class="sub">Search city, ZIP, address, park, stadium, airport — then save it to Supabase.</div>
+          <h1>📌 Places</h1>
+          <div class="sub">Search anywhere, drop a pin, and keep your map synced securely.</div>
         </div>
         <a class="back" href="/">Home</a>
       </header>
+
+      <section class="card stack auth-card" id="authCard">
+        <div>
+          <label for="passwordInput">App password</label>
+          <input id="passwordInput" type="password" placeholder="Enter the internal apps password" autocomplete="current-password" />
+        </div>
+        <button id="unlockBtn" type="button">Unlock places</button>
+        <div class="hint">Your password is kept only for this browser tab and is checked by the server.</div>
+      </section>
 
       <section class="card stack">
         <div>
@@ -237,6 +279,7 @@
           <button id="searchBtn">Search</button>
           <button id="useMapBtn" class="secondary">Use map click</button>
           <button id="loadBtn" class="secondary">Refresh saved</button>
+          <button id="fitBtn" class="secondary">Frame all pins</button>
         </div>
         <div class="hint">Tip: click a search result or click the map to stage a pin before saving.</div>
         <div id="results" class="results"></div>
@@ -288,7 +331,6 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

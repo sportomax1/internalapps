@@ -14,6 +14,25 @@ The app shows bedtime, wake time, total sleep, and sleep score trends with summa
 
 The older `public/oura.html` explorer is still present and was not replaced.
 
+## Places
+
+`/places/` is a password-protected Leaflet map backed by Supabase. Its browser
+code talks only to `/api/places`; the Supabase server key never reaches the
+client.
+
+Required Vercel variables:
+
+```txt
+APP_PASSWORD=
+SUPABASE_URL=
+SUPABASE_SECRET_KEY=
+```
+
+Apply `supabase/migrations/20260629214440_places_secure_table.sql` to the linked
+Supabase project before deploying. The migration preserves the existing
+`places` table, enables RLS, removes public CRUD policies, and grants access only
+to the server-side service role.
+
 ## Add `OURA_KEY`
 
 Create a personal access token in the Oura Cloud developer portal, then add it to Vercel as an environment variable:
