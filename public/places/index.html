@@ -123,6 +123,29 @@
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .stack { display: grid; gap: 10px; }
     .buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    details.card { padding: 0; }
+    details.card > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 14px;
+      font-weight: 800;
+      touch-action: manipulation;
+    }
+    details.card > summary::-webkit-details-marker { display: none; }
+    details.card > summary::after { content: "+"; float: right; color: var(--primary); }
+    details.card[open] > summary::after { content: "−"; }
+    .details-body { display: grid; gap: 10px; padding: 0 14px 14px; }
+    .batch-input { min-height: 132px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+    .batch-preview {
+      min-height: 40px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: rgba(2,6,23,.45);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    input[type="file"] { padding: 8px; font-size: 13px; }
     button {
       border: 0;
       border-radius: 12px;
@@ -164,6 +187,36 @@
     .meta { color: var(--muted); font-size: 12px; line-height: 1.35; }
     .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
     .tag { font-size: 11px; border-radius: 999px; padding: 4px 7px; background: rgba(56,189,248,.15); color: #bae6fd; border: 1px solid rgba(56,189,248,.22); }
+    button.tag {
+      min-height: 30px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .tag-filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tag-toggle {
+      min-height: 36px;
+      padding: 7px 10px;
+      border: 1px solid rgba(56,189,248,.25);
+      background: rgba(56,189,248,.1);
+      color: #bae6fd;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+    .tag-toggle[aria-pressed="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #06121f;
+    }
+    .filter-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .filter-heading label { margin: 0; }
+    .text-button {
+      min-height: 32px;
+      padding: 5px 8px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+    }
     .place-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
     .place-actions button { padding: 7px 9px; font-size: 12px; border-radius: 9px; min-height: 34px; }
 
@@ -220,8 +273,8 @@
       }
       main {
         order: 1;
-        height: 58dvh;
-        min-height: 360px;
+        height: 48dvh;
+        min-height: 300px;
         position: sticky;
         top: 0;
         z-index: 1;
@@ -234,9 +287,16 @@
       h1 { font-size: 22px; }
       header { align-items: flex-start; }
       .row { grid-template-columns: 1fr; }
-      .buttons button { flex: 1 1 140px; }
-      main { height: 52dvh; min-height: 310px; }
+      .buttons { display: grid; grid-template-columns: 1fr 1fr; }
+      .buttons button { width: 100%; min-height: 48px; }
+      .place-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+      .place-actions button { min-height: 44px; }
+      main { height: 42dvh; min-height: 260px; }
       .card { border-radius: 16px; padding: 12px; }
+      details.card { padding: 0; }
+      .topbar { left: 8px; right: 8px; max-width: none; justify-content: flex-end; }
+      .topbar .chip { padding: 7px 9px; }
+      .toast { bottom: calc(12px + var(--safe-bottom)); border-radius: 14px; }
     }
   </style>
 </head>
@@ -286,6 +346,23 @@
         <div id="results" class="results"></div>
       </section>
 
+      <details class="card" id="batchCard">
+        <summary>Batch add or import</summary>
+        <div class="details-body">
+          <div class="hint">Paste CSV with headers <strong>label, display_name, lat, lng, tags</strong>, a JSON array, or pipe-separated rows. Tags may be comma- or semicolon-separated.</div>
+          <textarea id="batchInput" class="batch-input" placeholder="label,display_name,lat,lng,tags&#10;Denver,Denver CO,39.7392,-104.9903,&quot;city;visited&quot;"></textarea>
+          <div>
+            <label for="batchFileInput">Or choose a CSV, JSON, or TXT file</label>
+            <input id="batchFileInput" type="file" accept=".csv,.json,.txt,text/csv,application/json,text/plain" />
+          </div>
+          <div id="batchPreview" class="batch-preview">Paste rows or choose a file to preview the import.</div>
+          <div class="buttons">
+            <button id="importBtn" class="good" disabled>Import places</button>
+            <button id="clearBatchBtn" class="secondary" type="button">Clear batch</button>
+          </div>
+        </div>
+      </details>
+
       <section class="card stack">
         <div>
           <label for="labelInput">Label</label>
@@ -325,6 +402,14 @@
             <label for="countBox">Saved</label>
             <input id="countBox" readonly value="0" />
           </div>
+        </div>
+        <div id="tagFilterSection" class="stack" hidden>
+          <div class="filter-heading">
+            <label>Show only tags</label>
+            <button id="clearTagsBtn" class="text-button" type="button">Clear tags</button>
+          </div>
+          <div id="tagFilters" class="tag-filters" aria-label="Filter places by tag"></div>
+          <div class="hint">Select one or more tags. Matching ignores capitalization.</div>
         </div>
         <div id="places" class="places"></div>
       </section>

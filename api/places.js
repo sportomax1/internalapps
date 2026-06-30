@@ -77,14 +77,36 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const place = cleanPlace(req.body);
+      const rawPlaces = Array.isArray(req.body?.places) ? req.body.places : [req.body];
+      if (!rawPlaces.length) {
+        return res.status(400).json({ error: 'At least one place is required.' });
+      }
+      if (rawPlaces.length > 200) {
+        return res.status(400).json({ error: 'Batch imports are limited to 200 places.' });
+      }
+
+      let places;
+      try {
+        places = rawPlaces.map((place, index) => {
+          try {
+            return cleanPlace(place);
+          } catch (error) {
+            throw new Error(`Row ${index + 1}: ${error.message}`);
+          }
+        });
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
       const { data, error } = await supabase
         .from('places')
-        .insert(place)
-        .select('id,label,display_name,lat,lng,tags,created_at,updated_at')
-        .single();
+        .insert(places)
+        .select('id,label,display_name,lat,lng,tags,created_at,updated_at');
       if (error) throw error;
-      return res.status(201).json({ place: data });
+      return res.status(201).json({
+        places: data || [],
+        place: data?.[0] || null,
+      });
     }
 
     if (req.method === 'PATCH') {

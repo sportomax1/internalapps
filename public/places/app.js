@@ -25,7 +25,15 @@ const els = {
   tagsInput: document.getElementById('tagsInput'),
   saveBtn: document.getElementById('saveBtn'),
   clearBtn: document.getElementById('clearBtn'),
+  batchInput: document.getElementById('batchInput'),
+  batchFileInput: document.getElementById('batchFileInput'),
+  batchPreview: document.getElementById('batchPreview'),
+  importBtn: document.getElementById('importBtn'),
+  clearBatchBtn: document.getElementById('clearBatchBtn'),
   filterInput: document.getElementById('filterInput'),
+  tagFilterSection: document.getElementById('tagFilterSection'),
+  tagFilters: document.getElementById('tagFilters'),
+  clearTagsBtn: document.getElementById('clearTagsBtn'),
   countBox: document.getElementById('countBox'),
   places: document.getElementById('places'),
   toast: document.getElementById('toast'),
@@ -38,6 +46,8 @@ let savedLayer = null;
 let savedPlaces = [];
 let mapClickMode = false;
 let editingPlaceId = null;
+let parsedBatchPlaces = [];
+let selectedTags = new Set();
 let hasFramedInitialPlaces = false;
 let tileLayer = null;
 let tileErrors = 0;
@@ -131,8 +141,11 @@ function setLocked(locked) {
   els.lockBtn.hidden = locked;
   els.saveBtn.disabled = locked;
   els.loadBtn.disabled = locked;
+  els.importBtn.disabled = locked || !parsedBatchPlaces.length;
   if (locked) {
     setStatus('Locked', 'bad');
+    els.tagFilterSection.hidden = true;
+    els.tagFilters.innerHTML = '';
     els.places.innerHTML = '<div class="empty">Unlock to load your saved places.</div>';
     setTimeout(() => els.passwordInput.focus(), 50);
   }
@@ -145,6 +158,156 @@ function parseTags(raw) {
       .map((tag) => tag.trim().toLowerCase())
       .filter(Boolean)
   )].slice(0, 20);
+}
+
+function parseBatchTags(raw) {
+  if (Array.isArray(raw)) return parseTags(raw.join(','));
+  return [...new Set(
+    String(raw || '')
+      .split(/[;,]/)
+      .map((tag) => tag.trim().toLowerCase())
+      .filter(Boolean)
+  )].slice(0, 20);
+}
+
+function parseDelimitedRow(line, delimiter) {
+  const values = [];
+  let value = '';
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === '"') {
+      if (quoted && line[index + 1] === '"') {
+        value += '"';
+        index += 1;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (character === delimiter && !quoted) {
+      values.push(value.trim());
+      value = '';
+    } else {
+      value += character;
+    }
+  }
+  values.push(value.trim());
+  return values;
+}
+
+function normalizeBatchPlace(value, rowNumber) {
+  const label = String(value.label || value.name || value.title || '').trim();
+  const display_name = String(
+    value.display_name || value.display || value.address || value.location || ''
+  ).trim();
+  const lat = Number(value.lat ?? value.latitude);
+  const lng = Number(value.lng ?? value.lon ?? value.longitude);
+  const tags = parseBatchTags(value.tags);
+  if (!label) throw new Error(`Row ${rowNumber}: label is required.`);
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+    throw new Error(`Row ${rowNumber}: latitude must be between -90 and 90.`);
+  }
+  if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+    throw new Error(`Row ${rowNumber}: longitude must be between -180 and 180.`);
+  }
+  return { label, display_name, lat, lng, tags };
+}
+
+function parseBatchText(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return { places: [], errors: [] };
+
+  try {
+    if (text.startsWith('[')) {
+      const values = JSON.parse(text);
+      if (!Array.isArray(values)) throw new Error('JSON must be an array of places.');
+      return {
+        places: values.map((value, index) => normalizeBatchPlace(value, index + 1)),
+        errors: [],
+      };
+    }
+
+    const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const delimiter = lines[0].includes('\t')
+      ? '\t'
+      : lines[0].includes('|')
+        ? '|'
+        : ',';
+    const rows = lines.map((line) => parseDelimitedRow(line, delimiter));
+    const normalizedHeader = rows[0].map((cell) =>
+      cell.toLowerCase().trim().replace(/\s+/g, '_')
+    );
+    const hasHeader =
+      normalizedHeader.some((cell) => ['lat', 'latitude'].includes(cell)) &&
+      normalizedHeader.some((cell) => ['lng', 'lon', 'longitude'].includes(cell));
+    const dataRows = hasHeader ? rows.slice(1) : rows;
+
+    const places = dataRows.map((row, index) => {
+      if (hasHeader) {
+        const value = Object.fromEntries(normalizedHeader.map((key, cellIndex) => [
+          key,
+          row[cellIndex] ?? '',
+        ]));
+        return normalizeBatchPlace(value, index + 2);
+      }
+      return normalizeBatchPlace({
+        label: row[0],
+        display_name: row[1],
+        lat: row[2],
+        lng: row[3],
+        tags: row.slice(4).join(delimiter === ',' ? ',' : ';'),
+      }, index + 1);
+    });
+    return { places, errors: [] };
+  } catch (error) {
+    return { places: [], errors: [error.message] };
+  }
+}
+
+function previewBatch() {
+  const { places, errors } = parseBatchText(els.batchInput.value);
+  parsedBatchPlaces = places;
+  if (errors.length) {
+    els.batchPreview.textContent = errors[0];
+    els.batchPreview.style.color = '#fecaca';
+  } else if (places.length) {
+    els.batchPreview.textContent = `${places.length} valid ${places.length === 1 ? 'place' : 'places'} ready to import.`;
+    els.batchPreview.style.color = '#bbf7d0';
+  } else {
+    els.batchPreview.textContent = 'Paste rows or choose a file to preview the import.';
+    els.batchPreview.style.color = '';
+  }
+  els.importBtn.disabled = !appPassword || !places.length;
+}
+
+function clearBatch() {
+  els.batchInput.value = '';
+  els.batchFileInput.value = '';
+  parsedBatchPlaces = [];
+  previewBatch();
+}
+
+async function importBatch() {
+  if (!appPassword) return setLocked(true);
+  previewBatch();
+  if (!parsedBatchPlaces.length) return toast('Add at least one valid place to import.');
+  els.importBtn.disabled = true;
+  els.importBtn.textContent = `Importing ${parsedBatchPlaces.length}…`;
+  try {
+    const { places } = await api('', {
+      method: 'POST',
+      body: JSON.stringify({ places: parsedBatchPlaces }),
+    });
+    const importedCount = places?.length || parsedBatchPlaces.length;
+    clearBatch();
+    await loadPlaces();
+    toast(`Imported ${importedCount} ${importedCount === 1 ? 'place' : 'places'}.`);
+  } catch (error) {
+    console.error(error);
+    toast(error.message);
+  } finally {
+    els.importBtn.textContent = 'Import places';
+    els.importBtn.disabled = !appPassword || !parsedBatchPlaces.length;
+  }
 }
 
 function getLabelFromDisplay(displayName) {
@@ -218,6 +381,7 @@ function lock() {
   appPassword = '';
   sessionStorage.removeItem(PASSWORD_KEY);
   savedPlaces = [];
+  selectedTags.clear();
   savedLayer.clearLayers();
   renderPlaces([]);
   setLocked(true);
@@ -362,6 +526,7 @@ async function loadPlaces() {
     savedPlaces = places || [];
     writePlacesCache(savedPlaces);
     setStatus('Connected', 'good');
+    renderTagFilters();
     renderPlaces(savedPlaces);
     renderSavedMarkers(savedPlaces);
     if (savedPlaces.length && !hasFramedInitialPlaces) {
@@ -373,6 +538,7 @@ async function loadPlaces() {
     const cachedPlaces = readPlacesCache();
     if (appPassword && cachedPlaces.length) {
       savedPlaces = cachedPlaces;
+      renderTagFilters();
       renderPlaces(savedPlaces);
       renderSavedMarkers(savedPlaces);
       setStatus(`Cached · ${cachedPlaces.length}`, 'neutral');
@@ -383,12 +549,46 @@ async function loadPlaces() {
   }
 }
 
+function renderTagFilters() {
+  const tagsByKey = new Map();
+  savedPlaces.forEach((place) => {
+    (place.tags || []).forEach((tag) => {
+      const display = String(tag).trim();
+      const key = display.toLowerCase();
+      if (key && !tagsByKey.has(key)) tagsByKey.set(key, display);
+    });
+  });
+  const tags = [...tagsByKey.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  selectedTags = new Set([...selectedTags].filter((tag) => tagsByKey.has(tag)));
+  els.tagFilterSection.hidden = !tags.length;
+  els.clearTagsBtn.hidden = !selectedTags.size;
+  els.tagFilters.innerHTML = tags.map(([key, display]) => `
+    <button
+      type="button"
+      class="tag-toggle"
+      data-filter-tag="${esc(key)}"
+      aria-pressed="${selectedTags.has(key)}"
+    >${esc(display)}</button>
+  `).join('');
+  els.tagFilters.querySelectorAll('[data-filter-tag]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const tag = button.dataset.filterTag;
+      if (selectedTags.has(tag)) selectedTags.delete(tag);
+      else selectedTags.add(tag);
+      renderTagFilters();
+      renderPlaces(savedPlaces);
+    });
+  });
+}
+
 function renderPlaces(rows) {
   const filter = els.filterInput.value.trim().toLowerCase();
   const filtered = rows.filter((place) => {
-    if (!filter) return true;
     const haystack = `${place.label || ''} ${place.display_name || ''} ${(place.tags || []).join(' ')}`.toLowerCase();
-    return haystack.includes(filter);
+    const textMatches = !filter || haystack.includes(filter);
+    const placeTags = new Set((place.tags || []).map((tag) => String(tag).toLowerCase()));
+    const tagsMatch = !selectedTags.size || [...selectedTags].some((tag) => placeTags.has(tag));
+    return textMatches && tagsMatch;
   });
   els.countBox.value = String(filtered.length);
 
@@ -403,7 +603,9 @@ function renderPlaces(rows) {
       <div class="title">${esc(place.label)}</div>
       <div class="meta">${esc(place.display_name || '')}</div>
       <div class="meta">${Number(place.lat).toFixed(5)}, ${Number(place.lng).toFixed(5)}</div>
-      <div class="tags">${(place.tags || []).map((tag) => `<span class="tag">${esc(tag)}</span>`).join('')}</div>
+      <div class="tags">${(place.tags || []).map((tag) => `
+        <button class="tag" type="button" data-place-tag="${esc(String(tag).toLowerCase())}">${esc(tag)}</button>
+      `).join('')}</div>
       <div class="place-actions">
         <button class="secondary" data-action="zoom" data-id="${esc(place.id)}">Zoom</button>
         <button class="secondary" data-action="edit" data-id="${esc(place.id)}">Edit</button>
@@ -419,6 +621,13 @@ function renderPlaces(rows) {
       if (button.dataset.action === 'zoom') zoomToPlace(place);
       if (button.dataset.action === 'edit') stagePlace(place);
       if (button.dataset.action === 'delete') await deletePlace(place.id);
+    });
+  });
+  els.places.querySelectorAll('[data-place-tag]').forEach((button) => {
+    button.addEventListener('click', () => {
+      selectedTags.add(button.dataset.placeTag);
+      renderTagFilters();
+      renderPlaces(savedPlaces);
     });
   });
   renderSavedMarkers(filtered);
@@ -509,9 +718,29 @@ els.fitBtn.addEventListener('click', fitSavedPlaces);
 els.retryMapBtn.addEventListener('click', retryBaseMap);
 els.saveBtn.addEventListener('click', savePlace);
 els.clearBtn.addEventListener('click', () => clearForm(true));
+els.batchInput.addEventListener('input', previewBatch);
+els.batchFileInput.addEventListener('change', async () => {
+  const file = els.batchFileInput.files?.[0];
+  if (!file) return;
+  try {
+    els.batchInput.value = await file.text();
+    previewBatch();
+  } catch (error) {
+    console.error(error);
+    toast('That file could not be read.');
+  }
+});
+els.importBtn.addEventListener('click', importBatch);
+els.clearBatchBtn.addEventListener('click', clearBatch);
 els.filterInput.addEventListener('input', () => renderPlaces(savedPlaces));
+els.clearTagsBtn.addEventListener('click', () => {
+  selectedTags.clear();
+  renderTagFilters();
+  renderPlaces(savedPlaces);
+});
 window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 150));
 
+previewBatch();
 setLocked(!appPassword);
 requestAnimationFrame(() => map.invalidateSize({ animate: false, pan: false }));
 setTimeout(() => map.invalidateSize({ animate: false, pan: false }), 250);
