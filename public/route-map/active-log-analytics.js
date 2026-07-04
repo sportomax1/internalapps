@@ -11,6 +11,49 @@
     "startDateInput", "endDateInput", "clearAllButton",
   ];
 
+  function injectUi() {
+    if (document.getElementById("activeLogAnalytics")) return;
+    const target = document.querySelector(".sidebar .control-card") || document.querySelector(".sidebar");
+    if (!target) return;
+    const card = document.createElement("section");
+    card.className = "control-card active-log-card";
+    card.id = "activeLogAnalytics";
+    card.innerHTML = `
+      <div class="control-card-title">
+        <span><i data-lucide="activity" aria-hidden="true"></i> ACTIVE LOG analytics</span>
+        <button class="text-button" id="activeLogClearButton" type="button" disabled>Clear</button>
+      </div>
+      <div class="coverage-note" id="activeLogStatus">Load GPX files with an ACTIVE LOG track to compare ride time, distance, speed, and segment counts.</div>
+      <div class="active-log-metrics" aria-label="Active log totals">
+        <div><strong id="activeLogSegmentTotal">0</strong><span>Segments</span></div>
+        <div><strong id="activeLogTimeTotal">—</strong><span>Total time</span></div>
+        <div><strong id="activeLogDistanceTotal">—</strong><span>Distance</span></div>
+        <div><strong id="activeLogMaxSpeedTotal">—</strong><span>Max mph</span></div>
+      </div>
+      <details class="analytics-section" open>
+        <summary>By year</summary>
+        <div class="analytics-table-wrap"><table class="analytics-table"><thead><tr><th>Year</th><th>Seg</th><th>Time</th><th>Miles</th><th>Avg</th><th>Max</th></tr></thead><tbody id="analyticsYearBody"></tbody></table></div>
+      </details>
+      <details class="analytics-section">
+        <summary>By month</summary>
+        <div class="analytics-table-wrap"><table class="analytics-table"><thead><tr><th>Month</th><th>Seg</th><th>Time</th><th>Miles</th><th>Avg</th><th>Max</th></tr></thead><tbody id="analyticsMonthBody"></tbody></table></div>
+      </details>
+      <details class="analytics-section">
+        <summary>By week</summary>
+        <div class="analytics-table-wrap"><table class="analytics-table"><thead><tr><th>Week</th><th>Seg</th><th>Time</th><th>Miles</th><th>Avg</th><th>Max</th></tr></thead><tbody id="analyticsWeekBody"></tbody></table></div>
+      </details>
+      <details class="analytics-section">
+        <summary>By day</summary>
+        <div class="analytics-table-wrap"><table class="analytics-table"><thead><tr><th>Date</th><th>Seg</th><th>Time</th><th>Miles</th><th>Avg</th><th>Max</th></tr></thead><tbody id="analyticsDayBody"></tbody></table></div>
+      </details>
+      <details class="analytics-section">
+        <summary>Segment detail</summary>
+        <div class="analytics-table-wrap"><table class="analytics-table segment-table"><thead><tr><th>Start</th><th>Time</th><th>Miles</th><th>Avg</th><th>Max</th><th>Pts</th></tr></thead><tbody id="analyticsSegmentBody"></tbody></table></div>
+      </details>`;
+    target.insertAdjacentElement("afterend", card);
+    lucide?.createIcons?.({ attrs: { width: 16, height: 16, "stroke-width": 2 } });
+  }
+
   function initElements() {
     ids.forEach((id) => { elements[id] = document.getElementById(id); });
   }
@@ -130,12 +173,10 @@
 
     let distanceMiles = 0;
     let maxMph = null;
-    const depths = [];
     for (let index = 1; index < points.length; index += 1) {
       const previous = points[index - 1];
       const current = points[index];
-      const km = haversineKm(previous, current);
-      const miles = km * MILES_PER_KM;
+      const miles = haversineKm(previous, current) * MILES_PER_KM;
       distanceMiles += miles;
       const t1 = timestamp(previous.time);
       const t2 = timestamp(current.time);
@@ -143,43 +184,22 @@
       const mph = hours ? miles / hours : null;
       if (Number.isFinite(mph) && mph <= MAX_REASONABLE_MPH) maxMph = Math.max(maxMph ?? 0, mph);
     }
-    points.forEach((point) => { if (Number.isFinite(point.depth)) depths.push(point.depth); });
     const times = points.map((point) => timestamp(point.time)).filter((value) => value !== null);
     const minTime = Math.min(...times);
     const maxTime = Math.max(...times);
     const durationMs = maxTime - minTime;
     const avgMph = durationMs > 0 ? distanceMiles / (durationMs / 3600000) : null;
-    return {
-      ...segment,
-      points,
-      startTime: minTime,
-      endTime: maxTime,
-      durationMs,
-      distanceMiles,
-      avgMph,
-      maxMph,
-      minDepth: depths.length ? Math.min(...depths) : null,
-      maxDepth: depths.length ? Math.max(...depths) : null,
-      pointCount: points.length,
-    };
+    return { ...segment, points, startTime: minTime, endTime: maxTime, durationMs, distanceMiles, avgMph, maxMph, pointCount: points.length };
   }
 
   function fingerprint(segment) {
     const first = segment.points[0];
     const last = segment.points[segment.points.length - 1];
-    return [
-      segment.startTime,
-      segment.endTime,
-      segment.pointCount,
-      first.lat.toFixed(5), first.lon.toFixed(5),
-      last.lat.toFixed(5), last.lon.toFixed(5),
-    ].join("|");
+    return [segment.startTime, segment.endTime, segment.pointCount, first.lat.toFixed(5), first.lon.toFixed(5), last.lat.toFixed(5), last.lon.toFixed(5)].join("|");
   }
 
   function addToBucket(map, key, segment) {
-    if (!map.has(key)) {
-      map.set(key, { label: key, segments: 0, durationMs: 0, distanceMiles: 0, weightedMphMiles: 0, maxMph: null, points: 0 });
-    }
+    if (!map.has(key)) map.set(key, { label: key, segments: 0, durationMs: 0, distanceMiles: 0, weightedMphMiles: 0, maxMph: null, points: 0 });
     const row = map.get(key);
     row.segments += 1;
     row.durationMs += segment.durationMs;
@@ -214,9 +234,7 @@
 
   function renderAnalytics() {
     const deduped = new Map();
-    activeLogSegments.map(summarizeSegment).filter(Boolean).forEach((segment) => {
-      deduped.set(fingerprint(segment), segment);
-    });
+    activeLogSegments.map(summarizeSegment).filter(Boolean).forEach((segment) => { deduped.set(fingerprint(segment), segment); });
     const segments = [...deduped.values()].sort((a, b) => a.startTime - b.startTime);
     const totals = { label: "Total", segments: 0, durationMs: 0, distanceMiles: 0, weightedMphMiles: 0, maxMph: null, points: 0 };
     const buckets = { year: new Map(), month: new Map(), week: new Map(), day: new Map() };
@@ -231,8 +249,8 @@
 
     elements.activeLogSegmentTotal.textContent = totals.segments.toLocaleString();
     elements.activeLogTimeTotal.textContent = formatDuration(totals.durationMs);
-    elements.activeLogDistanceTotal.textContent = Number.isFinite(totals.distanceMiles) && totals.distanceMiles > 0 ? `${totals.distanceMiles.toFixed(1)} mi` : "—";
-    elements.activeLogMaxSpeedTotal.textContent = Number.isFinite(totals.maxMph) && totals.maxMph > 0 ? `${totals.maxMph.toFixed(1)}` : "—";
+    elements.activeLogDistanceTotal.textContent = totals.distanceMiles > 0 ? `${totals.distanceMiles.toFixed(1)} mi` : "—";
+    elements.activeLogMaxSpeedTotal.textContent = totals.maxMph > 0 ? `${totals.maxMph.toFixed(1)}` : "—";
     elements.activeLogClearButton.disabled = activeLogSegments.length === 0;
     elements.activeLogStatus.textContent = activeLogSegments.length
       ? `${segments.length.toLocaleString()} unique ACTIVE LOG segment${segments.length === 1 ? "" : "s"} shown. Exact duplicate imports are deduped; speeds over ${MAX_REASONABLE_MPH} mph are ignored for max-speed stats.`
@@ -250,11 +268,8 @@
     if (!files.length) return;
     const errors = [];
     for (const file of files) {
-      try {
-        activeLogSegments.push(...parseGpxActiveLog(await file.text(), file.name));
-      } catch (error) {
-        errors.push(error.message || `${file.name}: could not parse ACTIVE LOG data.`);
-      }
+      try { activeLogSegments.push(...parseGpxActiveLog(await file.text(), file.name)); }
+      catch (error) { errors.push(error.message || `${file.name}: could not parse ACTIVE LOG data.`); }
     }
     renderAnalytics();
     if (errors.length) elements.activeLogStatus.textContent = errors.join(" ");
@@ -266,6 +281,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    injectUi();
     initElements();
     renderAnalytics();
     elements.fileInput?.addEventListener("change", () => ingestFiles(elements.fileInput.files));
