@@ -1,0 +1,16 @@
+.active-log-card { display: grid; gap: 9px; }
+.active-log-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.active-log-metrics div { min-width: 0; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: #0f172a; }
+.active-log-metrics strong { display: block; font-size: 16px; }
+.active-log-metrics span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+.analytics-section { border: 1px solid var(--border); border-radius: 10px; background: #111827; overflow: hidden; }
+.analytics-section summary { padding: 8px 10px; color: #dbeafe; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; }
+.analytics-section[open] summary { border-bottom: 1px solid var(--border); color: var(--accent); }
+.analytics-table-wrap { max-height: 220px; overflow: auto; }
+.analytics-table { width: 100%; border-collapse: collapse; font-size: 10px; font-variant-numeric: tabular-nums; }
+.analytics-table th, .analytics-table td { padding: 6px 7px; border-bottom: 1px solid rgb(255 255 255 / 6%); text-align: right; white-space: nowrap; }
+.analytics-table th:first-child, .analytics-table td:first-child { text-align: left; }
+.analytics-table th { background: #020617; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.analytics-table tr:hover td { background: rgb(56 189 248 / 8%); }
+.analytics-empty { color: var(--muted); text-align: center; padding: 12px; }
+.segment-table td:first-child { max-width: 76px; overflow: hidden; text-overflow: ellipsis; }
