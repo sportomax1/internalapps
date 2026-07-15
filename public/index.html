@@ -7,40 +7,56 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-:root{--primary:#007aff;--primary-glow:rgba(0,122,255,.3);--bg:#0a0a0a;--surface:rgba(25,25,25,.8);--border:rgba(255,255,255,.1);--text:#fff;--secondary:#a1a1a1;--gradient:linear-gradient(135deg,#007aff 0%,#5856d6 100%)}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden}.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;filter:blur(100px)}.blob{position:absolute;border-radius:50%;opacity:.15;animation:move 24s infinite alternate}.b1{width:400px;height:400px;background:#007aff;top:-100px;left:-100px}.b2{width:500px;height:500px;background:#5856d6;bottom:-150px;right:-100px;animation-duration:30s}.b3{width:300px;height:300px;background:#ff2d55;top:40%;left:60%;animation-duration:20s}@keyframes move{to{transform:translate(50px,100px) scale(1.1)}}.container{max-width:1200px;width:100%}header{text-align:center;margin-bottom:32px}.logo{width:50px;height:50px;margin:0 auto 12px;background:var(--gradient);border-radius:12px;display:grid;place-items:center;font-size:28px;box-shadow:0 10px 40px var(--primary-glow);border:1px solid rgba(255,255,255,.2)}h1{font-size:2rem;margin-bottom:4px}.subtitle{font-size:.9rem;color:var(--secondary)}.apps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:32px}.app-card{position:relative;background:var(--surface);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;text-decoration:none;color:var(--text);transition:.25s;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;overflow:hidden}.app-card:hover{transform:translateY(-4px) scale(1.04);border-color:rgba(0,122,255,.5);box-shadow:0 12px 24px rgba(0,0,0,.4),0 0 15px var(--primary-glow)}.icon{width:48px;height:48px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;display:grid;place-items:center;font-size:24px;transition:.25s}.app-card:hover .icon{transform:scale(1.12);background:var(--gradient)}.name{font-size:.85rem;font-weight:600;line-height:1.2;min-height:32px;display:grid;place-items:center}footer{text-align:center;color:var(--secondary);font-size:.75rem}@media(max-width:768px){h1{font-size:1.5rem}.apps-grid{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}.icon{width:40px;height:40px;font-size:20px}.name{font-size:.75rem}}
+:root{--primary:#007aff;--primary-glow:rgba(0,122,255,.3);--bg:#0a0a0a;--surface:rgba(25,25,25,.8);--border:rgba(255,255,255,.1);--text:#fff;--secondary:#a1a1a1;--gradient:linear-gradient(135deg,#007aff 0%,#5856d6 100%)}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden}.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;filter:blur(100px)}.blob{position:absolute;border-radius:50%;opacity:.15;animation:move 24s infinite alternate}.b1{width:400px;height:400px;background:#007aff;top:-100px;left:-100px}.b2{width:500px;height:500px;background:#5856d6;bottom:-150px;right:-100px;animation-duration:30s}.b3{width:300px;height:300px;background:#ff2d55;top:40%;left:60%;animation-duration:20s}@keyframes move{to{transform:translate(50px,100px) scale(1.1)}}.container{max-width:1200px;width:100%}header{text-align:center;margin-bottom:22px}.logo{width:50px;height:50px;margin:0 auto 12px;background:var(--gradient);border-radius:12px;display:grid;place-items:center;font-size:28px;box-shadow:0 10px 40px var(--primary-glow);border:1px solid rgba(255,255,255,.2)}h1{font-size:2rem;margin-bottom:4px}.subtitle{font-size:.9rem;color:var(--secondary)}.search-wrap{position:relative;max-width:560px;margin:0 auto 22px}.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);pointer-events:none}.search{width:100%;padding:13px 44px 13px 44px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(25,25,25,.88);backdrop-filter:blur(20px);color:var(--text);font:inherit;outline:none;box-shadow:0 8px 30px rgba(0,0,0,.22)}.search:focus{border-color:rgba(0,122,255,.8);box-shadow:0 0 0 3px rgba(0,122,255,.15)}.clear-search{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:9px;background:transparent;color:var(--secondary);cursor:pointer;font-size:18px;display:none}.clear-search:hover{background:rgba(255,255,255,.08);color:white}.results-count{text-align:center;color:var(--secondary);font-size:.76rem;margin-top:8px;min-height:16px}.apps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}.app-card{position:relative;background:var(--surface);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;text-decoration:none;color:var(--text);transition:.25s;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;overflow:hidden}.app-card:hover{transform:translateY(-4px) scale(1.04);border-color:rgba(0,122,255,.5);box-shadow:0 12px 24px rgba(0,0,0,.4),0 0 15px var(--primary-glow)}.app-card.hidden{display:none}.icon{width:48px;height:48px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;display:grid;place-items:center;font-size:24px;transition:.25s}.app-card:hover .icon{transform:scale(1.12);background:var(--gradient)}.name{font-size:.85rem;font-weight:600;line-height:1.2;min-height:32px;display:grid;place-items:center}.empty{display:none;text-align:center;padding:34px;color:var(--secondary);border:1px dashed var(--border);border-radius:16px;margin-bottom:24px}.empty.visible{display:block}footer{text-align:center;color:var(--secondary);font-size:.75rem}@media(max-width:768px){h1{font-size:1.5rem}.apps-grid{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}.icon{width:40px;height:40px;font-size:20px}.name{font-size:.75rem}}
 </style>
 </head>
 <body>
 <div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 <div class="container">
 <header><div class="logo">🔐</div><h1>Internal Apps</h1><p class="subtitle">Quick access to your tools.</p></header>
-<div class="apps-grid">
-<a href="/webnest/" class="app-card"><div class="icon">🌐</div><div class="name">WebNest Browser</div></a>
-<a href="/tools/html-runner.html" class="app-card"><div class="icon">▶️</div><div class="name">HTML App Runner</div></a>
-<a href="/k2-map-builder/" class="app-card"><div class="icon">🗺️</div><div class="name">K2 Map Builder</div></a>
-<a href="/map-pins.html" class="app-card"><div class="icon">📌</div><div class="name">Map Pins</div></a>
-<a href="/places/" class="app-card"><div class="icon">🌎</div><div class="name">Places Map</div></a>
-<a href="/route-map/" class="app-card"><div class="icon">🧭</div><div class="name">Route Map Viewer</div></a>
-<a href="/tracking/" class="app-card"><div class="icon">📍</div><div class="name">Activity Tracker</div></a>
-<a href="/fantasy-football.html" class="app-card"><div class="icon">🏈</div><div class="name">Fantasy Football</div></a>
-<a href="/party/" class="app-card"><div class="icon">🎉</div><div class="name">Party</div></a>
-<a href="/4runner-drive/" class="app-card"><div class="icon">🚙</div><div class="name">4Runner Drive</div></a>
-<a href="/photo-analyzer.html" class="app-card"><div class="icon">🖼️</div><div class="name">Photo Analyzer</div></a>
-<a href="/oura/" class="app-card"><div class="icon">💍</div><div class="name">Oura Explorer</div></a>
-<a href="/oura/trends.html" class="app-card"><div class="icon">📈</div><div class="name">Oura Trends</div></a>
-<a href="/tools/bga-studio-teach.html" class="app-card"><div class="icon">🎲</div><div class="name">BGA Studio Teach</div></a>
-<a href="/mybox.html" class="app-card"><div class="icon">📦</div><div class="name">My Box</div></a>
-<a href="/baby.html" class="app-card"><div class="icon">👶</div><div class="name">Baby</div></a>
-<a href="/tools/font.html" class="app-card"><div class="icon">🔡</div><div class="name">Typography</div></a>
-<a href="/tools/iphone.html" class="app-card"><div class="icon">📱</div><div class="name">iOS Sim</div></a>
-<a href="/tools/swiftui-preview-studio.html" class="app-card"><div class="icon">🧩</div><div class="name">SwiftUI Preview</div></a>
-<a href="/tools/desktop.html" class="app-card"><div class="icon">🖥️</div><div class="name">Desktop Sim</div></a>
-<a href="/tools/screensavers.html" class="app-card"><div class="icon">✨</div><div class="name">Screensavers</div></a>
-<a href="/tools/clock.html" class="app-card"><div class="icon">🕒</div><div class="name">Clock</div></a>
-<a href="/openscad-studio/" class="app-card"><div class="icon">🧊</div><div class="name">OpenSCAD Studio</div></a>
-<a href="/sweet16.html" class="app-card"><div class="icon">🎮</div><div class="name">Sweet 16</div></a>
+<div class="search-wrap"><span class="search-icon">🔎</span><input id="appSearch" class="search" type="search" placeholder="Search apps..." autocomplete="off" aria-label="Search apps"><button id="clearSearch" class="clear-search" type="button" aria-label="Clear search">×</button><div id="resultsCount" class="results-count"></div></div>
+<div id="appsGrid" class="apps-grid">
+<a href="/webnest/" class="app-card" data-keywords="web browser internet nest"><div class="icon">🌐</div><div class="name">WebNest Browser</div></a>
+<a href="/tools/html-runner.html" class="app-card" data-keywords="html app runner preview test code"><div class="icon">▶️</div><div class="name">HTML App Runner</div></a>
+<a href="/tools/image-converter.html" class="app-card" data-keywords="image photo file converter png jpg jpeg webp resize compress"><div class="icon">🔄</div><div class="name">Image Converter</div></a>
+<a href="/k2-map-builder/" class="app-card" data-keywords="map builder k2 geography"><div class="icon">🗺️</div><div class="name">K2 Map Builder</div></a>
+<a href="/map-pins.html" class="app-card" data-keywords="map pins markers locations"><div class="icon">📌</div><div class="name">Map Pins</div></a>
+<a href="/places/" class="app-card" data-keywords="places map travel locations"><div class="icon">🌎</div><div class="name">Places Map</div></a>
+<a href="/route-map/" class="app-card" data-keywords="route map viewer gpx trip"><div class="icon">🧭</div><div class="name">Route Map Viewer</div></a>
+<a href="/tracking/" class="app-card" data-keywords="activity tracker location progress"><div class="icon">📍</div><div class="name">Activity Tracker</div></a>
+<a href="/fantasy-football.html" class="app-card" data-keywords="fantasy football sports nfl"><div class="icon">🏈</div><div class="name">Fantasy Football</div></a>
+<a href="/party/" class="app-card" data-keywords="party games fun group"><div class="icon">🎉</div><div class="name">Party</div></a>
+<a href="/4runner-drive/" class="app-card" data-keywords="4runner drive vehicle toyota"><div class="icon">🚙</div><div class="name">4Runner Drive</div></a>
+<a href="/photo-analyzer.html" class="app-card" data-keywords="photo image analyzer inspect"><div class="icon">🖼️</div><div class="name">Photo Analyzer</div></a>
+<a href="/oura/" class="app-card" data-keywords="oura ring health sleep explorer"><div class="icon">💍</div><div class="name">Oura Explorer</div></a>
+<a href="/oura/trends.html" class="app-card" data-keywords="oura trends chart health sleep"><div class="icon">📈</div><div class="name">Oura Trends</div></a>
+<a href="/tools/bga-studio-teach.html" class="app-card" data-keywords="bga board game arena studio teach"><div class="icon">🎲</div><div class="name">BGA Studio Teach</div></a>
+<a href="/mybox.html" class="app-card" data-keywords="box storage files"><div class="icon">📦</div><div class="name">My Box</div></a>
+<a href="/baby.html" class="app-card" data-keywords="baby pregnancy family"><div class="icon">👶</div><div class="name">Baby</div></a>
+<a href="/tools/font.html" class="app-card" data-keywords="font typography text typeface"><div class="icon">🔡</div><div class="name">Typography</div></a>
+<a href="/tools/iphone.html" class="app-card" data-keywords="iphone ios simulator mobile"><div class="icon">📱</div><div class="name">iOS Sim</div></a>
+<a href="/tools/swiftui-preview-studio.html" class="app-card" data-keywords="swiftui preview ios code studio"><div class="icon">🧩</div><div class="name">SwiftUI Preview</div></a>
+<a href="/tools/desktop.html" class="app-card" data-keywords="desktop simulator computer screen"><div class="icon">🖥️</div><div class="name">Desktop Sim</div></a>
+<a href="/tools/screensavers.html" class="app-card" data-keywords="screensaver animation display"><div class="icon">✨</div><div class="name">Screensavers</div></a>
+<a href="/tools/clock.html" class="app-card" data-keywords="clock time timer"><div class="icon">🕒</div><div class="name">Clock</div></a>
+<a href="/openscad-studio/" class="app-card" data-keywords="openscad 3d model print studio"><div class="icon">🧊</div><div class="name">OpenSCAD Studio</div></a>
+<a href="/sweet16.html" class="app-card" data-keywords="sweet 16 game bracket"><div class="icon">🎮</div><div class="name">Sweet 16</div></a>
 </div>
+<div id="emptyState" class="empty">No apps match that search.</div>
 <footer><p>&copy; 2026 Internal Apps</p></footer>
 </div>
+<script>
+const search=document.getElementById('appSearch');
+const clear=document.getElementById('clearSearch');
+const cards=[...document.querySelectorAll('.app-card')];
+const count=document.getElementById('resultsCount');
+const empty=document.getElementById('emptyState');
+function normalize(value){return value.toLowerCase().trim().replace(/\s+/g,' ')}
+function filterApps(){const query=normalize(search.value);let visible=0;cards.forEach(card=>{const haystack=normalize(`${card.textContent} ${card.dataset.keywords||''}`);const matches=!query||query.split(' ').every(term=>haystack.includes(term));card.classList.toggle('hidden',!matches);if(matches)visible++});clear.style.display=query?'block':'none';count.textContent=query?`${visible} of ${cards.length} apps`:`${cards.length} apps`;empty.classList.toggle('visible',visible===0)}
+search.addEventListener('input',filterApps);
+search.addEventListener('keydown',event=>{if(event.key==='Escape'){search.value='';filterApps();search.blur()}if(event.key==='Enter'){const visible=cards.filter(card=>!card.classList.contains('hidden'));if(visible.length===1)visible[0].click()}});
+clear.addEventListener('click',()=>{search.value='';filterApps();search.focus()});
+filterApps();
+</script>
 </body>
 </html>
