@@ -4,52 +4,118 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1020">
-  <title>HTML App Runner</title>
+  <title>Quick Paste HTML Runner</title>
   <style>
-    :root{color-scheme:dark;--bg:#080b14;--panel:rgba(18,24,43,.94);--panel2:#11182b;--border:rgba(255,255,255,.12);--text:#f8fafc;--muted:#9aa6bd;--accent:#3b82f6;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
-    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif}button,.button{font:inherit;-webkit-tap-highlight-color:transparent}.app{height:100dvh;display:grid;grid-template-rows:auto 1fr;background:radial-gradient(circle at 10% 0%,rgba(59,130,246,.18),transparent 35%),var(--bg)}
-    .toolbar{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:calc(8px + var(--safe-top)) 10px 8px;background:var(--panel);border-bottom:1px solid var(--border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:5}.button,.icon-button{min-height:42px;border:1px solid var(--border);border-radius:12px;color:#fff;background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}.button{padding:0 13px;font-weight:700;white-space:nowrap}.button.primary{background:var(--accent);border-color:transparent}.icon-button{width:42px;padding:0;font-size:19px}.icon-button:disabled{opacity:.42}#fileInput{display:none}.file-info{min-width:0}.filename,.status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.filename{font-weight:650;font-size:14px}.status{margin-top:2px;color:var(--muted);font-size:11px}
-    .stage{min-height:0;position:relative;overflow:hidden;background:#fff}#viewer{display:block;width:100%;height:100%;border:0;background:#fff}.empty{position:absolute;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 25%,rgba(59,130,246,.13),transparent 35%),var(--bg);text-align:center}.empty[hidden]{display:none}.empty-card{width:min(470px,100%);padding:28px 22px;border:1px solid var(--border);border-radius:22px;background:rgba(17,24,43,.84);box-shadow:0 24px 80px rgba(0,0,0,.35)}.empty-icon{font-size:52px}.empty h1{margin:14px 0 8px;font-size:24px}.empty p{margin:0;color:var(--muted);line-height:1.5;font-size:14px}.empty-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}.empty-actions .button{width:100%}
-    .paste-panel{position:fixed;inset:0;z-index:30;display:grid;grid-template-rows:auto 1fr auto;background:var(--bg);padding:calc(10px + var(--safe-top)) 10px calc(10px + var(--safe-bottom));gap:10px}.paste-panel[hidden]{display:none}.paste-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.paste-head h2{margin:0;font-size:20px}.paste-panel textarea{width:100%;height:100%;resize:none;border:1px solid var(--border);border-radius:14px;background:#050812;color:#fff;padding:14px;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;outline:none}.paste-panel textarea:focus{border-color:var(--accent)}.paste-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    :root{color-scheme:dark;--bg:#080b14;--panel:rgba(18,24,43,.96);--panel2:#11182b;--border:rgba(255,255,255,.13);--text:#f8fafc;--muted:#9aa6bd;--accent:#3b82f6;--accent2:#2563eb;--good:#22c55e;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif}button,.button,textarea{font:inherit;-webkit-tap-highlight-color:transparent}.app{height:100dvh;display:grid;grid-template-rows:auto 1fr;background:radial-gradient(circle at 10% 0%,rgba(59,130,246,.18),transparent 35%),var(--bg)}
+    .toolbar{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:calc(8px + var(--safe-top)) 10px 8px;background:var(--panel);border-bottom:1px solid var(--border);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:8}.button,.icon-button{min-height:42px;border:1px solid var(--border);border-radius:12px;color:#fff;background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}.button{padding:0 13px;font-weight:750;white-space:nowrap}.button.primary{background:var(--accent);border-color:transparent}.button.good{background:var(--good);border-color:transparent;color:#07110a}.icon-button{width:42px;padding:0;font-size:18px}.icon-button:disabled,.button:disabled{opacity:.4}#fileInput{display:none}.file-info{min-width:0}.filename,.status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.filename{font-weight:700;font-size:14px}.status{margin-top:2px;color:var(--muted);font-size:11px}
+    .stage{min-height:0;position:relative;overflow:hidden;background:#fff}#viewer{display:block;width:100%;height:100%;border:0;background:#fff}.quick-panel{position:absolute;inset:0;z-index:5;display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(circle at 50% 15%,rgba(59,130,246,.14),transparent 38%),var(--bg);padding:18px 12px calc(12px + var(--safe-bottom));gap:12px}.quick-panel[hidden]{display:none}.quick-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;max-width:900px;width:100%;margin:auto auto 0}.quick-head h1{margin:0;font-size:24px}.quick-head p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.4}.source-wrap{width:min(900px,100%);height:100%;min-height:0;margin:0 auto;position:relative}.source-wrap textarea{width:100%;height:100%;resize:none;border:1px solid var(--border);border-radius:16px;background:#050812;color:#fff;padding:15px 15px 64px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;outline:none;box-shadow:0 20px 70px rgba(0,0,0,.28)}.source-wrap textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.16),0 20px 70px rgba(0,0,0,.28)}.paste-hint{position:absolute;left:14px;right:14px;bottom:12px;padding:10px 12px;border:1px solid var(--border);border-radius:11px;background:rgba(17,24,43,.94);color:var(--muted);font-size:12px;pointer-events:none}.quick-actions{width:min(900px,100%);margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .education{position:fixed;inset:0;z-index:30;display:grid;grid-template-rows:auto 1fr;background:var(--bg);padding:calc(10px + var(--safe-top)) 10px calc(10px + var(--safe-bottom));gap:10px}.education[hidden]{display:none}.education-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.education-head h2{margin:0;font-size:20px}.education-body{overflow:auto;padding:2px 0 20px}.edu-summary{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 12px}.edu-list{display:grid;gap:10px}.edu-card{border:1px solid var(--border);border-radius:14px;background:var(--panel2);padding:13px}.edu-card h3{margin:0 0 6px;font-size:15px}.edu-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}.edu-card code{color:#bfdbfe}.edu-empty{color:var(--muted);padding:24px;text-align:center}
     .notice{position:fixed;left:12px;right:12px;bottom:calc(12px + var(--safe-bottom));z-index:40;padding:12px 14px;border-radius:13px;background:rgba(15,23,42,.97);border:1px solid var(--border);box-shadow:0 12px 32px rgba(0,0,0,.35);font-size:13px;transform:translateY(140%);opacity:0;transition:.22s ease;pointer-events:none}.notice.show{transform:translateY(0);opacity:1}body.focus-mode .toolbar{display:none}body.focus-mode .app{grid-template-rows:1fr}
-    @media(max-width:620px){.toolbar{grid-template-columns:auto auto minmax(0,1fr) auto}.toolbar .clear{display:none}.button{padding:0 11px}.filename{font-size:13px}.empty-actions{grid-template-columns:1fr}}
+    @media(max-width:760px){.toolbar{grid-template-columns:auto auto minmax(0,1fr) auto}.toolbar .education-button,.toolbar .clear-button{display:none}.button{padding:0 11px}.filename{font-size:13px}.quick-panel{padding-top:14px}.quick-head h1{font-size:21px}.quick-actions{grid-template-columns:1fr 1fr}.quick-actions .education-mobile{grid-column:1/-1}}
   </style>
 </head>
 <body>
   <main class="app">
     <header class="toolbar" aria-label="HTML runner controls">
-      <label class="button primary" for="fileInput">Upload</label>
+      <button id="quickButton" class="button primary" type="button">Quick Paste</button>
+      <label class="button" for="fileInput">Upload</label>
       <input id="fileInput" type="file" accept=".html,.htm,text/html">
-      <button id="pasteButton" class="button" type="button">Paste</button>
-      <div class="file-info"><div id="filename" class="filename">No app loaded</div><div id="status" class="status">Upload a file or paste HTML</div></div>
+      <button id="educationButton" class="button education-button" type="button">Explain</button>
+      <div class="file-info"><div id="filename" class="filename">Quick Paste</div><div id="status" class="status">Paste HTML and it runs automatically</div></div>
       <button id="focusButton" class="icon-button" type="button" aria-label="Enter focus mode" title="Focus mode" disabled>⛶</button>
-      <button id="clearButton" class="icon-button clear" type="button" aria-label="Close current app" title="Close" disabled>✕</button>
+      <button id="clearButton" class="icon-button clear-button" type="button" aria-label="Clear current app" title="Clear">✕</button>
     </header>
+
     <section class="stage">
       <iframe id="viewer" title="Loaded HTML app" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-presentation allow-same-origin" allow="camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen" hidden></iframe>
-      <div id="emptyState" class="empty"><div class="empty-card"><div class="empty-icon" aria-hidden="true">📱</div><h1>HTML App Runner</h1><p>Run a self-contained SPA by selecting an HTML file from Files or pasting the complete HTML source.</p><div class="empty-actions"><label class="button primary" for="fileInput">Upload HTML File</label><button id="emptyPasteButton" class="button" type="button">Paste HTML</button></div></div></div>
+
+      <section id="quickPanel" class="quick-panel" aria-label="Quick paste HTML">
+        <div class="quick-head">
+          <div><h1>Paste HTML. It runs instantly.</h1><p>The source remains available so you can return, review, edit, rerun, or explain it.</p></div>
+        </div>
+        <div class="source-wrap">
+          <textarea id="htmlInput" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Paste a complete HTML app here..."></textarea>
+          <div class="paste-hint">On paste, the app renders automatically. Editing does not rerun until you tap Run Updated Code.</div>
+        </div>
+        <div class="quick-actions">
+          <button id="clearSourceButton" class="button" type="button">Clear</button>
+          <button id="explainSourceButton" class="button education-mobile" type="button">Explain Code</button>
+          <button id="runButton" class="button good" type="button">Run Updated Code</button>
+        </div>
+      </section>
     </section>
   </main>
 
-  <section id="pastePanel" class="paste-panel" hidden aria-label="Paste HTML source">
-    <div class="paste-head"><h2>Paste HTML</h2><button id="cancelPasteButton" class="icon-button" type="button" aria-label="Cancel">✕</button></div>
-    <textarea id="htmlInput" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Paste the complete HTML document here..."></textarea>
-    <div class="paste-actions"><button id="clearPasteButton" class="button" type="button">Clear Text</button><button id="runPasteButton" class="button primary" type="button">Run HTML</button></div>
+  <section id="educationPanel" class="education" hidden aria-label="Code education mode">
+    <div class="education-head"><h2>Code Education Mode</h2><button id="closeEducationButton" class="icon-button" type="button" aria-label="Close education mode">✕</button></div>
+    <div class="education-body"><p id="educationSummary" class="edu-summary"></p><div id="educationList" class="edu-list"></div></div>
   </section>
 
   <div id="notice" class="notice" role="status" aria-live="polite"></div>
 
   <script>
     (()=>{"use strict";
-      const $=id=>document.getElementById(id),fileInput=$("fileInput"),viewer=$("viewer"),filename=$("filename"),status=$("status"),emptyState=$("emptyState"),focusButton=$("focusButton"),clearButton=$("clearButton"),pasteButton=$("pasteButton"),emptyPasteButton=$("emptyPasteButton"),pastePanel=$("pastePanel"),htmlInput=$("htmlInput"),runPasteButton=$("runPasteButton"),cancelPasteButton=$("cancelPasteButton"),clearPasteButton=$("clearPasteButton"),notice=$("notice");let noticeTimer=0;
-      function showNotice(message){clearTimeout(noticeTimer);notice.textContent=message;notice.classList.add("show");noticeTimer=setTimeout(()=>notice.classList.remove("show"),2800)}
+      const $=id=>document.getElementById(id);
+      const fileInput=$("fileInput"),viewer=$("viewer"),filename=$("filename"),status=$("status"),focusButton=$("focusButton"),clearButton=$("clearButton"),quickButton=$("quickButton"),educationButton=$("educationButton"),quickPanel=$("quickPanel"),htmlInput=$("htmlInput"),runButton=$("runButton"),clearSourceButton=$("clearSourceButton"),explainSourceButton=$("explainSourceButton"),educationPanel=$("educationPanel"),closeEducationButton=$("closeEducationButton"),educationSummary=$("educationSummary"),educationList=$("educationList"),notice=$("notice");
+      let noticeTimer=0,currentHtml="",currentName="Quick Paste";
+
+      function showNotice(message){clearTimeout(noticeTimer);notice.textContent=message;notice.classList.add("show");noticeTimer=setTimeout(()=>notice.classList.remove("show"),2500)}
       function formatBytes(bytes){if(bytes<1024)return`${bytes} B`;if(bytes<1048576)return`${(bytes/1024).toFixed(1)} KB`;return`${(bytes/1048576).toFixed(1)} MB`}
       function looksLikeHtml(html){return /<html[\s>]|<!doctype\s+html|<body[\s>]|<script[\s>]|<style[\s>]/i.test(html)}
-      function runHtml(html,name,source){if(!html.trim()){showNotice("Paste or select some HTML first.");return}if(!looksLikeHtml(html))showNotice("This may not be a complete HTML app.");viewer.srcdoc=html;viewer.hidden=false;emptyState.hidden=true;filename.textContent=name;status.textContent=source;focusButton.disabled=false;clearButton.disabled=false;document.title=`${name} • HTML Runner`;pastePanel.hidden=true}
-      async function loadFile(file){const name=file.name.toLowerCase();if(!(file.type==="text/html"||name.endsWith(".html")||name.endsWith(".htm"))){showNotice("Please select an .html or .htm file.");fileInput.value="";return}try{runHtml(await file.text(),file.name,`${formatBytes(file.size)} • Loaded from Files`)}catch(error){console.error(error);showNotice("The selected HTML file could not be read.")}}
-      function openPaste(){pastePanel.hidden=false;setTimeout(()=>htmlInput.focus(),0)}
-      function clearApp(){document.body.classList.remove("focus-mode");viewer.srcdoc="";viewer.hidden=true;emptyState.hidden=false;filename.textContent="No app loaded";status.textContent="Upload a file or paste HTML";fileInput.value="";focusButton.disabled=true;clearButton.disabled=true;document.title="HTML App Runner"}
-      fileInput.addEventListener("change",()=>{const file=fileInput.files&&fileInput.files[0];if(file)loadFile(file)});pasteButton.addEventListener("click",openPaste);emptyPasteButton.addEventListener("click",openPaste);cancelPasteButton.addEventListener("click",()=>pastePanel.hidden=true);clearPasteButton.addEventListener("click",()=>{htmlInput.value="";htmlInput.focus()});runPasteButton.addEventListener("click",()=>runHtml(htmlInput.value,"Pasted HTML",`${formatBytes(new Blob([htmlInput.value]).size)} • Pasted source`));focusButton.addEventListener("click",()=>document.body.classList.toggle("focus-mode"));clearButton.addEventListener("click",clearApp);window.addEventListener("keydown",event=>{if(event.key==="Escape"){if(!pastePanel.hidden)pastePanel.hidden=true;else if(document.body.classList.contains("focus-mode"))document.body.classList.remove("focus-mode")}});
+
+      function runHtml(html,name="Pasted HTML",source="Pasted source"){
+        if(!html.trim()){showNotice("Paste or upload some HTML first.");return false}
+        if(!looksLikeHtml(html))showNotice("Rendered, but this may not be a complete HTML document.");
+        currentHtml=html;currentName=name;htmlInput.value=html;viewer.srcdoc=html;viewer.hidden=false;quickPanel.hidden=true;filename.textContent=name;status.textContent=source;focusButton.disabled=false;document.title=`${name} • HTML Runner`;return true
+      }
+
+      function openQuickPaste(){document.body.classList.remove("focus-mode");quickPanel.hidden=false;viewer.hidden=true;filename.textContent=currentHtml?currentName:"Quick Paste";status.textContent=currentHtml?"Review, edit, or paste over the current source":"Paste HTML and it runs automatically";setTimeout(()=>htmlInput.focus(),0)}
+
+      async function loadFile(file){
+        const lower=file.name.toLowerCase();
+        if(!(file.type==="text/html"||lower.endsWith(".html")||lower.endsWith(".htm"))){showNotice("Please select an .html or .htm file.");fileInput.value="";return}
+        try{const html=await file.text();runHtml(html,file.name,`${formatBytes(file.size)} • Loaded from Files`)}catch(error){console.error(error);showNotice("The selected HTML file could not be read.")}
+      }
+
+      function clearAll(){document.body.classList.remove("focus-mode");viewer.srcdoc="";viewer.hidden=true;currentHtml="";currentName="Quick Paste";htmlInput.value="";fileInput.value="";focusButton.disabled=true;filename.textContent="Quick Paste";status.textContent="Paste HTML and it runs automatically";document.title="Quick Paste HTML Runner";quickPanel.hidden=false;setTimeout(()=>htmlInput.focus(),0)}
+
+      function addLesson(title,description,code){const card=document.createElement("article");card.className="edu-card";const h=document.createElement("h3");h.textContent=title;const p=document.createElement("p");p.innerHTML=description+(code?` <code>${code.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code>`:"");card.append(h,p);educationList.appendChild(card)}
+
+      function explainCode(){
+        const html=htmlInput.value||currentHtml;
+        if(!html.trim()){showNotice("Paste or upload HTML before using education mode.");return}
+        educationList.innerHTML="";
+        const parser=new DOMParser(),doc=parser.parseFromString(html,"text/html");
+        const lessons=[];
+        lessons.push(["Document structure","The browser builds the page from the document type, the <code>&lt;head&gt;</code> settings, and the visible <code>&lt;body&gt;</code> content.",doc.doctype?"<!DOCTYPE html>":"No DOCTYPE detected"]);
+        if(doc.querySelector('meta[name="viewport"]'))lessons.push(["Mobile viewport","This tells phones to size the page to the device width instead of pretending the screen is a desktop-sized canvas.",'<meta name="viewport">']);
+        const styles=doc.querySelectorAll("style");if(styles.length)lessons.push(["Embedded CSS",`${styles.length} <code>&lt;style&gt;</code> block${styles.length===1?"":"s"} control layout, spacing, typography, colors, responsiveness, and animation.`,`${styles.length} style block${styles.length===1?"":"s"}`]);
+        const externalStyles=doc.querySelectorAll('link[rel="stylesheet"]');if(externalStyles.length)lessons.push(["External stylesheets",`${externalStyles.length} stylesheet link${externalStyles.length===1?"":"s"} load CSS from another file or website. They require network access unless already cached.`,`${externalStyles.length} linked stylesheet${externalStyles.length===1?"":"s"}`]);
+        const scripts=doc.querySelectorAll("script");if(scripts.length)lessons.push(["JavaScript",`${scripts.length} <code>&lt;script&gt;</code> block${scripts.length===1?"":"s"} add behavior such as button actions, calculations, game logic, storage, drawing, or API calls.`,`${scripts.length} script block${scripts.length===1?"":"s"}`]);
+        const modules=doc.querySelectorAll('script[type="module"]');if(modules.length)lessons.push(["JavaScript modules","Module scripts support <code>import</code> and <code>export</code>. Imports using relative paths may fail when the app is pasted into this runner.",`${modules.length} module script${modules.length===1?"":"s"}`]);
+        const canvases=doc.querySelectorAll("canvas");if(canvases.length)lessons.push(["Canvas graphics",`The app has ${canvases.length} canvas element${canvases.length===1?"":"s"}. JavaScript can draw games, charts, annotations, or animations pixel by pixel inside them.`,"<canvas>"]);
+        const forms=doc.querySelectorAll("form,input,select,textarea,button");if(forms.length)lessons.push(["User controls",`${forms.length} form or control element${forms.length===1?"":"s"} collect input or trigger actions. JavaScript often listens for click, input, change, or submit events on these elements.`,`${forms.length} controls`]);
+        const images=doc.querySelectorAll("img");if(images.length)lessons.push(["Images",`${images.length} image element${images.length===1?"":"s"} appear in the page. Relative image paths may not work when pasted unless the image is embedded as a data URL or hosted online.`,`${images.length} images`]);
+        const storageHits=(html.match(/localStorage|sessionStorage|indexedDB/g)||[]).length;if(storageHits)lessons.push(["Browser storage","The code uses browser storage to remember data. In this runner, stored data belongs to the runner's web origin rather than a separate installed app URL.",`${storageHits} storage reference${storageHits===1?"":"s"}`]);
+        const fetchHits=(html.match(/\bfetch\s*\(|XMLHttpRequest|axios\./g)||[]).length;if(fetchHits)lessons.push(["Network requests","The code appears to request data from another URL. Those requests need internet access and may be blocked by the destination server's CORS rules.",`${fetchHits} request reference${fetchHits===1?"":"s"}`]);
+        const listeners=(html.match(/addEventListener\s*\(/g)||[]).length;if(listeners)lessons.push(["Event listeners",`${listeners} event listener${listeners===1?"":"s"} wait for user actions or browser events, then run a function in response.`,`${listeners} addEventListener call${listeners===1?"":"s"}`]);
+        const animations=(html.match(/@keyframes|animation\s*:/g)||[]).length;if(animations)lessons.push(["CSS animation","The stylesheet defines animation behavior. Keyframes describe the changing states, while animation properties control timing and repetition.",`${animations} animation reference${animations===1?"":"s"}`]);
+        if(!lessons.length)educationList.innerHTML='<div class="edu-empty">No recognizable HTML blocks were found.</div>';else lessons.forEach(item=>addLesson(...item));
+        educationSummary.textContent=`Local pattern-based explanation of ${formatBytes(new Blob([html]).size)} of source. It does not use AI and may describe common structures rather than the app's exact intent.`;
+        educationPanel.hidden=false
+      }
+
+      fileInput.addEventListener("change",()=>{const file=fileInput.files&&fileInput.files[0];if(file)loadFile(file)});
+      quickButton.addEventListener("click",openQuickPaste);
+      runButton.addEventListener("click",()=>runHtml(htmlInput.value,"Pasted HTML",`${formatBytes(new Blob([htmlInput.value]).size)} • Updated source`));
+      clearSourceButton.addEventListener("click",()=>{htmlInput.value="";htmlInput.focus()});
+      clearButton.addEventListener("click",clearAll);
+      educationButton.addEventListener("click",explainCode);explainSourceButton.addEventListener("click",explainCode);closeEducationButton.addEventListener("click",()=>educationPanel.hidden=true);
+      focusButton.addEventListener("click",()=>document.body.classList.toggle("focus-mode"));
+      htmlInput.addEventListener("paste",()=>setTimeout(()=>{if(htmlInput.value.trim())runHtml(htmlInput.value,"Pasted HTML",`${formatBytes(new Blob([htmlInput.value]).size)} • Auto-ran after paste`)},0));
+      window.addEventListener("keydown",event=>{if(event.key==="Escape"){if(!educationPanel.hidden)educationPanel.hidden=true;else if(document.body.classList.contains("focus-mode"))document.body.classList.remove("focus-mode");else if(quickPanel.hidden)openQuickPaste()}});
+      setTimeout(()=>htmlInput.focus(),100);
     })();
   </script>
 </body>
