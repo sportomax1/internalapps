@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Image File Converter</title>
+<style>
+:root{color-scheme:dark;--bg:#09090b;--panel:#18181b;--panel2:#27272a;--border:#3f3f46;--text:#fafafa;--muted:#a1a1aa;--accent:#3b82f6;--danger:#ef4444;--success:#22c55e}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#172554 0,#09090b 40%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:24px}.app{width:min(1050px,100%);margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.back{color:#bfdbfe;text-decoration:none}.back:hover{text-decoration:underline}h1{font-size:clamp(1.7rem,4vw,2.5rem);margin:0}.subtitle{color:var(--muted);margin:6px 0 0}.panel{background:rgba(24,24,27,.9);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}.drop{display:grid;place-items:center;text-align:center;min-height:210px;border:2px dashed #52525b;border-radius:16px;padding:24px;cursor:pointer;transition:.2s;background:rgba(255,255,255,.02)}.drop:hover,.drop.drag{border-color:var(--accent);background:rgba(59,130,246,.08)}.drop strong{font-size:1.15rem}.drop p{color:var(--muted);margin:8px 0}.drop input{display:none}.controls{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:12px;margin:18px 0}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:.78rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.field input,.field select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px}.quality-wrap{display:flex;align-items:center;gap:8px}.quality-wrap input{padding:0}.quality-value{min-width:34px;text-align:right;color:var(--muted)}.actions{display:flex;flex-wrap:wrap;gap:10px}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer;background:var(--accent);color:white}.btn.secondary{background:#3f3f46}.btn.danger{background:var(--danger)}.btn:disabled{opacity:.45;cursor:not-allowed}.status{min-height:24px;color:var(--muted);margin:14px 0 0}.results{display:grid;gap:12px;margin-top:18px}.item{display:grid;grid-template-columns:76px 1fr auto;gap:14px;align-items:center;background:rgba(39,39,42,.7);border:1px solid var(--border);border-radius:14px;padding:12px}.thumb{width:76px;height:64px;object-fit:contain;background:#111;border-radius:8px}.meta{min-width:0}.name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.details{font-size:.82rem;color:var(--muted);margin-top:5px}.download{color:white;background:var(--success);text-decoration:none;border-radius:9px;padding:9px 12px;font-weight:700;white-space:nowrap}.error{color:#fca5a5}.note{font-size:.78rem;color:var(--muted);margin-top:12px}@media(max-width:780px){body{padding:14px}.controls{grid-template-columns:1fr 1fr}.item{grid-template-columns:64px 1fr}.thumb{width:64px}.download{grid-column:1/-1;text-align:center}.topbar{align-items:flex-start;flex-direction:column}}@media(max-width:430px){.controls{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="app">
+<div class="topbar"><div><h1>Image File Converter</h1><p class="subtitle">Convert and resize images locally in your browser. Files are never uploaded.</p></div><a class="back" href="/">← Internal Apps</a></div>
+<section class="panel">
+<label class="drop" id="dropZone"><input id="fileInput" type="file" accept="image/*" multiple><div><div style="font-size:3rem">🖼️</div><strong>Drop images here or click to browse</strong><p>Supports formats your browser can decode, including PNG, JPEG, GIF, BMP, and WebP.</p></div></label>
+<div class="controls">
+<div class="field"><label for="format">Output type</label><select id="format"><option value="image/png">PNG</option><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select></div>
+<div class="field"><label for="quality">Quality</label><div class="quality-wrap"><input id="quality" type="range" min="10" max="100" value="92"><span id="qualityValue" class="quality-value">92</span></div></div>
+<div class="field"><label for="width">Max width</label><input id="width" type="number" min="1" placeholder="Original"></div>
+<div class="field"><label for="height">Max height</label><input id="height" type="number" min="1" placeholder="Original"></div>
+<div class="field"><label for="background">JPEG background</label><input id="background" type="color" value="#ffffff"></div>
+</div>
+<div class="actions"><button class="btn" id="convertBtn" disabled>Convert Images</button><button class="btn secondary" id="downloadAllBtn" disabled>Download All</button><button class="btn danger" id="clearBtn" disabled>Clear</button></div>
+<div id="status" class="status" aria-live="polite"></div>
+<p class="note">Animated images are converted using their first frame. HEIC/HEIF support depends on the browser and is usually unavailable without an extra decoding library.</p>
+<div id="results" class="results"></div>
+</section>
+</main>
+<script>
+const input=document.getElementById('fileInput');
+const drop=document.getElementById('dropZone');
+const format=document.getElementById('format');
+const quality=document.getElementById('quality');
+const qualityValue=document.getElementById('qualityValue');
+const widthInput=document.getElementById('width');
+const heightInput=document.getElementById('height');
+const background=document.getElementById('background');
+const convertBtn=document.getElementById('convertBtn');
+const downloadAllBtn=document.getElementById('downloadAllBtn');
+const clearBtn=document.getElementById('clearBtn');
+const status=document.getElementById('status');
+const results=document.getElementById('results');
+let files=[];
+let outputs=[];
+quality.addEventListener('input',()=>qualityValue.textContent=quality.value);
+format.addEventListener('change',()=>{const lossy=format.value!=='image/png';quality.disabled=!lossy;background.disabled=format.value!=='image/jpeg'});
+input.addEventListener('change',()=>setFiles([...input.files]));
+['dragenter','dragover'].forEach(type=>drop.addEventListener(type,e=>{e.preventDefault();drop.classList.add('drag')}));
+['dragleave','drop'].forEach(type=>drop.addEventListener(type,e=>{e.preventDefault();drop.classList.remove('drag')}));
+drop.addEventListener('drop',e=>setFiles([...e.dataTransfer.files]));
+convertBtn.addEventListener('click',convertAll);
+downloadAllBtn.addEventListener('click',downloadAll);
+clearBtn.addEventListener('click',clearAll);
+function setFiles(selected){files=selected.filter(file=>file.type.startsWith('image/')||/\.(png|jpe?g|gif|bmp|webp|heic|heif)$/i.test(file.name));cleanupOutputs();results.innerHTML='';convertBtn.disabled=!files.length;clearBtn.disabled=!files.length;downloadAllBtn.disabled=true;status.textContent=files.length?`${files.length} image${files.length===1?'':'s'} ready to convert.`:'No supported image files selected.'}
+function cleanupOutputs(){outputs.forEach(item=>URL.revokeObjectURL(item.url));outputs=[]}
+function clearAll(){files=[];input.value='';cleanupOutputs();results.innerHTML='';status.textContent='';convertBtn.disabled=true;downloadAllBtn.disabled=true;clearBtn.disabled=true}
+function loadImage(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('This browser could not decode the file.'))};img.src=url})}
+function outputSize(w,h){const maxW=Number(widthInput.value)||Infinity;const maxH=Number(heightInput.value)||Infinity;const scale=Math.min(1,maxW/w,maxH/h);return{w:Math.max(1,Math.round(w*scale)),h:Math.max(1,Math.round(h*scale))}}
+function extension(type){return type==='image/jpeg'?'jpg':type.split('/')[1]}
+function baseName(name){return name.replace(/\.[^.]+$/,'')||'converted-image'}
+function canvasBlob(canvas,type,q){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Conversion failed.')),type,q))}
+async function convertOne(file){const img=await loadImage(file);const size=outputSize(img.naturalWidth,img.naturalHeight);const canvas=document.createElement('canvas');canvas.width=size.w;canvas.height=size.h;const ctx=canvas.getContext('2d',{alpha:format.value!=='image/jpeg'});if(format.value==='image/jpeg'){ctx.fillStyle=background.value;ctx.fillRect(0,0,size.w,size.h)}ctx.drawImage(img,0,0,size.w,size.h);const blob=await canvasBlob(canvas,format.value,Number(quality.value)/100);const name=`${baseName(file.name)}.${extension(format.value)}`;return{blob,url:URL.createObjectURL(blob),name,width:size.w,height:size.h,original:file.size}}
+async function convertAll(){convertBtn.disabled=true;downloadAllBtn.disabled=true;cleanupOutputs();results.innerHTML='';let succeeded=0;for(let i=0;i<files.length;i++){status.textContent=`Converting ${i+1} of ${files.length}: ${files[i].name}`;try{const item=await convertOne(files[i]);outputs.push(item);renderItem(item);succeeded++}catch(error){renderError(files[i],error)}}status.textContent=`Finished: ${succeeded} of ${files.length} converted.`;convertBtn.disabled=false;downloadAllBtn.disabled=!outputs.length}
+function renderItem(item){const row=document.createElement('article');row.className='item';row.innerHTML=`<img class="thumb" alt="Converted preview"><div class="meta"><div class="name"></div><div class="details"></div></div><a class="download" download>Download</a>`;row.querySelector('img').src=item.url;row.querySelector('.name').textContent=item.name;row.querySelector('.details').textContent=`${item.width} × ${item.height} • ${formatBytes(item.blob.size)} (was ${formatBytes(item.original)})`;const link=row.querySelector('a');link.href=item.url;link.download=item.name;results.appendChild(row)}
+function renderError(file,error){const row=document.createElement('article');row.className='item error';row.innerHTML='<div style="font-size:2rem">⚠️</div><div class="meta"><div class="name"></div><div class="details"></div></div>';row.querySelector('.name').textContent=file.name;row.querySelector('.details').textContent=error.message;results.appendChild(row)}
+async function downloadAll(){for(const item of outputs){const a=document.createElement('a');a.href=item.url;a.download=item.name;document.body.appendChild(a);a.click();a.remove();await new Promise(resolve=>setTimeout(resolve,250))}}
+function formatBytes(bytes){if(bytes<1024)return`${bytes} B`;if(bytes<1048576)return`${(bytes/1024).toFixed(1)} KB`;return`${(bytes/1048576).toFixed(2)} MB`}
+format.dispatchEvent(new Event('change'));
+</script>
+</body>
+</html>
