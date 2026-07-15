@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <title>HTML App Runner</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b14;
+      --panel: rgba(18, 24, 43, 0.92);
+      --panel-2: #11182b;
+      --border: rgba(255,255,255,.12);
+      --text: #f8fafc;
+      --muted: #9aa6bd;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    button, .file-button { font: inherit; -webkit-tap-highlight-color: transparent; }
+
+    .app {
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(59,130,246,.18), transparent 35%),
+        var(--bg);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 8px;
+      padding: calc(8px + var(--safe-top)) 10px 8px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      z-index: 5;
+    }
+
+    .file-button, .icon-button {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: white;
+      background: var(--panel-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .file-button {
+      padding: 0 14px;
+      background: var(--accent);
+      border-color: transparent;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .icon-button {
+      width: 42px;
+      padding: 0;
+      font-size: 19px;
+    }
+
+    .icon-button:disabled { opacity: .42; }
+
+    #fileInput { display: none; }
+
+    .file-info { min-width: 0; }
+
+    .filename {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .stage {
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    #viewer {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: white;
+    }
+
+    .empty {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 50% 25%, rgba(59,130,246,.13), transparent 35%),
+        var(--bg);
+      text-align: center;
+    }
+
+    .empty[hidden] { display: none; }
+
+    .empty-card {
+      width: min(430px, 100%);
+      padding: 28px 22px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: rgba(17,24,43,.82);
+      box-shadow: 0 24px 80px rgba(0,0,0,.35);
+    }
+
+    .empty-icon { font-size: 52px; }
+    .empty h1 { margin: 14px 0 8px; font-size: 24px; }
+    .empty p { margin: 0; color: var(--muted); line-height: 1.5; font-size: 14px; }
+    .empty .file-button { margin-top: 20px; width: 100%; }
+
+    .notice {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + var(--safe-bottom));
+      z-index: 20;
+      padding: 12px 14px;
+      border-radius: 13px;
+      background: rgba(15,23,42,.96);
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 32px rgba(0,0,0,.35);
+      font-size: 13px;
+      transform: translateY(140%);
+      opacity: 0;
+      transition: .22s ease;
+      pointer-events: none;
+    }
+
+    .notice.show { transform: translateY(0); opacity: 1; }
+
+    body.focus-mode .toolbar { display: none; }
+    body.focus-mode .app { grid-template-rows: 1fr; }
+
+    @media (max-width: 520px) {
+      .toolbar { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+      .file-button { padding: 0 12px; }
+      .filename { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="toolbar" aria-label="HTML runner controls">
+      <label class="file-button" for="fileInput">Choose HTML</label>
+      <input id="fileInput" type="file" accept=".html,.htm,text/html">
+
+      <div class="file-info">
+        <div id="filename" class="filename">No file selected</div>
+        <div id="status" class="status">Select a self-contained SPA from Files</div>
+      </div>
+
+      <button id="focusButton" class="icon-button" type="button" aria-label="Enter full screen" title="Full screen" disabled>⛶</button>
+      <button id="clearButton" class="icon-button" type="button" aria-label="Close current app" title="Close" disabled>✕</button>
+    </header>
+
+    <section class="stage">
+      <iframe
+        id="viewer"
+        title="Loaded HTML app"
+        sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-presentation allow-same-origin"
+        allow="camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen"
+        hidden
+      ></iframe>
+
+      <div id="emptyState" class="empty">
+        <div class="empty-card">
+          <div class="empty-icon" aria-hidden="true">📱</div>
+          <h1>HTML App Runner</h1>
+          <p>Choose a single-file HTML app from your iPhone Files app. It will run here without needing Safari to open the local file directly.</p>
+          <label class="file-button" for="fileInput">Choose HTML File</label>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const fileInput = document.getElementById("fileInput");
+      const viewer = document.getElementById("viewer");
+      const filename = document.getElementById("filename");
+      const status = document.getElementById("status");
+      const emptyState = document.getElementById("emptyState");
+      const focusButton = document.getElementById("focusButton");
+      const clearButton = document.getElementById("clearButton");
+      const notice = document.getElementById("notice");
+      let noticeTimer = 0;
+
+      function showNotice(message) {
+        window.clearTimeout(noticeTimer);
+        notice.textContent = message;
+        notice.classList.add("show");
+        noticeTimer = window.setTimeout(() => notice.classList.remove("show"), 2800);
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      }
+
+      function isHtmlFile(file) {
+        const name = file.name.toLowerCase();
+        return file.type === "text/html" || name.endsWith(".html") || name.endsWith(".htm");
+      }
+
+      async function loadFile(file) {
+        if (!isHtmlFile(file)) {
+          showNotice("Please select an .html or .htm file.");
+          fileInput.value = "";
+          return;
+        }
+
+        try {
+          const html = await file.text();
+          if (!/<html[\s>]|<!doctype\s+html/i.test(html)) {
+            showNotice("This file does not appear to contain a complete HTML page.");
+          }
+
+          viewer.srcdoc = html;
+          viewer.hidden = false;
+          emptyState.hidden = true;
+          filename.textContent = file.name;
+          status.textContent = `${formatBytes(file.size)} • Loaded from Files`;
+          focusButton.disabled = false;
+          clearButton.disabled = false;
+          document.title = `${file.name} • HTML Runner`;
+        } catch (error) {
+          console.error(error);
+          showNotice("The selected HTML file could not be read.");
+        }
+      }
+
+      function clearApp() {
+        document.body.classList.remove("focus-mode");
+        viewer.srcdoc = "";
+        viewer.hidden = true;
+        emptyState.hidden = false;
+        filename.textContent = "No file selected";
+        status.textContent = "Select a self-contained SPA from Files";
+        fileInput.value = "";
+        focusButton.disabled = true;
+        clearButton.disabled = true;
+        document.title = "HTML App Runner";
+      }
+
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (file) loadFile(file);
+      });
+
+      focusButton.addEventListener("click", () => {
+        document.body.classList.toggle("focus-mode");
+      });
+
+      clearButton.addEventListener("click", clearApp);
+
+      window.addEventListener("keydown", event => {
+        if (event.key === "Escape" && document.body.classList.contains("focus-mode")) {
+          document.body.classList.remove("focus-mode");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
