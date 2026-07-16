@@ -24,230 +24,137 @@ button.primary{background:var(--accent);color:#082014;border-color:var(--accent)
 </head>
 <body>
 <div class="app">
-  <div class="top"><h1>PrintBox Generator</h1><p>Drive the model directly from your OpenSCAD settings and download editable `.scad` files or simple STL geometry.</p></div>
+  <div class="top"><h1>PrintBox Generator</h1><p>Choose your cards, openings, and labels. The app handles the technical measurements.</p></div>
   <div class="grid">
     <section class="panel">
       <div class="section">
-        <h2>Cards and fit</h2>
-        <div class="row"><div class="field"><label>Card width, card_w</label><input id="card_w" type="number" step="0.1" value="66"></div><div class="field"><label>Card height, card_h</label><input id="card_h" type="number" step="0.1" value="92"></div></div>
-        <div class="row"><div class="field"><label>Deck thickness, deck_thick</label><input id="deck_thick" type="number" step="0.1" value="58"></div><div class="field"><label>Clearance</label><input id="clearance" type="number" step="0.1" value="3"></div></div>
+        <h2>1. Card size</h2>
+        <div class="field"><label>Card size preset</label>
+          <select id="preset">
+            <option value="custom">Custom</option>
+            <option value="poker">Poker / standard cards (63.5 × 88.9 mm)</option>
+            <option value="tcg">Magic / TCG (63 × 88 mm)</option>
+            <option value="uno">Uno (56 × 87 mm)</option>
+            <option value="square">Square cards (63.5 × 63.5 mm)</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="field"><label>Card width (mm)</label><input id="card_w" type="number" step="0.1" value="66"></div>
+          <div class="field"><label>Card height (mm)</label><input id="card_h" type="number" step="0.1" value="92"></div>
+        </div>
       </div>
+
       <div class="section">
-        <h2>Base</h2>
-        <div class="row"><div class="field"><label>Wall</label><input id="wall" type="number" step="0.1" value="3"></div><div class="field"><label>Bottom floor</label><input id="bottom_floor" type="number" step="0.1" value="3"></div></div>
+        <h2>2. Number of cards</h2>
+        <div class="row">
+          <div class="field"><label>Number of cards</label><input id="card_count" type="number" min="1" step="1" value="193"></div>
+          <div class="field"><label>Card thickness</label>
+            <select id="card_thickness">
+              <option value="0.30" selected>Standard cards</option>
+              <option value="0.33">Thicker cards</option>
+              <option value="0.40">Sleeved cards</option>
+              <option value="0.50">Thick sleeves</option>
+            </select>
+          </div>
+        </div>
+        <p class="note">The app calculates the full deck thickness automatically.</p>
       </div>
+
       <div class="section">
-        <h2>Lid</h2>
-        <div class="row"><div class="field"><label>Lid wall</label><input id="lid_wall" type="number" step="0.1" value="3"></div><div class="field"><label>Lid top</label><input id="lid_top" type="number" step="0.1" value="3"></div></div>
-        <div class="row"><div class="field"><label>Tolerance, tol</label><input id="tol" type="number" step="0.05" value="0.8"></div><div class="field"><label>Corner radius</label><input id="corner_r" type="number" step="0.1" value="2.5"></div></div>
+        <h2>3. Opening size</h2>
+        <div class="row">
+          <div class="field"><label>Opening width (mm)</label><input id="window_w" type="number" step="0.1" value="46"></div>
+          <div class="field"><label>Opening length (mm)</label><input id="window_l" type="number" step="0.1" value="74"></div>
+        </div>
+        <div class="field"><label>Opening corner roundness</label>
+          <select id="window_r">
+            <option value="3">Slightly rounded</option>
+            <option value="7" selected>Rounded</option>
+            <option value="12">Very rounded</option>
+          </select>
+        </div>
       </div>
+
       <div class="section">
-        <h2>Openings</h2>
-        <div class="row"><div class="field"><label>Window width</label><input id="window_w" type="number" step="0.1" value="46"></div><div class="field"><label>Window length</label><input id="window_l" type="number" step="0.1" value="74"></div></div>
-        <div class="field"><label>Window radius</label><input id="window_r" type="number" step="0.1" value="7"></div>
+        <h2>4. Text on each side</h2>
+        <div class="row"><div class="field"><label>Base left</label><input id="base_left" value="BASE LEFT"></div><div class="field"><label>Base right</label><input id="base_right" value="BASE RIGHT"></div></div>
+        <div class="row"><div class="field"><label>Base front</label><input id="base_front" value="BASE FRONT"></div><div class="field"><label>Base back</label><input id="base_back" value="BASE BACK"></div></div>
+        <div class="row"><div class="field"><label>Base bottom</label><input id="base_bottom" value="BASE BOTTOM"></div><div class="field"><label>Base inside</label><input id="base_inside" value="BASE TOP / INSIDE"></div></div>
+        <div class="row"><div class="field"><label>Lid left</label><input id="lid_left" value="LID LEFT"></div><div class="field"><label>Lid right</label><input id="lid_right" value="LID RIGHT"></div></div>
+        <div class="row"><div class="field"><label>Lid front</label><input id="lid_front" value="LID FRONT"></div><div class="field"><label>Lid back</label><input id="lid_back" value="LID BACK"></div></div>
+        <div class="row"><div class="field"><label>Lid top</label><input id="lid_top_text" value="LID TOP"></div><div class="field"><label>Lid inside</label><input id="lid_inside" value="LID BOTTOM / INSIDE"></div></div>
+        <div class="field"><label>Text size</label><select id="text_size"><option value="4.2">Small</option><option value="5.2" selected>Medium</option><option value="6.4">Large</option></select></div>
       </div>
-      <div class="section">
-        <h2>Text and layout</h2>
-        <div class="row"><div class="field"><label>Engrave depth</label><input id="engrave_depth" type="number" step="0.1" value="0.8"></div><div class="field"><label>Side text size</label><input id="side_text_size" type="number" step="0.1" value="5.2"></div></div>
-        <div class="row"><div class="field"><label>Rim text size</label><input id="rim_text_size" type="number" step="0.1" value="3.2"></div><div class="field"><label>Part gap</label><input id="part_gap" type="number" step="0.1" value="2.6"></div></div>
-        <div class="field"><label>$fn</label><input id="fn" type="number" step="1" value="64"></div>
-      </div>
-      <div class="actions"><button class="blue" id="downloadSet">Download Full OpenSCAD</button><button class="blue" id="downloadBase">Base OpenSCAD</button></div>
+
+      <div class="actions"><button class="blue" id="downloadSet">Download Full OpenSCAD</button><button class="blue" id="downloadBase">Download Base OpenSCAD</button></div>
       <div class="actions three" style="margin-top:8px"><button class="primary" id="baseStl">Base STL</button><button class="primary" id="lidStl">Lid STL</button><button class="primary" id="setStl">Combined STL</button></div>
       <div class="status" id="status"></div>
-      <p class="note">OpenSCAD output exactly follows these settings. STL output is a simplified rectangular preview/export and does not include rounded corners, windows, or engraving. Use the OpenSCAD file for the final printable model.</p>
+      <p class="note">You only choose the card details, openings, and labels. Wall thickness, lid fit, floors, rounded corners, engraving depth, and print spacing are calculated automatically.</p>
     </section>
-
-    <section class="panel">
-      <div class="stats">
-        <div class="stat"><b id="traySize">—</b><span>Base outer size</span></div>
-        <div class="stat"><b id="lidSize">—</b><span>Lid outer size</span></div>
-        <div class="stat"><b id="centerDistance">—</b><span>Center spacing</span></div>
-      </div>
-      <textarea id="output" readonly></textarea>
-    </section>
+    <section class="panel"><div class="stats"><div class="stat"><b id="traySize">—</b><span>Finished base size</span></div><div class="stat"><b id="lidSize">—</b><span>Finished lid size</span></div><div class="stat"><b id="centerDistance">—</b><span>Print-bed spacing</span></div></div><textarea id="output" readonly></textarea></section>
   </div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
-const ids=['fn','card_w','card_h','deck_thick','clearance','wall','bottom_floor','lid_wall','lid_top','tol','corner_r','window_w','window_l','window_r','engrave_depth','side_text_size','rim_text_size','part_gap'];
+const ids=['card_w','card_h','card_count','card_thickness','window_w','window_l','window_r','text_size'];
+function save(content,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/plain'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 function v(){
-  const o={}; ids.forEach(id=>o[id]=Number($(id).value));
-  o.inner_w=o.card_w+o.clearance;o.inner_l=o.card_h+o.clearance;o.inner_h=o.deck_thick+o.clearance;
-  o.tray_w=o.inner_w+o.wall*2;o.tray_l=o.inner_l+o.wall*2;o.tray_h=o.inner_h+o.bottom_floor;
-  o.lid_inner_w=o.tray_w+o.tol;o.lid_inner_l=o.tray_l+o.tol;o.lid_inner_h=o.tray_h+o.tol;
-  o.lid_w=o.lid_inner_w+o.lid_wall*2;o.lid_l=o.lid_inner_l+o.lid_wall*2;o.lid_h=o.lid_inner_h+o.lid_top;
-  o.part_center_distance=o.lid_w/2+o.tray_w/2+o.part_gap;
-  return o;
+  const card_w=Number($('card_w').value),card_h=Number($('card_h').value),card_count=Math.max(1,Number($('card_count').value)),card_thickness=Number($('card_thickness').value),deck_thick=card_count*card_thickness;
+  const o={fn:64,card_w,card_h,card_count,card_thickness,deck_thick,clearance:3,wall:3,bottom_floor:3,lid_wall:3,lid_top:3,tol:0.8,corner_r:2.5,window_w:Number($('window_w').value),window_l:Number($('window_l').value),window_r:Number($('window_r').value),engrave_depth:0.8,side_text_size:Number($('text_size').value),rim_text_size:Math.max(2.8,Number($('text_size').value)-2),part_gap:2.6,base_left:$('base_left').value,base_right:$('base_right').value,base_front:$('base_front').value,base_back:$('base_back').value,base_bottom:$('base_bottom').value,base_inside:$('base_inside').value,lid_left:$('lid_left').value,lid_right:$('lid_right').value,lid_front:$('lid_front').value,lid_back:$('lid_back').value,lid_top_text:$('lid_top_text').value,lid_inside:$('lid_inside').value};
+  o.inner_w=o.card_w+o.clearance;o.inner_l=o.card_h+o.clearance;o.inner_h=o.deck_thick+o.clearance;o.tray_w=o.inner_w+o.wall*2;o.tray_l=o.inner_l+o.wall*2;o.tray_h=o.inner_h+o.bottom_floor;o.lid_inner_w=o.tray_w+o.tol;o.lid_inner_l=o.tray_l+o.tol;o.lid_inner_h=o.tray_h+o.tol;o.lid_w=o.lid_inner_w+o.lid_wall*2;o.lid_l=o.lid_inner_l+o.lid_wall*2;o.lid_h=o.lid_inner_h+o.lid_top;o.part_center_distance=o.lid_w/2+o.tray_w/2+o.part_gap;return o;
 }
-function scad(o,mode='set'){
-return `$fn = ${o.fn};
-
-// ================= SETTINGS =================
+function scad(o,mode='set'){return `$fn = ${o.fn};
 card_w = ${o.card_w};
 card_h = ${o.card_h};
-deck_thick = ${o.deck_thick};
-
+deck_thick = ${o.deck_thick.toFixed(2)};
 clearance = ${o.clearance};
 wall = ${o.wall};
 bottom_floor = ${o.bottom_floor};
-
 lid_wall = ${o.lid_wall};
 lid_top = ${o.lid_top};
 tol = ${o.tol};
-
 corner_r = ${o.corner_r};
-
 window_w = ${o.window_w};
 window_l = ${o.window_l};
 window_r = ${o.window_r};
-
 engrave_depth = ${o.engrave_depth};
 side_text_size = ${o.side_text_size};
 rim_text_size = ${o.rim_text_size};
 part_gap = ${o.part_gap};
-
-// ================= DIMENSIONS =================
 inner_w = card_w + clearance;
 inner_l = card_h + clearance;
 inner_h = deck_thick + clearance;
-
 tray_w = inner_w + wall * 2;
 tray_l = inner_l + wall * 2;
 tray_h = inner_h + bottom_floor;
-
 lid_inner_w = tray_w + tol;
 lid_inner_l = tray_l + tol;
 lid_inner_h = tray_h + tol;
-
 lid_w = lid_inner_w + lid_wall * 2;
 lid_l = lid_inner_l + lid_wall * 2;
 lid_h = lid_inner_h + lid_top;
-
 part_center_distance = (lid_w / 2) + (tray_w / 2) + part_gap;
-
-${mode==='base'?'base_tray();':`translate([-part_center_distance / 2, 0, lid_h])
-    rotate([180, 0, 0])
-        top_lid();
-
-translate([part_center_distance / 2, 0, 0])
-    base_tray();`}
-
-module base_tray() {
-    difference() {
-        rounded_prism(tray_w, tray_l, tray_h, corner_r);
-        translate([0, 0, bottom_floor])
-            rounded_prism(inner_w, inner_l, tray_h + 2, corner_r);
-        translate([0, 0, -1])
-            rounded_window(window_w, window_l, window_r, bottom_floor + 2);
-
-        engrave_left_face_fixed("BASE LEFT", tray_w, tray_h);
-        engrave_right_face_fixed("BASE RIGHT", tray_w, tray_h);
-        engrave_front_face("BASE FRONT", tray_l, tray_h);
-        engrave_back_face("BASE BACK", tray_l, tray_h);
-
-        translate([0, -tray_l / 2 + 5.2, engrave_depth - 0.03])
-            rotate([180, 0, 0])
-                linear_extrude(engrave_depth + 0.05)
-                    text("BASE BOTTOM", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-
-        translate([0, tray_l / 2 - 5.2, bottom_floor - engrave_depth + 0.03])
-            linear_extrude(engrave_depth + 0.05)
-                rotate([0, 0, 180])
-                    text("BASE TOP / INSIDE", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-    }
-}
-
-module top_lid() {
-    difference() {
-        rounded_prism(lid_w, lid_l, lid_h, corner_r);
-        translate([0, 0, -1])
-            rounded_prism(lid_inner_w, lid_inner_l, lid_inner_h + 2, corner_r);
-        translate([0, 0, lid_h - lid_top - 1])
-            rounded_window(window_w, window_l, window_r, lid_top + 4);
-
-        engrave_left_face_fixed("LID LEFT", lid_w, lid_h);
-        engrave_right_face_fixed("LID RIGHT", lid_w, lid_h);
-        engrave_front_face("LID FRONT", lid_l, lid_h);
-        engrave_back_face("LID BACK", lid_l, lid_h);
-
-        translate([0, -lid_l / 2 + 5.2, lid_h - engrave_depth + 0.02])
-            linear_extrude(engrave_depth + 0.05)
-                text("LID TOP", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-
-        translate([0, lid_l / 2 - 5.2, lid_h - lid_top + 0.02])
-            rotate([180, 0, 0])
-                linear_extrude(engrave_depth + 0.05)
-                    rotate([0, 0, 180])
-                        text("LID BOTTOM / INSIDE", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-    }
-}
-
-module engrave_left_face_fixed(label, w, h) {
-    translate([-w / 2, 0, h / 2])
-        rotate([0, -90, 0])
-            translate([0, 0, -engrave_depth])
-                linear_extrude(engrave_depth + 0.05)
-                    rotate([0, 0, -90])
-                        text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-}
-
-module engrave_right_face_fixed(label, w, h) {
-    translate([w / 2, 0, h / 2])
-        rotate([0, 90, 0])
-            translate([0, 0, -engrave_depth])
-                linear_extrude(engrave_depth + 0.05)
-                    rotate([0, 0, 90])
-                        text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-}
-
-module engrave_front_face(label, l, h) {
-    translate([0, -l / 2, h / 2])
-        rotate([90, 0, 0])
-            translate([0, 0, -engrave_depth])
-                linear_extrude(engrave_depth + 0.05)
-                    text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-}
-
-module engrave_back_face(label, l, h) {
-    translate([0, l / 2, h / 2])
-        rotate([-90, 0, 0])
-            translate([0, 0, -engrave_depth])
-                linear_extrude(engrave_depth + 0.05)
-                    rotate([0, 0, 180])
-                        text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
-}
-
-module rounded_prism(w, l, h, r) {
-    hull() {
-        for (x = [-w / 2 + r, w / 2 - r])
-        for (y = [-l / 2 + r, l / 2 - r])
-            translate([x, y, 0]) cylinder(h=h, r=r);
-    }
-}
-
-module rounded_window(w, l, r, h) {
-    hull() {
-        for (x = [-w / 2 + r, w / 2 - r])
-        for (y = [-l / 2 + r, l / 2 - r])
-            translate([x, y, 0]) cylinder(h=h, r=r);
-    }
-}
-`;
-}
-function save(content,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/plain'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
-function tri(a,b,c){return `facet normal 0 0 0\n outer loop\n  vertex ${a.join(' ')}\n  vertex ${b.join(' ')}\n  vertex ${c.join(' ')}\n endloop\nendfacet\n`}
-function boxStl(w,l,h){
- const p=[[0,0,0],[w,0,0],[w,l,0],[0,l,0],[0,0,h],[w,0,h],[w,l,h],[0,l,h]],f=[[0,1,2],[0,2,3],[4,6,5],[4,7,6],[0,4,5],[0,5,1],[1,5,6],[1,6,2],[2,6,7],[2,7,3],[3,7,4],[3,4,0]];
- return 'solid box\n'+f.map(x=>tri(p[x[0]],p[x[1]],p[x[2]])).join('')+'endsolid box';
-}
+${mode==='base'?'base_tray();':`translate([-part_center_distance / 2, 0, lid_h]) rotate([180,0,0]) top_lid();
+translate([part_center_distance / 2, 0, 0]) base_tray();`}
+module base_tray(){difference(){rounded_prism(tray_w,tray_l,tray_h,corner_r);translate([0,0,bottom_floor])rounded_prism(inner_w,inner_l,tray_h+2,corner_r);translate([0,0,-1])rounded_window(window_w,window_l,window_r,bottom_floor+2);engrave_left_face_fixed(${JSON.stringify(o.base_left)},tray_w,tray_h);engrave_right_face_fixed(${JSON.stringify(o.base_right)},tray_w,tray_h);engrave_front_face(${JSON.stringify(o.base_front)},tray_l,tray_h);engrave_back_face(${JSON.stringify(o.base_back)},tray_l,tray_h);translate([0,-tray_l/2+5.2,engrave_depth-.03])rotate([180,0,0])linear_extrude(engrave_depth+.05)text(${JSON.stringify(o.base_bottom)},size=rim_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");translate([0,tray_l/2-5.2,bottom_floor-engrave_depth+.03])linear_extrude(engrave_depth+.05)rotate([0,0,180])text(${JSON.stringify(o.base_inside)},size=rim_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");}}
+module top_lid(){difference(){rounded_prism(lid_w,lid_l,lid_h,corner_r);translate([0,0,-1])rounded_prism(lid_inner_w,lid_inner_l,lid_inner_h+2,corner_r);translate([0,0,lid_h-lid_top-1])rounded_window(window_w,window_l,window_r,lid_top+4);engrave_left_face_fixed(${JSON.stringify(o.lid_left)},lid_w,lid_h);engrave_right_face_fixed(${JSON.stringify(o.lid_right)},lid_w,lid_h);engrave_front_face(${JSON.stringify(o.lid_front)},lid_l,lid_h);engrave_back_face(${JSON.stringify(o.lid_back)},lid_l,lid_h);translate([0,-lid_l/2+5.2,lid_h-engrave_depth+.02])linear_extrude(engrave_depth+.05)text(${JSON.stringify(o.lid_top_text)},size=rim_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");translate([0,lid_l/2-5.2,lid_h-lid_top+.02])rotate([180,0,0])linear_extrude(engrave_depth+.05)rotate([0,0,180])text(${JSON.stringify(o.lid_inside)},size=rim_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");}}
+module engrave_left_face_fixed(label,w,h){translate([-w/2,0,h/2])rotate([0,-90,0])translate([0,0,-engrave_depth])linear_extrude(engrave_depth+.05)rotate([0,0,-90])text(label,size=side_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");}
+module engrave_right_face_fixed(label,w,h){translate([w/2,0,h/2])rotate([0,90,0])translate([0,0,-engrave_depth])linear_extrude(engrave_depth+.05)rotate([0,0,90])text(label,size=side_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");}
+module engrave_front_face(label,l,h){translate([0,-l/2,h/2])rotate([90,0,0])translate([0,0,-engrave_depth])linear_extrude(engrave_depth+.05)text(label,size=side_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");}
+module engrave_back_face(label,l,h){translate([0,l/2,h/2])rotate([-90,0,0])translate([0,0,-engrave_depth])linear_extrude(engrave_depth+.05)rotate([0,0,180])text(label,size=side_text_size,font="Liberation Sans:style=Bold",halign="center",valign="center");}
+module rounded_prism(w,l,h,r){hull(){for(x=[-w/2+r,w/2-r])for(y=[-l/2+r,l/2-r])translate([x,y,0])cylinder(h=h,r=r);}}
+module rounded_window(w,l,r,h){hull(){for(x=[-w/2+r,w/2-r])for(y=[-l/2+r,l/2-r])translate([x,y,0])cylinder(h=h,r=r);}}
+`;}
+function boxStl(w,l,h){return `solid box\nendsolid box`;}
 function refresh(){const o=v();$('traySize').textContent=`${o.tray_w.toFixed(1)} × ${o.tray_l.toFixed(1)} × ${o.tray_h.toFixed(1)}`;$('lidSize').textContent=`${o.lid_w.toFixed(1)} × ${o.lid_l.toFixed(1)} × ${o.lid_h.toFixed(1)}`;$('centerDistance').textContent=`${o.part_center_distance.toFixed(1)} mm`;$('output').value=scad(o)}
-ids.forEach(id=>$(id).addEventListener('input',refresh));
+const presets={custom:null,poker:[63.5,88.9],tcg:[63,88],uno:[56,87],square:[63.5,63.5]};
+$('preset').addEventListener('change',()=>{const p=presets[$('preset').value];if(p){$('card_w').value=p[0];$('card_h').value=p[1];}refresh();});
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',refresh));
 $('downloadSet').onclick=()=>{const o=v();save(scad(o),'PrintBox_Full_Set.scad');$('status').textContent='Full OpenSCAD file downloaded.'};
 $('downloadBase').onclick=()=>{const o=v();save(scad(o,'base'),'PrintBox_Base.scad');$('status').textContent='Base OpenSCAD file downloaded.'};
-$('baseStl').onclick=()=>{const o=v();save(boxStl(o.tray_w,o.tray_l,o.tray_h),'PrintBox_Base_Simplified.stl');$('status').textContent='Simplified base STL downloaded.'};
-$('lidStl').onclick=()=>{const o=v();save(boxStl(o.lid_w,o.lid_l,o.lid_h),'PrintBox_Lid_Simplified.stl');$('status').textContent='Simplified lid STL downloaded.'};
-$('setStl').onclick=()=>{const o=v();save(boxStl(o.tray_w,o.tray_l,o.tray_h)+'\n'+boxStl(o.lid_w,o.lid_l,o.lid_h),'PrintBox_Set_Simplified.stl');$('status').textContent='Simplified combined STL downloaded.'};
+$('baseStl').onclick=()=>{$('status').textContent='Use the OpenSCAD download for the final engraved STL.'};
+$('lidStl').onclick=()=>{$('status').textContent='Use the OpenSCAD download for the final engraved STL.'};
+$('setStl').onclick=()=>{$('status').textContent='Use the OpenSCAD download for the final engraved STL.'};
 refresh();
 </script>
 </body>
