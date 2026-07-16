@@ -5,55 +5,250 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PrintBox Generator</title>
 <style>
-:root{--bg:#0b1020;--panel:#151c2f;--panel2:#1d2740;--line:#31405f;--text:#f7f9fc;--muted:#9fb0cb;--accent:#5ee0a0;--accent2:#62a8ff}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0b1020,#0d1325);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-.app{max-width:1100px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.title h1{margin:0;font-size:clamp(1.7rem,3vw,2.6rem)}.title p{margin:6px 0 0;color:var(--muted)}
-.grid{display:grid;grid-template-columns:380px 1fr;gap:16px}.panel{background:rgba(21,28,47,.96);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.22)}
-label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:12px}
-input,select,textarea{width:100%;border:1px solid var(--line);background:#0f1628;color:var(--text);border-radius:10px;padding:10px 11px;font:inherit}
-textarea{min-height:380px;resize:vertical;font:12px/1.5 Consolas,monospace}
-.check{display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px}.check input{width:auto}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.actions.three{grid-template-columns:repeat(3,1fr)}
-button{border:0;border-radius:10px;padding:10px 12px;font:inherit;font-weight:700;cursor:pointer;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
-button.primary{background:var(--accent);color:#082014;border-color:var(--accent)}button.blue{background:var(--accent2);color:#07111f;border-color:var(--accent2)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}.stat{padding:12px;background:#10182b;border:1px solid var(--line);border-radius:12px}.stat b{display:block;font-size:18px}.stat span{font-size:11px;color:var(--muted)}
-.tabs{display:flex;gap:8px;margin-bottom:10px}.tabs button.active{background:var(--accent2);color:#07111f;border-color:var(--accent2)}
-.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:12px}.status{margin-top:10px;color:var(--accent);font-size:12px;min-height:18px}
-@media(max-width:820px){.grid{grid-template-columns:1fr}.app{padding:14px}.row{grid-template-columns:1fr 1fr}.actions.three{grid-template-columns:1fr}}
+:root{--bg:#0b1020;--panel:#151c2f;--line:#31405f;--text:#f7f9fc;--muted:#9fb0cb;--accent:#5ee0a0;--blue:#62a8ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0b1020,#0d1325);color:var(--text);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
+.app{max-width:1250px;margin:auto;padding:22px}.top{margin-bottom:16px}.top h1{margin:0;font-size:clamp(1.7rem,3vw,2.5rem)}.top p{margin:6px 0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:430px 1fr;gap:16px}.panel{background:#151c2f;border:1px solid var(--line);border-radius:18px;padding:17px}
+.section{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}.section:last-child{border:0}
+.section h2{font-size:13px;margin:0 0 10px;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field{margin-bottom:10px}label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+input,select,textarea{width:100%;border:1px solid var(--line);background:#0f1628;color:var(--text);border-radius:10px;padding:9px 10px;font:inherit}
+textarea{min-height:560px;resize:vertical;font:12px/1.45 Consolas,monospace}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.actions.three{grid-template-columns:repeat(3,1fr)}
+button{border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;background:#1d2740;color:var(--text);font-weight:700}
+button.primary{background:var(--accent);color:#082014;border-color:var(--accent)}button.blue{background:var(--blue);color:#07111f;border-color:var(--blue)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}.stat{padding:12px;background:#10182b;border:1px solid var(--line);border-radius:12px}.stat b{display:block;font-size:17px}.stat span{font-size:11px;color:var(--muted)}
+.note,.status{font-size:12px;color:var(--muted);line-height:1.45}.status{color:var(--accent);min-height:18px;margin-top:8px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.app{padding:13px}.actions.three{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="top"><div class="title"><h1>PrintBox Generator</h1><p>Create printable card boxes as STL or OpenSCAD.</p></div></div>
+  <div class="top"><h1>PrintBox Generator</h1><p>Drive the model directly from your OpenSCAD settings and download editable `.scad` files or simple STL geometry.</p></div>
   <div class="grid">
     <section class="panel">
-      <div class="field"><label>Preset</label><select id="preset"><option value="uno">Uno</option><option value="flip7">Flip 7</option><option value="poker">Standard Poker</option><option value="mtg">Magic / TCG</option><option value="custom">Custom</option></select></div>
-      <div class="row"><div class="field"><label>Card width (mm)</label><input id="width" type="number" step="0.1" value="56"></div><div class="field"><label>Card height (mm)</label><input id="height" type="number" step="0.1" value="87"></div></div>
-      <div class="row"><div class="field"><label>Card count</label><input id="count" type="number" min="1" value="112"></div><div class="field"><label>Card thickness (mm)</label><input id="thickness" type="number" step="0.01" value="0.30"></div></div>
-      <div class="row"><div class="field"><label>Wall thickness (mm)</label><input id="wall" type="number" step="0.1" value="1.6"></div><div class="field"><label>Lid tolerance (mm)</label><input id="tolerance" type="number" step="0.05" value="0.30"></div></div>
-      <div class="row"><div class="field"><label>Card clearance (mm)</label><input id="clearance" type="number" step="0.1" value="2"></div><div class="field"><label>Lid depth (mm)</label><input id="lidDepth" type="number" step="0.5" value="25"></div></div>
-      <div class="field"><label>Engraving text</label><input id="engrave" type="text" maxlength="24" placeholder="GAME NAME"></div>
-      <label class="check"><input id="fingers" type="checkbox" checked> Add side finger cutouts to lid</label>
-      <div class="actions three"><button class="primary" id="boxStl">Box STL</button><button class="primary" id="lidStl">Lid STL</button><button class="primary" id="setStl">Combined STL</button></div>
-      <div class="actions"><button class="blue" id="boxScad">Box OpenSCAD</button><button class="blue" id="setScad">Full Set OpenSCAD</button></div>
+      <div class="section">
+        <h2>Cards and fit</h2>
+        <div class="row"><div class="field"><label>Card width, card_w</label><input id="card_w" type="number" step="0.1" value="66"></div><div class="field"><label>Card height, card_h</label><input id="card_h" type="number" step="0.1" value="92"></div></div>
+        <div class="row"><div class="field"><label>Deck thickness, deck_thick</label><input id="deck_thick" type="number" step="0.1" value="58"></div><div class="field"><label>Clearance</label><input id="clearance" type="number" step="0.1" value="3"></div></div>
+      </div>
+      <div class="section">
+        <h2>Base</h2>
+        <div class="row"><div class="field"><label>Wall</label><input id="wall" type="number" step="0.1" value="3"></div><div class="field"><label>Bottom floor</label><input id="bottom_floor" type="number" step="0.1" value="3"></div></div>
+      </div>
+      <div class="section">
+        <h2>Lid</h2>
+        <div class="row"><div class="field"><label>Lid wall</label><input id="lid_wall" type="number" step="0.1" value="3"></div><div class="field"><label>Lid top</label><input id="lid_top" type="number" step="0.1" value="3"></div></div>
+        <div class="row"><div class="field"><label>Tolerance, tol</label><input id="tol" type="number" step="0.05" value="0.8"></div><div class="field"><label>Corner radius</label><input id="corner_r" type="number" step="0.1" value="2.5"></div></div>
+      </div>
+      <div class="section">
+        <h2>Openings</h2>
+        <div class="row"><div class="field"><label>Window width</label><input id="window_w" type="number" step="0.1" value="46"></div><div class="field"><label>Window length</label><input id="window_l" type="number" step="0.1" value="74"></div></div>
+        <div class="field"><label>Window radius</label><input id="window_r" type="number" step="0.1" value="7"></div>
+      </div>
+      <div class="section">
+        <h2>Text and layout</h2>
+        <div class="row"><div class="field"><label>Engrave depth</label><input id="engrave_depth" type="number" step="0.1" value="0.8"></div><div class="field"><label>Side text size</label><input id="side_text_size" type="number" step="0.1" value="5.2"></div></div>
+        <div class="row"><div class="field"><label>Rim text size</label><input id="rim_text_size" type="number" step="0.1" value="3.2"></div><div class="field"><label>Part gap</label><input id="part_gap" type="number" step="0.1" value="2.6"></div></div>
+        <div class="field"><label>$fn</label><input id="fn" type="number" step="1" value="64"></div>
+      </div>
+      <div class="actions"><button class="blue" id="downloadSet">Download Full OpenSCAD</button><button class="blue" id="downloadBase">Base OpenSCAD</button></div>
+      <div class="actions three" style="margin-top:8px"><button class="primary" id="baseStl">Base STL</button><button class="primary" id="lidStl">Lid STL</button><button class="primary" id="setStl">Combined STL</button></div>
       <div class="status" id="status"></div>
-      <p class="note">STL output is generated directly in the browser. OpenSCAD output is editable and recommended when you want to adjust text, dimensions, windows, or print orientation later.</p>
+      <p class="note">OpenSCAD output exactly follows these settings. STL output is a simplified rectangular preview/export and does not include rounded corners, windows, or engraving. Use the OpenSCAD file for the final printable model.</p>
     </section>
-    <section class="panel"><div class="stats"><div class="stat"><b id="outerSize">—</b><span>Box outer size</span></div><div class="stat"><b id="stackDepth">—</b><span>Card stack depth</span></div><div class="stat"><b id="lidSize">—</b><span>Lid outer size</span></div></div><div class="tabs"><button id="tabScad" class="active">OpenSCAD Preview</button><button id="tabSummary">Dimensions</button></div><textarea id="output" readonly></textarea></section>
+
+    <section class="panel">
+      <div class="stats">
+        <div class="stat"><b id="traySize">—</b><span>Base outer size</span></div>
+        <div class="stat"><b id="lidSize">—</b><span>Lid outer size</span></div>
+        <div class="stat"><b id="centerDistance">—</b><span>Center spacing</span></div>
+      </div>
+      <textarea id="output" readonly></textarea>
+    </section>
   </div>
 </div>
 <script>
-const PRESETS={uno:{name:"Uno",width:56,height:87,count:112},flip7:{name:"Flip 7",width:56,height:89,count:84},poker:{name:"Standard Poker",width:63.5,height:88.9,count:54},mtg:{name:"Magic TCG",width:63,height:88,count:60},custom:{name:"Custom",width:60,height:90,count:20}};
-const $=id=>document.getElementById(id),fmt=n=>(Number(n)||0).toFixed(4);
-function values(){const width=+$('width').value,height=+$('height').value,count=+$('count').value,thickness=+$('thickness').value,wall=+$('wall').value,tolerance=+$('tolerance').value,clearance=+$('clearance').value,lidDepth=+$('lidDepth').value,stack=count*thickness,innerW=width+clearance,innerH=height+clearance,innerD=stack+clearance,outerW=innerW+wall*2,outerH=innerH+wall*2,outerD=innerD+wall,lidInnerW=outerW+tolerance*2,lidInnerH=outerH+tolerance*2,lidW=lidInnerW+wall*2,lidH=lidInnerH+wall*2;return{width,height,count,thickness,wall,tolerance,clearance,lidDepth,stack,innerW,innerH,innerD,outerW,outerH,outerD,lidInnerW,lidInnerH,lidW,lidH,engrave:$('engrave').value.trim(),fingers:$('fingers').checked,name:PRESETS[$('preset').value].name}}
-function save(content,name,type='text/plain'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
-function scad(v,mode='set'){const txt=JSON.stringify(v.engrave||''),finger=v.fingers?'true':'false';return `$fn = 64;\n\n// Generated by PrintBox Generator\ncard_w = ${v.width};\ncard_h = ${v.height};\ncard_count = ${v.count};\ncard_thickness = ${v.thickness};\nclearance = ${v.clearance};\nwall = ${v.wall};\nlid_tolerance = ${v.tolerance};\nlid_depth = ${v.lidDepth};\nengraving_text = ${txt};\nfinger_cutouts = ${finger};\n\nstack_h = card_count * card_thickness;\ninner_w = card_w + clearance;\ninner_h = card_h + clearance;\ninner_d = stack_h + clearance;\nbox_w = inner_w + wall*2;\nbox_h = inner_h + wall*2;\nbox_d = inner_d + wall;\nlid_inner_w = box_w + lid_tolerance*2;\nlid_inner_h = box_h + lid_tolerance*2;\nlid_w = lid_inner_w + wall*2;\nlid_h = lid_inner_h + wall*2;\n\nmodule box_part() {\n  difference() {\n    cube([box_w, box_h, box_d]);\n    translate([wall, wall, wall]) cube([inner_w, inner_h, box_d]);\n    if (engraving_text != \"\")\n      translate([box_w/2, -0.01, box_d/2]) rotate([90,0,0]) linear_extrude(0.8) text(engraving_text, size=min(10,box_w/8), halign=\"center\", valign=\"center\");\n  }\n}\n\nmodule lid_part() {\n  difference() {\n    cube([lid_w, lid_h, lid_depth]);\n    translate([wall, wall, wall]) cube([lid_inner_w, lid_inner_h, lid_depth]);\n    if (finger_cutouts) {\n      translate([lid_w/2, -1, lid_depth]) rotate([-90,0,0]) cylinder(h=wall+2, r=12);\n      translate([lid_w/2, lid_h-wall-1, lid_depth]) rotate([-90,0,0]) cylinder(h=wall+2, r=12);\n    }\n  }\n}\n\n${mode==='box'?'box_part();':'box_part();\ntranslate([box_w + 15, 0, 0]) lid_part();'}\n`}
-function addTri(f,p1,p2,p3,off={x:0,y:0,z:0}){const v=p=>`${fmt(p[0]+off.x)} ${fmt(p[1]+off.y)} ${fmt(p[2]+off.z)}`;f.push(`facet normal 0 0 0\n outer loop\n  vertex ${v(p1)}\n  vertex ${v(p2)}\n  vertex ${v(p3)}\n endloop\nendfacet`)}
-function addQuad(f,a,b,c,d,off){addTri(f,a,b,c,off);addTri(f,a,c,d,off)}
-function openBoxMesh(w,h,d,wall,off={x:0,y:0,z:0}){const f=[],x0=0,x1=w,y0=0,y1=h,z0=0,z1=d,ix0=wall,ix1=w-wall,iy0=wall,iy1=h-wall,iz=wall;addQuad(f,[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],off);addQuad(f,[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1],off);addQuad(f,[ix1,iy0,iz],[ix0,iy0,iz],[ix0,iy0,z1],[ix1,iy0,z1],off);addQuad(f,[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],off);addQuad(f,[ix1,iy1,iz],[ix1,iy0,iz],[ix1,iy0,z1],[ix1,iy1,z1],off);addQuad(f,[x1,y1,z0],[x0,y1,z0],[x0,y1,z1],[x1,y1,z1],off);addQuad(f,[ix0,iy1,iz],[ix1,iy1,iz],[ix1,iy1,z1],[ix0,iy1,z1],off);addQuad(f,[x0,y1,z0],[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],off);addQuad(f,[ix0,iy0,iz],[ix0,iy1,iz],[ix0,iy1,z1],[ix0,iy0,z1],off);return f.join('\n')}
-function stl(v,mode){const box=`solid PrintBox\n${openBoxMesh(v.outerW,v.outerH,v.outerD,v.wall)}\nendsolid PrintBox`,lid=`solid PrintBoxLid\n${openBoxMesh(v.lidW,v.lidH,v.lidDepth,v.wall)}\nendsolid PrintBoxLid`;if(mode==='box')return box;if(mode==='lid')return lid;return `solid PrintBoxSet\n${openBoxMesh(v.outerW,v.outerH,v.outerD,v.wall)}\n${openBoxMesh(v.lidW,v.lidH,v.lidDepth,v.wall,{x:v.outerW+15,y:0,z:0})}\nendsolid PrintBoxSet`}
-function refresh(summary=false){const v=values();$('outerSize').textContent=`${v.outerW.toFixed(1)} × ${v.outerH.toFixed(1)} × ${v.outerD.toFixed(1)}`;$('stackDepth').textContent=`${v.stack.toFixed(1)} mm`;$('lidSize').textContent=`${v.lidW.toFixed(1)} × ${v.lidH.toFixed(1)} × ${v.lidDepth.toFixed(1)}`;$('output').value=summary?`Preset: ${v.name}\nCards: ${v.count}\nCard size: ${v.width} × ${v.height} mm\nStack depth: ${v.stack.toFixed(2)} mm\nBox interior: ${v.innerW.toFixed(2)} × ${v.innerH.toFixed(2)} × ${v.innerD.toFixed(2)} mm\nBox exterior: ${v.outerW.toFixed(2)} × ${v.outerH.toFixed(2)} × ${v.outerD.toFixed(2)} mm\nLid exterior: ${v.lidW.toFixed(2)} × ${v.lidH.toFixed(2)} × ${v.lidDepth.toFixed(2)} mm\nWall: ${v.wall} mm\nTolerance: ${v.tolerance} mm`:scad(v,'set')}
-$('preset').onchange=()=>{const p=PRESETS[$('preset').value];$('width').value=p.width;$('height').value=p.height;$('count').value=p.count;refresh()};document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>refresh()));$('boxStl').onclick=()=>{const v=values();save(stl(v,'box'),`${v.name}_Box.stl`);$('status').textContent='Box STL downloaded.'};$('lidStl').onclick=()=>{const v=values();save(stl(v,'lid'),`${v.name}_Lid.stl`);$('status').textContent='Lid STL downloaded.'};$('setStl').onclick=()=>{const v=values();save(stl(v,'set'),`${v.name}_Set.stl`);$('status').textContent='Combined STL downloaded.'};$('boxScad').onclick=()=>{const v=values();save(scad(v,'box'),`${v.name}_Box.scad`);$('status').textContent='Box OpenSCAD downloaded.'};$('setScad').onclick=()=>{const v=values();save(scad(v,'set'),`${v.name}_Set.scad`);$('status').textContent='OpenSCAD set downloaded.'};$('tabScad').onclick=()=>{$('tabScad').classList.add('active');$('tabSummary').classList.remove('active');refresh(false)};$('tabSummary').onclick=()=>{$('tabSummary').classList.add('active');$('tabScad').classList.remove('active');refresh(true)};refresh();
+const $=id=>document.getElementById(id);
+const ids=['fn','card_w','card_h','deck_thick','clearance','wall','bottom_floor','lid_wall','lid_top','tol','corner_r','window_w','window_l','window_r','engrave_depth','side_text_size','rim_text_size','part_gap'];
+function v(){
+  const o={}; ids.forEach(id=>o[id]=Number($(id).value));
+  o.inner_w=o.card_w+o.clearance;o.inner_l=o.card_h+o.clearance;o.inner_h=o.deck_thick+o.clearance;
+  o.tray_w=o.inner_w+o.wall*2;o.tray_l=o.inner_l+o.wall*2;o.tray_h=o.inner_h+o.bottom_floor;
+  o.lid_inner_w=o.tray_w+o.tol;o.lid_inner_l=o.tray_l+o.tol;o.lid_inner_h=o.tray_h+o.tol;
+  o.lid_w=o.lid_inner_w+o.lid_wall*2;o.lid_l=o.lid_inner_l+o.lid_wall*2;o.lid_h=o.lid_inner_h+o.lid_top;
+  o.part_center_distance=o.lid_w/2+o.tray_w/2+o.part_gap;
+  return o;
+}
+function scad(o,mode='set'){
+return `$fn = ${o.fn};
+
+// ================= SETTINGS =================
+card_w = ${o.card_w};
+card_h = ${o.card_h};
+deck_thick = ${o.deck_thick};
+
+clearance = ${o.clearance};
+wall = ${o.wall};
+bottom_floor = ${o.bottom_floor};
+
+lid_wall = ${o.lid_wall};
+lid_top = ${o.lid_top};
+tol = ${o.tol};
+
+corner_r = ${o.corner_r};
+
+window_w = ${o.window_w};
+window_l = ${o.window_l};
+window_r = ${o.window_r};
+
+engrave_depth = ${o.engrave_depth};
+side_text_size = ${o.side_text_size};
+rim_text_size = ${o.rim_text_size};
+part_gap = ${o.part_gap};
+
+// ================= DIMENSIONS =================
+inner_w = card_w + clearance;
+inner_l = card_h + clearance;
+inner_h = deck_thick + clearance;
+
+tray_w = inner_w + wall * 2;
+tray_l = inner_l + wall * 2;
+tray_h = inner_h + bottom_floor;
+
+lid_inner_w = tray_w + tol;
+lid_inner_l = tray_l + tol;
+lid_inner_h = tray_h + tol;
+
+lid_w = lid_inner_w + lid_wall * 2;
+lid_l = lid_inner_l + lid_wall * 2;
+lid_h = lid_inner_h + lid_top;
+
+part_center_distance = (lid_w / 2) + (tray_w / 2) + part_gap;
+
+${mode==='base'?'base_tray();':`translate([-part_center_distance / 2, 0, lid_h])
+    rotate([180, 0, 0])
+        top_lid();
+
+translate([part_center_distance / 2, 0, 0])
+    base_tray();`}
+
+module base_tray() {
+    difference() {
+        rounded_prism(tray_w, tray_l, tray_h, corner_r);
+        translate([0, 0, bottom_floor])
+            rounded_prism(inner_w, inner_l, tray_h + 2, corner_r);
+        translate([0, 0, -1])
+            rounded_window(window_w, window_l, window_r, bottom_floor + 2);
+
+        engrave_left_face_fixed("BASE LEFT", tray_w, tray_h);
+        engrave_right_face_fixed("BASE RIGHT", tray_w, tray_h);
+        engrave_front_face("BASE FRONT", tray_l, tray_h);
+        engrave_back_face("BASE BACK", tray_l, tray_h);
+
+        translate([0, -tray_l / 2 + 5.2, engrave_depth - 0.03])
+            rotate([180, 0, 0])
+                linear_extrude(engrave_depth + 0.05)
+                    text("BASE BOTTOM", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+
+        translate([0, tray_l / 2 - 5.2, bottom_floor - engrave_depth + 0.03])
+            linear_extrude(engrave_depth + 0.05)
+                rotate([0, 0, 180])
+                    text("BASE TOP / INSIDE", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+    }
+}
+
+module top_lid() {
+    difference() {
+        rounded_prism(lid_w, lid_l, lid_h, corner_r);
+        translate([0, 0, -1])
+            rounded_prism(lid_inner_w, lid_inner_l, lid_inner_h + 2, corner_r);
+        translate([0, 0, lid_h - lid_top - 1])
+            rounded_window(window_w, window_l, window_r, lid_top + 4);
+
+        engrave_left_face_fixed("LID LEFT", lid_w, lid_h);
+        engrave_right_face_fixed("LID RIGHT", lid_w, lid_h);
+        engrave_front_face("LID FRONT", lid_l, lid_h);
+        engrave_back_face("LID BACK", lid_l, lid_h);
+
+        translate([0, -lid_l / 2 + 5.2, lid_h - engrave_depth + 0.02])
+            linear_extrude(engrave_depth + 0.05)
+                text("LID TOP", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+
+        translate([0, lid_l / 2 - 5.2, lid_h - lid_top + 0.02])
+            rotate([180, 0, 0])
+                linear_extrude(engrave_depth + 0.05)
+                    rotate([0, 0, 180])
+                        text("LID BOTTOM / INSIDE", size=rim_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+    }
+}
+
+module engrave_left_face_fixed(label, w, h) {
+    translate([-w / 2, 0, h / 2])
+        rotate([0, -90, 0])
+            translate([0, 0, -engrave_depth])
+                linear_extrude(engrave_depth + 0.05)
+                    rotate([0, 0, -90])
+                        text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+}
+
+module engrave_right_face_fixed(label, w, h) {
+    translate([w / 2, 0, h / 2])
+        rotate([0, 90, 0])
+            translate([0, 0, -engrave_depth])
+                linear_extrude(engrave_depth + 0.05)
+                    rotate([0, 0, 90])
+                        text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+}
+
+module engrave_front_face(label, l, h) {
+    translate([0, -l / 2, h / 2])
+        rotate([90, 0, 0])
+            translate([0, 0, -engrave_depth])
+                linear_extrude(engrave_depth + 0.05)
+                    text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+}
+
+module engrave_back_face(label, l, h) {
+    translate([0, l / 2, h / 2])
+        rotate([-90, 0, 0])
+            translate([0, 0, -engrave_depth])
+                linear_extrude(engrave_depth + 0.05)
+                    rotate([0, 0, 180])
+                        text(label, size=side_text_size, font="Liberation Sans:style=Bold", halign="center", valign="center");
+}
+
+module rounded_prism(w, l, h, r) {
+    hull() {
+        for (x = [-w / 2 + r, w / 2 - r])
+        for (y = [-l / 2 + r, l / 2 - r])
+            translate([x, y, 0]) cylinder(h=h, r=r);
+    }
+}
+
+module rounded_window(w, l, r, h) {
+    hull() {
+        for (x = [-w / 2 + r, w / 2 - r])
+        for (y = [-l / 2 + r, l / 2 - r])
+            translate([x, y, 0]) cylinder(h=h, r=r);
+    }
+}
+`;
+}
+function save(content,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/plain'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+function tri(a,b,c){return `facet normal 0 0 0\n outer loop\n  vertex ${a.join(' ')}\n  vertex ${b.join(' ')}\n  vertex ${c.join(' ')}\n endloop\nendfacet\n`}
+function boxStl(w,l,h){
+ const p=[[0,0,0],[w,0,0],[w,l,0],[0,l,0],[0,0,h],[w,0,h],[w,l,h],[0,l,h]],f=[[0,1,2],[0,2,3],[4,6,5],[4,7,6],[0,4,5],[0,5,1],[1,5,6],[1,6,2],[2,6,7],[2,7,3],[3,7,4],[3,4,0]];
+ return 'solid box\n'+f.map(x=>tri(p[x[0]],p[x[1]],p[x[2]])).join('')+'endsolid box';
+}
+function refresh(){const o=v();$('traySize').textContent=`${o.tray_w.toFixed(1)} × ${o.tray_l.toFixed(1)} × ${o.tray_h.toFixed(1)}`;$('lidSize').textContent=`${o.lid_w.toFixed(1)} × ${o.lid_l.toFixed(1)} × ${o.lid_h.toFixed(1)}`;$('centerDistance').textContent=`${o.part_center_distance.toFixed(1)} mm`;$('output').value=scad(o)}
+ids.forEach(id=>$(id).addEventListener('input',refresh));
+$('downloadSet').onclick=()=>{const o=v();save(scad(o),'PrintBox_Full_Set.scad');$('status').textContent='Full OpenSCAD file downloaded.'};
+$('downloadBase').onclick=()=>{const o=v();save(scad(o,'base'),'PrintBox_Base.scad');$('status').textContent='Base OpenSCAD file downloaded.'};
+$('baseStl').onclick=()=>{const o=v();save(boxStl(o.tray_w,o.tray_l,o.tray_h),'PrintBox_Base_Simplified.stl');$('status').textContent='Simplified base STL downloaded.'};
+$('lidStl').onclick=()=>{const o=v();save(boxStl(o.lid_w,o.lid_l,o.lid_h),'PrintBox_Lid_Simplified.stl');$('status').textContent='Simplified lid STL downloaded.'};
+$('setStl').onclick=()=>{const o=v();save(boxStl(o.tray_w,o.tray_l,o.tray_h)+'\n'+boxStl(o.lid_w,o.lid_l,o.lid_h),'PrintBox_Set_Simplified.stl');$('status').textContent='Simplified combined STL downloaded.'};
+refresh();
 </script>
 </body>
 </html>
