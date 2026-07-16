@@ -1,0 +1,69 @@
+:root{
+      color-scheme:dark;
+      --bg:#111318;--panel:#191d25;--panel2:#202632;--line:#303846;
+      --text:#f2f5f8;--muted:#9ca8b7;--accent:#64d391;--accent2:#42a5f5;
+      --danger:#ff6b6b;--warning:#f7c65b;--radius:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{overflow:hidden}
+    button,select,input{font:inherit}
+    .app{display:grid;grid-template-rows:58px 1fr 30px;height:100%}
+    header{display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--line);
+      background:#151820;min-width:0}
+    .brand{font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+    .brand span{color:var(--accent)}
+    .toolbar{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0}
+    button,.select{
+      border:1px solid var(--line);background:var(--panel2);color:var(--text);
+      border-radius:9px;padding:8px 11px;cursor:pointer
+    }
+    button:hover,.select:hover{border-color:#4b586b}
+    button.primary{background:var(--accent);border-color:var(--accent);color:#092116;font-weight:800}
+    button.primary:hover{filter:brightness(1.08)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .workspace{display:grid;grid-template-columns:minmax(330px,42%) 7px 1fr;min-height:0}
+    .editor-pane,.preview-pane{min-width:0;min-height:0;background:var(--panel)}
+    .editor-pane{display:grid;grid-template-rows:42px 1fr 118px}
+    .pane-head{display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--line);background:#171b22}
+    .pane-title{font-size:13px;font-weight:750}
+    .hint{margin-left:auto;color:var(--muted);font-size:12px}
+    textarea{
+      width:100%;height:100%;resize:none;border:0;outline:0;padding:16px;
+      background:#11151c;color:#e9edf2;font:13px/1.55 "Cascadia Code","SFMono-Regular",Consolas,monospace;
+      tab-size:2;white-space:pre;overflow:auto
+    }
+    .console{border-top:1px solid var(--line);background:#0e1218;padding:10px 12px;overflow:auto;
+      font:12px/1.45 "Cascadia Code",Consolas,monospace;color:var(--muted)}
+    .console .ok{color:var(--accent)} .console .err{color:var(--danger)}
+    .console .warn{color:var(--warning)}
+    .splitter{background:#0d1015;cursor:col-resize;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+    .splitter:hover{background:var(--accent)}
+    .preview-pane{position:relative;overflow:hidden}
+    #viewport{position:absolute;inset:0}
+    .viewbar{position:absolute;left:12px;top:12px;display:flex;gap:7px;z-index:3;flex-wrap:wrap}
+    .viewbar button{padding:7px 9px;background:rgba(22,27,35,.88);backdrop-filter:blur(8px);font-size:12px}
+    .stats{position:absolute;right:12px;top:12px;z-index:3;padding:8px 10px;border:1px solid var(--line);
+      border-radius:9px;background:rgba(22,27,35,.88);backdrop-filter:blur(8px);font-size:12px;color:var(--muted)}
+    .empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);pointer-events:none;text-align:center}
+    .empty strong{display:block;color:var(--text);font-size:18px;margin-bottom:5px}
+    footer{display:flex;align-items:center;padding:0 10px;border-top:1px solid var(--line);
+      background:#141820;color:var(--muted);font-size:11px;gap:12px}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+    .spacer{flex:1}
+    .mobile-tabs{display:none}
+    @media(max-width:780px){
+      body{overflow:auto}
+      .app{min-height:100%;height:auto;grid-template-rows:58px auto 30px}
+      .toolbar .optional{display:none}
+      .workspace{display:block}
+      .splitter{display:none}
+      .editor-pane,.preview-pane{height:calc(100vh - 88px)}
+      .editor-pane{grid-template-rows:42px 1fr 100px}
+      .preview-pane{display:none}
+      body.preview-mode .editor-pane{display:none}
+      body.preview-mode .preview-pane{display:block}
+      .mobile-tabs{display:flex;gap:4px}
+      .brand{display:none}
+    }
