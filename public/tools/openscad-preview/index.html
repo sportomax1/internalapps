@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>OpenSCAD 3D Preview Lab v6</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
 <div class="app">
@@ -58,15 +58,10 @@
   <footer>
     <span class="dot"></span><span id="status">Ready</span>
     <span class="spacer"></span>
-    <span>Offline editor • CDN-powered 3D engine</span>
+    <span>OpenSCAD-style browser preview • CDN-powered 3D engine</span>
   </footer>
 </div>
 <input type="file" id="fileInput" accept=".scad,text/plain" hidden />
-<script type="module">
-  const parts = ["app-1.js","app-2.js","app-3.js","app-4.js","app-5.js"];
-  const source = (await Promise.all(parts.map(p => fetch(p).then(r => { if (!r.ok) throw new Error(`Failed to load ${p}`); return r.text(); })))).join("");
-  const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-  try { await import(url); } finally { URL.revokeObjectURL(url); }
-</script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>
