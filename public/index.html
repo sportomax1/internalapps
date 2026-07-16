@@ -39,24 +39,14 @@
 <a href="/tools/desktop.html" class="app-card" data-keywords="desktop simulator computer screen"><div class="icon">🖥️</div><div class="name">Desktop Sim</div></a>
 <a href="/tools/screensavers.html" class="app-card" data-keywords="screensaver animation display"><div class="icon">✨</div><div class="name">Screensavers</div></a>
 <a href="/tools/clock.html" class="app-card" data-keywords="clock time timer"><div class="icon">🕒</div><div class="name">Clock</div></a>
-<a href="/openscad-studio/" class="app-card" data-keywords="openscad 3d model print studio"><div class="icon">🧊</div><div class="name">OpenSCAD Studio</div></a>
+<a href="/tools/openscad-preview.html" class="app-card" data-keywords="openscad 3d model print studio preview"><div class="icon">🧊</div><div class="name">OpenSCAD Studio</div></a>
 <a href="/sweet16.html" class="app-card" data-keywords="sweet 16 game bracket"><div class="icon">🎮</div><div class="name">Sweet 16</div></a>
 </div>
 <div id="emptyState" class="empty">No apps match that search.</div>
 <footer><p>&copy; 2026 Internal Apps</p></footer>
 </div>
 <script>
-const search=document.getElementById('appSearch');
-const clear=document.getElementById('clearSearch');
-const cards=[...document.querySelectorAll('.app-card')];
-const count=document.getElementById('resultsCount');
-const empty=document.getElementById('emptyState');
-function normalize(value){return value.toLowerCase().trim().replace(/\s+/g,' ')}
-function filterApps(){const query=normalize(search.value);let visible=0;cards.forEach(card=>{const haystack=normalize(`${card.textContent} ${card.dataset.keywords||''}`);const matches=!query||query.split(' ').every(term=>haystack.includes(term));card.classList.toggle('hidden',!matches);if(matches)visible++});clear.style.display=query?'block':'none';count.textContent=query?`${visible} of ${cards.length} apps`:`${cards.length} apps`;empty.classList.toggle('visible',visible===0)}
-search.addEventListener('input',filterApps);
-search.addEventListener('keydown',event=>{if(event.key==='Escape'){search.value='';filterApps();search.blur()}if(event.key==='Enter'){const visible=cards.filter(card=>!card.classList.contains('hidden'));if(visible.length===1)visible[0].click()}});
-clear.addEventListener('click',()=>{search.value='';filterApps();search.focus()});
-filterApps();
+const search=document.getElementById('appSearch');const clear=document.getElementById('clearSearch');const cards=[...document.querySelectorAll('.app-card')];const count=document.getElementById('resultsCount');const empty=document.getElementById('emptyState');function normalize(value){return value.toLowerCase().trim().replace(/\s+/g,' ')}function filterApps(){const query=normalize(search.value);let visible=0;cards.forEach(card=>{const haystack=normalize(`${card.textContent} ${card.dataset.keywords||''}`);const matches=!query||query.split(' ').every(term=>haystack.includes(term));card.classList.toggle('hidden',!matches);if(matches)visible++});clear.style.display=query?'block':'none';count.textContent=query?`${visible} of ${cards.length} apps`:`${cards.length} apps`;empty.classList.toggle('visible',visible===0)}search.addEventListener('input',filterApps);search.addEventListener('keydown',event=>{if(event.key==='Escape'){search.value='';filterApps();search.blur()}if(event.key==='Enter'){const visible=cards.filter(card=>!card.classList.contains('hidden'));if(visible.length===1)visible[0].click()}});clear.addEventListener('click',()=>{search.value='';filterApps();search.focus()});filterApps();
 </script>
 </body>
 </html>
