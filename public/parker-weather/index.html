@@ -1,194 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#007aff">
-  <title>Parker Weather</title>
-  <style>
-    :root {
-      color-scheme: light dark;
-      --blue: #007aff;
-      --cyan: #39d2ff;
-      --white: #ffffff;
-      --text: #101114;
-      --secondary: rgba(60,60,67,.72);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body { margin: 0; min-height: 100%; }
-
-    body {
-      min-height: 100svh;
-      background: linear-gradient(135deg, #007aff 0%, #34c7ff 100%);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    .app {
-      min-height: 100svh;
-      padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
-      display: flex;
-      justify-content: center;
-    }
-
-    .content {
-      width: min(100%, 520px);
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 22px;
-    }
-
-    .hero { text-align: center; }
-    .monkey { font-size: 72px; line-height: 1; margin-bottom: 12px; }
-    h1 { margin: 0; color: white; font-size: clamp(34px, 8vw, 44px); line-height: 1.05; letter-spacing: -.04em; }
-    .subtitle { margin: 10px 0 0; color: rgba(255,255,255,.8); font-size: 17px; font-weight: 600; }
-
-    .card {
-      width: 100%;
-      padding: 24px;
-      border-radius: 28px;
-      background: rgba(255,255,255,.62);
-      border: 1px solid rgba(255,255,255,.48);
-      box-shadow: 0 20px 60px rgba(0,65,150,.22);
-      backdrop-filter: blur(28px) saturate(150%);
-      -webkit-backdrop-filter: blur(28px) saturate(150%);
-      text-align: center;
-    }
-
-    .weather-symbol { font-size: 68px; line-height: 1; margin-bottom: 12px; }
-    .condition { font-size: 24px; font-weight: 750; letter-spacing: -.02em; }
-    .temperature { margin: 8px 0 14px; font-size: clamp(58px, 16vw, 74px); font-weight: 800; letter-spacing: -.05em; }
-
-    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .metric { padding: 12px; border-radius: 16px; background: rgba(255,255,255,.48); }
-    .metric-label { color: var(--secondary); font-size: 12px; }
-    .metric-value { margin-top: 5px; font-size: 17px; font-weight: 700; }
-    .updated { margin-top: 16px; color: var(--secondary); font-size: 12px; }
-
-    .button {
-      appearance: none;
-      width: 100%;
-      min-height: 52px;
-      border: 0;
-      border-radius: 14px;
-      background: white;
-      color: var(--blue);
-      font: inherit;
-      font-size: 17px;
-      font-weight: 700;
-      box-shadow: 0 12px 28px rgba(0,75,180,.24);
-      cursor: pointer;
-      transition: transform .15s ease, opacity .15s ease;
-    }
-    .button:active { transform: scale(.98); }
-    .button:disabled { opacity: .7; cursor: default; }
-
-    .credit { text-align: center; color: rgba(255,255,255,.75); font-size: 12px; }
-    .status { min-height: 220px; display: grid; place-items: center; color: #222; }
-    .spinner {
-      width: 32px; height: 32px; border-radius: 50%;
-      border: 3px solid rgba(0,122,255,.2); border-top-color: var(--blue);
-      animation: spin .8s linear infinite; margin: 0 auto 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-height: 700px) {
-      .app { padding-top: max(16px, env(safe-area-inset-top)); }
-      .content { gap: 14px; }
-      .monkey { font-size: 54px; margin-bottom: 6px; }
-      h1 { font-size: 34px; }
-      .card { padding: 18px; }
-      .weather-symbol { font-size: 52px; }
-      .temperature { font-size: 54px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#007aff">
+<title>Parker Weather & Rockies</title>
+<style>
+:root{--blue:#007aff;--cyan:#39d2ff;--purple:#35146c;--text:#101114;--secondary:rgba(60,60,67,.72);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,sans-serif}*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{min-height:100svh;color:var(--text);overflow-x:hidden}.app{min-height:100svh;padding:max(20px,env(safe-area-inset-top)) 20px calc(88px + env(safe-area-inset-bottom));display:flex;justify-content:center;background:linear-gradient(135deg,#007aff,#34c7ff);transition:background .25s}.app.rockies{background:linear-gradient(135deg,#2c145b,#126ad8)}.content{width:min(100%,540px);display:flex;flex-direction:column;gap:18px}.hero{text-align:center;color:#fff}.hero-icon{font-size:66px;line-height:1;margin-bottom:8px}h1{margin:0;font-size:clamp(32px,8vw,43px);line-height:1.05;letter-spacing:-.04em}.subtitle{margin:9px 0 0;color:rgba(255,255,255,.8);font-size:17px;font-weight:650}.card{width:100%;padding:22px;border-radius:26px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);box-shadow:0 20px 60px rgba(0,50,130,.22);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%)}.weather{text-align:center}.weather-symbol{font-size:66px}.condition{font-size:24px;font-weight:750}.temperature{margin:7px 0 13px;font-size:68px;font-weight:800;letter-spacing:-.05em}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px}.metric{padding:12px;border-radius:16px;background:rgba(255,255,255,.48)}.metric-label,.updated,.game-meta{color:var(--secondary);font-size:12px}.metric-value{margin-top:5px;font-size:17px;font-weight:700}.updated{margin-top:15px}.button{appearance:none;width:100%;min-height:52px;border:0;border-radius:14px;background:#fff;color:var(--blue);font:inherit;font-size:17px;font-weight:750;box-shadow:0 12px 28px rgba(0,60,160,.24);cursor:pointer}.button:active{transform:scale(.98)}.button:disabled{opacity:.7}.credit{text-align:center;color:rgba(255,255,255,.75);font-size:12px}.status{min-height:220px;display:grid;place-items:center;text-align:center}.spinner{width:32px;height:32px;border-radius:50%;border:3px solid rgba(0,122,255,.2);border-top-color:var(--blue);animation:spin .8s linear infinite;margin:0 auto 12px}@keyframes spin{to{transform:rotate(360deg)}}.games{display:grid;gap:12px}.game{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}.game-date{font-size:15px;font-weight:700}.game-matchup{margin-top:4px;font-size:20px;font-weight:800}.game-right{text-align:right}.game-time{font-size:16px;font-weight:750;color:var(--blue)}.pill{display:inline-block;margin-top:6px;padding:4px 8px;border-radius:999px;background:rgba(0,122,255,.12);font-size:11px;font-weight:800}.tabs{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 28px),520px);display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;border-radius:20px;background:rgba(255,255,255,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 15px 45px rgba(0,0,0,.22)}.tab{border:0;border-radius:14px;padding:11px;background:transparent;color:#555;font:inherit;font-weight:700}.tab.active{background:#fff;color:var(--blue);box-shadow:0 5px 14px rgba(0,0,0,.1)}.hidden{display:none!important}@media(max-height:700px){.hero-icon{font-size:50px}h1{font-size:33px}.card{padding:18px}.temperature{font-size:54px}}
+</style>
 </head>
 <body>
-  <main class="app">
-    <section class="content" aria-live="polite">
-      <header class="hero">
-        <div class="monkey" aria-hidden="true">🐒</div>
-        <h1>Parker Weather</h1>
-        <p class="subtitle">80134 • Current conditions</p>
-      </header>
-
-      <div id="weatherCard" class="card status">
-        <div>
-          <div class="spinner"></div>
-          <div>Loading weather…</div>
-        </div>
-      </div>
-
-      <button id="refreshButton" class="button" type="button">↻&nbsp;&nbsp;Refresh Weather</button>
-      <div class="credit">Weather data from Open-Meteo</div>
-    </section>
-  </main>
-
-  <script>
-    const weatherCard = document.getElementById('weatherCard');
-    const refreshButton = document.getElementById('refreshButton');
-
-    const weatherMap = {
-      0: ['Clear sky', '☀️'], 1: ['Mainly clear', '🌤️'], 2: ['Partly cloudy', '⛅'], 3: ['Overcast', '☁️'],
-      45: ['Foggy', '🌫️'], 48: ['Foggy', '🌫️'],
-      51: ['Drizzle', '🌦️'], 53: ['Drizzle', '🌦️'], 55: ['Drizzle', '🌦️'], 56: ['Drizzle', '🌦️'], 57: ['Drizzle', '🌦️'],
-      61: ['Rain', '🌧️'], 63: ['Rain', '🌧️'], 65: ['Rain', '🌧️'], 66: ['Rain', '🌧️'], 67: ['Rain', '🌧️'],
-      71: ['Snow', '🌨️'], 73: ['Snow', '🌨️'], 75: ['Snow', '🌨️'], 77: ['Snow', '🌨️'],
-      80: ['Rain showers', '🌦️'], 81: ['Rain showers', '🌦️'], 82: ['Rain showers', '🌦️'],
-      85: ['Snow showers', '🌨️'], 86: ['Snow showers', '🌨️'],
-      95: ['Thunderstorms', '⛈️'], 96: ['Thunderstorms', '⛈️'], 99: ['Thunderstorms', '⛈️']
-    };
-
-    function rounded(value) { return Math.round(Number(value)); }
-
-    function renderWeather(current) {
-      const [condition, symbol] = weatherMap[current.weather_code] || ['Current weather', '🌡️'];
-      const updated = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
-      weatherCard.classList.remove('status');
-      weatherCard.innerHTML = `
-        <div class="weather-symbol" aria-hidden="true">${symbol}</div>
-        <div class="condition">${condition}</div>
-        <div class="temperature">${rounded(current.temperature_2m)}°F</div>
-        <div class="metrics">
-          <div class="metric"><div class="metric-label">Feels like</div><div class="metric-value">${rounded(current.apparent_temperature)}°</div></div>
-          <div class="metric"><div class="metric-label">Wind</div><div class="metric-value">${rounded(current.wind_speed_10m)} mph</div></div>
-        </div>
-        <div class="updated">Updated ${updated}</div>`;
-    }
-
-    function renderError(message) {
-      weatherCard.classList.add('status');
-      weatherCard.innerHTML = `<div><div style="font-size:44px">📶</div><h2 style="margin:12px 0 8px;font-size:20px">Couldn’t load weather</h2><div style="color:var(--secondary);font-size:14px">${message}</div></div>`;
-    }
-
-    async function loadWeather() {
-      refreshButton.disabled = true;
-      refreshButton.textContent = 'Refreshing…';
-      try {
-        const url = new URL('https://api.open-meteo.com/v1/forecast');
-        url.search = new URLSearchParams({
-          latitude: '39.5186', longitude: '-104.7614',
-          current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m',
-          temperature_unit: 'fahrenheit', wind_speed_unit: 'mph', timezone: 'America/Denver'
-        });
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Open-Meteo returned an unexpected response.');
-        const payload = await response.json();
-        renderWeather(payload.current);
-      } catch (error) {
-        renderError(error?.message || 'Unable to connect.');
-      } finally {
-        refreshButton.disabled = false;
-        refreshButton.innerHTML = '↻&nbsp;&nbsp;Refresh Weather';
-      }
-    }
-
-    refreshButton.addEventListener('click', loadWeather);
-    loadWeather();
-  </script>
+<main id="app" class="app">
+<section class="content" aria-live="polite">
+<header class="hero"><div id="heroIcon" class="hero-icon">🐒</div><h1 id="title">Parker Weather</h1><p id="subtitle" class="subtitle">80134 • Current conditions</p></header>
+<section id="weatherPanel">
+<div id="weatherCard" class="card status"><div><div class="spinner"></div><div>Loading weather…</div></div></div>
+<button id="weatherRefresh" class="button" type="button">↻&nbsp;&nbsp;Refresh Weather</button>
+<div class="credit">Weather data from Open-Meteo</div>
+</section>
+<section id="rockiesPanel" class="hidden">
+<div id="gamesCard" class="games"><div class="card status"><div><div class="spinner"></div><div>Loading schedule…</div></div></div></div>
+<button id="gamesRefresh" class="button" type="button">↻&nbsp;&nbsp;Refresh Schedule</button>
+<div class="credit">Schedule data from MLB</div>
+</section>
+</section>
+<nav class="tabs" aria-label="App tabs"><button class="tab active" data-tab="weather">☀️ Weather</button><button class="tab" data-tab="rockies">⚾ Rockies</button></nav>
+</main>
+<script>
+const $=id=>document.getElementById(id), app=$('app'), weatherPanel=$('weatherPanel'), rockiesPanel=$('rockiesPanel'), weatherCard=$('weatherCard'), gamesCard=$('gamesCard'), weatherRefresh=$('weatherRefresh'), gamesRefresh=$('gamesRefresh');
+const weatherMap={0:['Clear sky','☀️'],1:['Mainly clear','🌤️'],2:['Partly cloudy','⛅'],3:['Overcast','☁️'],45:['Foggy','🌫️'],48:['Foggy','🌫️'],51:['Drizzle','🌦️'],53:['Drizzle','🌦️'],55:['Drizzle','🌦️'],56:['Drizzle','🌦️'],57:['Drizzle','🌦️'],61:['Rain','🌧️'],63:['Rain','🌧️'],65:['Rain','🌧️'],66:['Rain','🌧️'],67:['Rain','🌧️'],71:['Snow','🌨️'],73:['Snow','🌨️'],75:['Snow','🌨️'],77:['Snow','🌨️'],80:['Rain showers','🌦️'],81:['Rain showers','🌦️'],82:['Rain showers','🌦️'],85:['Snow showers','🌨️'],86:['Snow showers','🌨️'],95:['Thunderstorms','⛈️'],96:['Thunderstorms','⛈️'],99:['Thunderstorms','⛈️']};
+function showTab(tab){const weather=tab==='weather';weatherPanel.classList.toggle('hidden',!weather);rockiesPanel.classList.toggle('hidden',weather);app.classList.toggle('rockies',!weather);$('heroIcon').textContent=weather?'🐒':'⚾️';$('title').textContent=weather?'Parker Weather':'Colorado Rockies';$('subtitle').textContent=weather?'80134 • Current conditions':'Next 7 games';document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));if(!weather&&!gamesCard.dataset.loaded)loadGames()}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function renderWeather(c){const [condition,symbol]=weatherMap[c.weather_code]||['Current weather','🌡️'];weatherCard.className='card weather';weatherCard.innerHTML=`<div class="weather-symbol">${symbol}</div><div class="condition">${condition}</div><div class="temperature">${Math.round(c.temperature_2m)}°F</div><div class="metrics"><div class="metric"><div class="metric-label">Feels like</div><div class="metric-value">${Math.round(c.apparent_temperature)}°</div></div><div class="metric"><div class="metric-label">Wind</div><div class="metric-value">${Math.round(c.wind_speed_10m)} mph</div></div></div><div class="updated">Updated ${new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date())}</div>`}
+async function loadWeather(){weatherRefresh.disabled=true;weatherRefresh.textContent='Refreshing…';try{const u=new URL('https://api.open-meteo.com/v1/forecast');u.search=new URLSearchParams({latitude:'39.5186',longitude:'-104.7614',current:'temperature_2m,apparent_temperature,weather_code,wind_speed_10m',temperature_unit:'fahrenheit',wind_speed_unit:'mph',timezone:'America/Denver'});const r=await fetch(u);if(!r.ok)throw Error('Open-Meteo returned an unexpected response.');renderWeather((await r.json()).current)}catch(e){weatherCard.className='card status';weatherCard.innerHTML=`<div><div style="font-size:44px">📶</div><h2>Couldn’t load weather</h2><div class="game-meta">${e.message}</div></div>`}finally{weatherRefresh.disabled=false;weatherRefresh.innerHTML='↻&nbsp;&nbsp;Refresh Weather'}}
+function ymd(d){return d.toISOString().slice(0,10)}
+function renderGames(games){gamesCard.dataset.loaded='1';if(!games.length){gamesCard.innerHTML='<div class="card status">No upcoming Rockies games were found.</div>';return}gamesCard.innerHTML=games.slice(0,7).map(g=>{const home=g.teams.home.team.id===115, opp=home?g.teams.away.team.name:g.teams.home.team.name,d=new Date(g.gameDate);return `<article class="card game"><div><div class="game-date">${new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric'}).format(d)}</div><div class="game-matchup">${home?'vs':'at'} ${opp}</div><div class="game-meta">${g.venue?.name||''}</div></div><div class="game-right"><div class="game-time">${new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(d)}</div><div class="game-meta">${g.status?.detailedState||'Scheduled'}</div><span class="pill">${home?'HOME':'AWAY'}</span></div></article>`}).join('')}
+async function loadGames(){gamesRefresh.disabled=true;gamesRefresh.textContent='Refreshing…';gamesCard.innerHTML='<div class="card status"><div><div class="spinner"></div><div>Loading schedule…</div></div></div>';try{const end=new Date();end.setDate(end.getDate()+60);const u=new URL('https://statsapi.mlb.com/api/v1/schedule');u.search=new URLSearchParams({sportId:'1',teamId:'115',startDate:ymd(new Date()),endDate:ymd(end),hydrate:'venue'});const r=await fetch(u);if(!r.ok)throw Error('MLB returned an unexpected response.');renderGames((await r.json()).dates.flatMap(d=>d.games))}catch(e){gamesCard.innerHTML=`<div class="card status"><div><div style="font-size:44px">📶</div><h2>Couldn’t load schedule</h2><div class="game-meta">${e.message}</div></div></div>`}finally{gamesRefresh.disabled=false;gamesRefresh.innerHTML='↻&nbsp;&nbsp;Refresh Schedule'}}
+weatherRefresh.addEventListener('click',loadWeather);gamesRefresh.addEventListener('click',loadGames);loadWeather();
+</script>
 </body>
 </html>
