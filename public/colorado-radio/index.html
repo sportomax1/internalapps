@@ -1,45 +1,52 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#07111f">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Colorado Radio Mixer</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
-  <style>
-    :root{--bg:#06101e;--panel:#0d1b2f;--text:#eef6ff;--muted:#9fb1c6;--line:rgba(255,255,255,.11);--brand:#69b7ff;--brand2:#8ee6c8;--danger:#ff6b6b;--ok:#65e68b;--warn:#ffd166;--shadow:0 22px 65px rgba(0,0,0,.35)}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 15% 0,rgba(105,183,255,.22),transparent 28%),radial-gradient(circle at 90% 5%,rgba(142,230,200,.15),transparent 25%),linear-gradient(180deg,#06101e,#090f19);color:var(--text)}
-    button,input{font:inherit}.app{min-height:100vh;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-    .shell{width:min(1200px,100%);margin:auto;display:grid;gap:16px}header{display:flex;justify-content:space-between;gap:12px;align-items:center}.title{display:flex;gap:12px;align-items:center}.logo{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;font-size:27px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#04101c;box-shadow:0 12px 34px rgba(105,183,255,.25)}h1{margin:0;font-size:clamp(25px,4vw,42px);letter-spacing:-.045em}.sub{color:var(--muted);font-size:13px;margin-top:5px}.warning{font-size:12px;color:#1a1300;background:var(--warn);padding:8px 11px;border-radius:999px;font-weight:800}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.04));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);backdrop-filter:blur(18px)}
-    .toolbar{padding:14px;display:grid;grid-template-columns:1fr auto auto;gap:9px}.search{min-width:0;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.23);color:var(--text);padding:13px 14px;font-size:16px}.btn{border:1px solid var(--line);border-radius:14px;min-height:46px;padding:10px 14px;background:rgba(255,255,255,.08);color:var(--text);cursor:pointer;touch-action:manipulation}.btn:hover{background:rgba(255,255,255,.14)}.primary{background:linear-gradient(135deg,var(--brand),#4d8fff);color:#03101e;border:0;font-weight:900}.danger{background:rgba(255,107,107,.14);color:#ffd6d6}.small{font-size:12px;color:var(--muted)}
-    .layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{padding:14px;display:grid;gap:11px}.sectionHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.sectionHead h2{margin:0;font-size:17px}.count{color:var(--muted);font-size:12px}
-    .list{display:grid;gap:9px}.station{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:11px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.045)}.freq{font-size:19px;font-weight:950;letter-spacing:-.05em}.band{font-size:10px;color:var(--muted);font-weight:800}.name{font-weight:850}.desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}.stationActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stationActions .btn{min-height:38px;padding:7px 9px;font-size:12px}
-    .mixer{display:grid;gap:10px}.channel{border:1px solid var(--line);border-radius:18px;background:rgba(0,0,0,.18);padding:12px;display:grid;gap:10px}.channelTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.channelName{font-weight:900}.live{font-size:10px;border-radius:999px;padding:5px 8px;background:rgba(101,230,139,.15);color:var(--ok);font-weight:900}.channelControls{display:grid;grid-template-columns:auto auto auto 1fr auto;gap:8px;align-items:center}.channelControls input{width:100%;accent-color:var(--brand)}audio{display:none}
-    .results{display:grid;gap:8px}.result{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.04)}.result img{width:52px;height:52px;border-radius:12px;object-fit:cover;background:#10233f}.result .btn{font-size:12px;padding:8px 10px}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px}.status{padding:11px 14px;color:var(--muted);font-size:12px;line-height:1.4}.footer{text-align:center;color:var(--muted);font-size:11px;padding:2px 8px}
-    @media(max-width:850px){.layout{grid-template-columns:1fr}.warning{display:none}}@media(max-width:600px){.app{padding:10px 10px calc(18px + env(safe-area-inset-bottom))}.logo{width:44px;height:44px;border-radius:14px}.sub{max-width:260px}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.station{grid-template-columns:62px minmax(0,1fr) auto}.stationActions{grid-column:auto;display:flex}.stationActions .btn{font-size:0;width:42px;padding:8px}.stationActions .btn:before{font-size:16px}.stationActions .primary:before{content:'▶'}.stationActions .mixBtn:before{content:'＋'}.result{grid-template-columns:46px 1fr}.result img{width:46px;height:46px}.result .btn{grid-column:1/-1}.section{padding:10px}.channelControls{grid-template-columns:repeat(4,1fr)}.channelControls input{grid-column:1/-1;grid-row:2}.btn{min-height:48px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Colorado Radio Mixer</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
+<style>
+:root{--text:#eef6ff;--muted:#9fb1c6;--line:rgba(255,255,255,.11);--brand:#69b7ff;--brand2:#8ee6c8;--danger:#ff6b6b;--ok:#65e68b;--warn:#ffd166;--shadow:0 22px 65px rgba(0,0,0,.35)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 15% 0,rgba(105,183,255,.22),transparent 28%),radial-gradient(circle at 90% 5%,rgba(142,230,200,.15),transparent 25%),linear-gradient(180deg,#06101e,#090f19);color:var(--text)}
+button,input,select{font:inherit}.app{min-height:100vh;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.shell{width:min(1200px,100%);margin:auto;display:grid;gap:16px}header{display:flex;justify-content:space-between;gap:12px;align-items:center}.title{display:flex;gap:12px;align-items:center}.logo{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;font-size:27px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#04101c;box-shadow:0 12px 34px rgba(105,183,255,.25)}h1{margin:0;font-size:clamp(25px,4vw,42px);letter-spacing:-.045em}.sub{color:var(--muted);font-size:13px;margin-top:5px}.warning{font-size:12px;color:#1a1300;background:var(--warn);padding:8px 11px;border-radius:999px;font-weight:800}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.04));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+.toolbar{padding:14px;display:grid;grid-template-columns:minmax(180px,1fr) repeat(5,auto);gap:9px}.search{min-width:0;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.23);color:var(--text);padding:13px 14px;font-size:16px}.btn{border:1px solid var(--line);border-radius:14px;min-height:46px;padding:10px 14px;background:rgba(255,255,255,.08);color:var(--text);cursor:pointer;touch-action:manipulation}.btn:hover{background:rgba(255,255,255,.14)}.btn.active{outline:2px solid var(--ok);background:rgba(101,230,139,.15)}.primary{background:linear-gradient(135deg,var(--brand),#4d8fff);color:#03101e;border:0;font-weight:900}.danger{background:rgba(255,107,107,.14);color:#ffd6d6}
+.settings{padding:12px 14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}.toggle{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px}.toggle input{accent-color:var(--brand)}.select{border:1px solid var(--line);background:#0b1627;color:var(--text);border-radius:10px;padding:7px 9px}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{padding:14px;display:grid;gap:11px}.sectionHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.sectionHead h2{margin:0;font-size:17px}.count{color:var(--muted);font-size:12px}
+.list{display:grid;gap:9px}.station{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:11px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.045)}.freq{font-size:19px;font-weight:950;letter-spacing:-.05em}.band{font-size:10px;color:var(--muted);font-weight:800}.name{font-weight:850}.desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}.stationActions{display:flex;gap:7px}.stationActions .btn{min-height:38px;padding:7px 9px;font-size:12px}
+.mixer{display:grid;gap:10px}.channel{border:1px solid var(--line);border-radius:18px;background:rgba(0,0,0,.18);padding:12px;display:grid;gap:10px}.channelTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.channelName{font-weight:900}.live{font-size:10px;border-radius:999px;padding:5px 8px;background:rgba(101,230,139,.15);color:var(--ok);font-weight:900}.channelControls{display:grid;grid-template-columns:auto auto auto 1fr auto auto;gap:8px;align-items:center}.channelControls input{width:100%;accent-color:var(--brand)}audio{display:none}
+.results{display:grid;gap:8px}.result{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.04)}.result img{width:52px;height:52px;border-radius:12px;object-fit:cover;background:#10233f}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px}.status{padding:11px 14px;color:var(--muted);font-size:12px;line-height:1.4}.footer{text-align:center;color:var(--muted);font-size:11px;padding:2px 8px}
+@media(max-width:1000px){.toolbar{grid-template-columns:1fr 1fr 1fr}.toolbar .search{grid-column:1/-1}.layout{grid-template-columns:1fr}.warning{display:none}}
+@media(max-width:600px){.app{padding:10px 10px calc(18px + env(safe-area-inset-bottom))}.logo{width:44px;height:44px;border-radius:14px}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.station{grid-template-columns:62px minmax(0,1fr) auto}.stationActions .btn{font-size:0;width:42px;padding:8px}.stationActions .primary:before{content:'▶';font-size:16px}.stationActions .mixBtn:before{content:'＋';font-size:16px}.channelControls{grid-template-columns:repeat(3,1fr)}.channelControls input{grid-column:1/-1}.result{grid-template-columns:46px 1fr}.result img{width:46px;height:46px}.result .btn{grid-column:1/-1}.section{padding:10px}}
+</style>
 </head>
 <body>
 <main class="app"><div class="shell">
-<header><div class="title"><div class="logo">📻</div><div><h1>Colorado Radio Mixer</h1><div class="sub">Colorado sports presets + searchable iHeart live-radio library</div></div></div><div class="warning">Multiple streams can sound chaotic</div></header>
+<header><div class="title"><div class="logo">📻</div><div><h1>Colorado Radio Mixer</h1><div class="sub">Colorado sports presets + searchable iHeart radio</div></div></div><div class="warning">Multiple streams can sound chaotic</div></header>
 <section class="card toolbar">
 <input id="searchInput" class="search" type="search" placeholder="Search iHeart: station, city, frequency or genre…" autocomplete="off">
-<button id="searchBtn" class="btn primary">Search iHeart</button>
+<button id="searchBtn" class="btn primary">Search</button>
+<button id="randomBtn" class="btn">🎲 Random</button>
+<button id="scannerBtn" class="btn">📡 Scanner</button>
+<button id="nextScanBtn" class="btn">⏭ Next</button>
 <button id="stopAllBtn" class="btn danger">Stop all</button>
 </section>
-<div id="status" class="card status">Each saved station stays on one compact line. Add several to the mixer; rewind works only when a station exposes a DVR window, and clip saving depends on browser/CORS support.</div>
+<section class="card settings">
+<label class="toggle"><input id="autoAdSwitch" type="checkbox"> Experimental auto-switch on detected ads/silence</label>
+<label class="toggle">Scanner interval
+<select id="scanInterval" class="select"><option value="8">8 sec</option><option value="12" selected>12 sec</option><option value="20">20 sec</option><option value="30">30 sec</option></select></label>
+<span id="scannerState" class="count">Scanner off</span>
+</section>
+<div id="status" class="card status">Random plays one saved preset. Scanner cycles through presets. Experimental ad switching depends on browser-accessible metadata or audio analysis and may not work on many stations.</div>
 <section class="layout">
-  <div class="card section"><div class="sectionHead"><h2>Colorado presets</h2><span id="presetCount" class="count"></span></div><div id="presetList" class="list"></div></div>
-  <div class="card section"><div class="sectionHead"><h2>Active mixer</h2><span id="mixerCount" class="count">0 playing</span></div><div id="mixer" class="mixer"><div class="empty">No active streams.</div></div></div>
+<div class="card section"><div class="sectionHead"><h2>Colorado presets</h2><span id="presetCount" class="count"></span></div><div id="presetList" class="list"></div></div>
+<div class="card section"><div class="sectionHead"><h2>Active mixer</h2><span id="mixerCount" class="count">0 active</span></div><div id="mixer" class="mixer"><div class="empty">No active streams.</div></div></div>
 </section>
-<section class="card section">
-  <div class="sectionHead"><h2>iHeart search results</h2><span id="resultCount" class="count">Search the nationwide library</span></div>
-  <div id="results" class="results"><div class="empty">Try “Denver”, “sports”, “classic rock”, “New York” or a call sign.</div></div>
-</section>
-<div class="footer">Search uses iHeart catalog data through this app’s same-origin proxy. Availability, ads, geoblocks and game blackouts are controlled by broadcasters.</div>
+<section class="card section"><div class="sectionHead"><h2>iHeart search results</h2><span id="resultCount" class="count">Search nationwide</span></div><div id="results" class="results"><div class="empty">Try “Denver”, “sports”, “classic rock” or a call sign.</div></div></section>
+<div class="footer">Ad detection is heuristic only. Broadcaster restrictions, ads, blackouts and stream availability remain outside this app’s control.</div>
 </div></main>
 <script>
 const PRESETS=[
@@ -55,88 +62,95 @@ const PRESETS=[
 {name:'106.7 The Bull',frequency:'106.7',band:'FM',callSign:'KWBL',category:'Country',area:'Denver',official:'https://1067thebull.iheart.com/',stream:'https://stream.revma.ihrhls.com/zc7784/hls.m3u8',iheartId:7784}
 ];
 const active=new Map();
-const presetList=document.getElementById('presetList'),mixer=document.getElementById('mixer'),results=document.getElementById('results'),statusEl=document.getElementById('status');
-const resultCount=document.getElementById('resultCount'),mixerCount=document.getElementById('mixerCount'),searchInput=document.getElementById('searchInput');
+let scannerTimer=null,scannerIndex=-1,lastRandom=-1,audioContext=null,analyserTimer=null,silenceStarted=0;
+const presetList=document.getElementById('presetList'),mixer=document.getElementById('mixer'),results=document.getElementById('results'),statusEl=document.getElementById('status'),resultCount=document.getElementById('resultCount'),mixerCount=document.getElementById('mixerCount'),searchInput=document.getElementById('searchInput'),scannerBtn=document.getElementById('scannerBtn'),scannerState=document.getElementById('scannerState'),autoAdSwitch=document.getElementById('autoAdSwitch');
 function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function keyFor(s){return String(s.iheartId||s.id||s.stream||s.name)}
 function isHls(u=''){return /\.m3u8($|\?)/i.test(u)}
 function setStatus(t){statusEl.textContent=t}
 function renderPresets(){
- document.getElementById('presetCount').textContent=`${PRESETS.length} stations`;
- presetList.innerHTML=PRESETS.map((s,i)=>`<div class="station"><div><div class="freq">${esc(s.frequency)}</div><div class="band">${esc(s.band)}</div></div><div><div class="name">${esc(s.name)}</div><div class="desc">${esc(s.callSign)} • ${esc(s.category)} • ${esc(s.area)}</div></div><div class="stationActions"><button class="btn primary" data-play="${i}">Play solo</button><button class="btn mixBtn" data-add="${i}">Add to mix</button></div></div>`).join('');
- presetList.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>playSolo(PRESETS[+b.dataset.play]));
- presetList.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addChannel(PRESETS[+b.dataset.add],true));
+document.getElementById('presetCount').textContent=`${PRESETS.length} stations`;
+presetList.innerHTML=PRESETS.map((s,i)=>`<div class="station"><div><div class="freq">${esc(s.frequency)}</div><div class="band">${esc(s.band)}</div></div><div><div class="name">${esc(s.name)}</div><div class="desc">${esc(s.callSign)} • ${esc(s.category)} • ${esc(s.area)}</div></div><div class="stationActions"><button class="btn primary" data-play="${i}">Play solo</button><button class="btn mixBtn" data-add="${i}">Add to mix</button></div></div>`).join('');
+presetList.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>playSolo(PRESETS[+b.dataset.play]));
+presetList.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addChannel(PRESETS[+b.dataset.add],true));
 }
 function stopAndDestroy(ch){ch.audio.pause();ch.audio.removeAttribute('src');ch.audio.load();if(ch.hls)ch.hls.destroy()}
-function stopAll(){active.forEach(stopAndDestroy);active.clear();renderMixer();setStatus('All streams stopped.')}
-async function playSolo(s){stopAll();await addChannel(s,true)}
+function stopAll(){stopScanner();active.forEach(stopAndDestroy);active.clear();renderMixer();setStatus('All streams stopped.')}
+async function playSolo(s){active.forEach(stopAndDestroy);active.clear();await addChannel(s,true)}
 async function resolveStation(s){
- if(s.stream)return s;
- if(!s.iheartId&&!s.id)throw new Error('No iHeart station ID was provided.');
- const r=await fetch(`/api/iheart?action=station&id=${encodeURIComponent(s.iheartId||s.id)}`);
- if(!r.ok)throw new Error(`Station lookup failed (${r.status})`);
- const data=await r.json();return {...s,...data,stream:data.stream||s.stream};
+if(s.stream)return s;
+const r=await fetch(`/api/iheart?action=station&id=${encodeURIComponent(s.iheartId||s.id)}`);
+if(!r.ok)throw new Error(`Station lookup failed (${r.status})`);
+const data=await r.json();return {...s,...data,stream:data.stream||s.stream};
 }
 async function addChannel(input,autoplay){
- try{
-  const s=await resolveStation(input);if(!s.stream)throw new Error('No playable stream was returned.');
-  const k=keyFor(s);if(active.has(k)){if(autoplay)await active.get(k).audio.play();return}
-  const audio=new Audio();audio.preload='none';audio.playsInline=true;audio.volume=.75;let hls=null;
-  if(isHls(s.stream)){if(audio.canPlayType('application/vnd.apple.mpegurl'))audio.src=s.stream;else if(window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true,backBufferLength:45});hls.loadSource(s.stream);hls.attachMedia(audio)}else throw new Error('This browser cannot play HLS.')}else audio.src=s.stream;
-  const ch={station:s,audio,hls};active.set(k,ch);
-  audio.addEventListener('playing',renderMixer);audio.addEventListener('pause',renderMixer);audio.addEventListener('error',()=>setStatus(`${s.name}: stream failed or is restricted.`));
-  renderMixer();if(autoplay){await audio.play();setStatus(`Playing ${s.name}${active.size>1?` with ${active.size-1} other stream(s).`:'.'}`)}
- }catch(e){setStatus(e.message||'Unable to start station.')}
+try{
+const s=await resolveStation(input);if(!s.stream)throw new Error('No playable stream was returned.');
+const k=keyFor(s);if(active.has(k)){if(autoplay)await active.get(k).audio.play();return}
+const audio=new Audio();audio.preload='none';audio.playsInline=true;audio.crossOrigin='anonymous';audio.volume=.75;let hls=null;
+if(isHls(s.stream)){if(audio.canPlayType('application/vnd.apple.mpegurl'))audio.src=s.stream;else if(window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true,backBufferLength:45});hls.loadSource(s.stream);hls.attachMedia(audio)}else throw new Error('This browser cannot play HLS.')}else audio.src=s.stream;
+const ch={station:s,audio,hls};active.set(k,ch);
+audio.addEventListener('playing',()=>{renderMixer();if(autoAdSwitch.checked)startAudioHeuristic(ch)});
+audio.addEventListener('pause',renderMixer);
+audio.addEventListener('error',()=>setStatus(`${s.name}: stream failed or is restricted.`));
+renderMixer();if(autoplay){await audio.play();setStatus(`Playing ${s.name}${active.size>1?` with ${active.size-1} other stream(s).`:'.'}`)}
+}catch(e){setStatus(e.message||'Unable to start station.')}
 }
 function removeChannel(k){const ch=active.get(k);if(!ch)return;stopAndDestroy(ch);active.delete(k);renderMixer()}
-function rewindChannel(k){
- const ch=active.get(k);if(!ch)return;
- const a=ch.audio;
- if(a.seekable&&a.seekable.length){const start=a.seekable.start(0),end=a.seekable.end(a.seekable.length-1);a.currentTime=Math.max(start,Math.min(end,a.currentTime-15));setStatus(`Rewound ${ch.station.name} by up to 15 seconds.`)}
- else setStatus(`${ch.station.name} does not expose a rewindable live buffer.`)
-}
-function goLive(k){
- const ch=active.get(k);if(!ch)return;const a=ch.audio;
- if(a.seekable&&a.seekable.length){a.currentTime=a.seekable.end(a.seekable.length-1);setStatus(`${ch.station.name} returned to live.`)}
- else setStatus(`${ch.station.name} is already using a non-seekable live stream.`)
-}
+function rewindChannel(k){const ch=active.get(k),a=ch?.audio;if(!a)return;if(a.seekable&&a.seekable.length){const start=a.seekable.start(0),end=a.seekable.end(a.seekable.length-1);a.currentTime=Math.max(start,Math.min(end,a.currentTime-15));setStatus(`Rewound ${ch.station.name} by up to 15 seconds.`)}else setStatus(`${ch.station.name} does not expose a rewindable buffer.`)}
+function goLive(k){const ch=active.get(k),a=ch?.audio;if(!a)return;if(a.seekable&&a.seekable.length){a.currentTime=a.seekable.end(a.seekable.length-1);setStatus(`${ch.station.name} returned to live.`)}else setStatus(`${ch.station.name} is already live.`)}
 async function saveClip(k){
- const ch=active.get(k);if(!ch)return;const a=ch.audio;
- const capture=a.captureStream||a.mozCaptureStream;
- if(!capture||!window.MediaRecorder){setStatus('Clip saving is not supported by this browser for live radio.');return}
- try{
-  const stream=capture.call(a);const chunks=[];const rec=new MediaRecorder(stream);
-  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
-  rec.onstop=()=>{const blob=new Blob(chunks,{type:rec.mimeType||'audio/webm'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`${(ch.station.callSign||ch.station.name).replace(/[^a-z0-9]+/gi,'-')}-${new Date().toISOString().replace(/[:.]/g,'-')}.webm`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus(`Saved a 15-second clip from ${ch.station.name}.`)};
-  rec.start();setStatus(`Recording 15 seconds from ${ch.station.name}…`);setTimeout(()=>{if(rec.state!=='inactive')rec.stop()},15000)
- }catch(e){setStatus('This station blocks browser audio capture. Rewind may still work when the stream exposes a DVR window.')}
+const ch=active.get(k),a=ch?.audio;if(!a)return;const capture=a.captureStream||a.mozCaptureStream;
+if(!capture||!window.MediaRecorder){setStatus('Clip saving is not supported by this browser.');return}
+try{const stream=capture.call(a),chunks=[],rec=new MediaRecorder(stream);rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};rec.onstop=()=>{const blob=new Blob(chunks,{type:rec.mimeType||'audio/webm'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`${(ch.station.callSign||ch.station.name).replace(/[^a-z0-9]+/gi,'-')}-${Date.now()}.webm`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus(`Saved a 15-second clip from ${ch.station.name}.`)};rec.start();setStatus(`Recording 15 seconds from ${ch.station.name}…`);setTimeout(()=>rec.state!=='inactive'&&rec.stop(),15000)}catch{setStatus('This station blocks browser audio capture.')}
 }
 function renderMixer(){
- mixerCount.textContent=`${active.size} active`;
- if(!active.size){mixer.innerHTML='<div class="empty">No active streams.</div>';return}
- mixer.innerHTML=[...active].map(([k,ch])=>`<div class="channel"><div class="channelTop"><div><div class="channelName">${esc(ch.station.name)}</div><div class="desc">${esc(ch.station.callSign||'')} ${ch.station.city?'• '+esc(ch.station.city):''}</div></div><span class="live">${ch.audio.paused?'PAUSED':'LIVE'}</span></div><div class="channelControls"><button class="btn primary" data-toggle="${esc(k)}">${ch.audio.paused?'Play':'Pause'}</button><button class="btn" data-rewind="${esc(k)}">↶ 15s</button><button class="btn" data-live="${esc(k)}">Go live</button><input data-volume="${esc(k)}" type="range" min="0" max="1" step=".01" value="${ch.audio.volume}"><button class="btn danger" data-clip="${esc(k)}">Save clip</button><button class="btn danger" data-remove="${esc(k)}">Remove</button></div></div>`).join('');
- mixer.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const ch=active.get(b.dataset.toggle);if(ch.audio.paused)await ch.audio.play();else ch.audio.pause();renderMixer()});
- mixer.querySelectorAll('[data-rewind]').forEach(b=>b.onclick=()=>rewindChannel(b.dataset.rewind));
- mixer.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>goLive(b.dataset.live));
- mixer.querySelectorAll('[data-clip]').forEach(b=>b.onclick=()=>saveClip(b.dataset.clip));
- mixer.querySelectorAll('[data-volume]').forEach(r=>r.oninput=()=>{active.get(r.dataset.volume).audio.volume=+r.value});
- mixer.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>removeChannel(b.dataset.remove));
+mixerCount.textContent=`${active.size} active`;
+if(!active.size){mixer.innerHTML='<div class="empty">No active streams.</div>';return}
+mixer.innerHTML=[...active].map(([k,ch])=>`<div class="channel"><div class="channelTop"><div><div class="channelName">${esc(ch.station.name)}</div><div class="desc">${esc(ch.station.callSign||'')}</div></div><span class="live">${ch.audio.paused?'PAUSED':'LIVE'}</span></div><div class="channelControls"><button class="btn primary" data-toggle="${esc(k)}">${ch.audio.paused?'Play':'Pause'}</button><button class="btn" data-rewind="${esc(k)}">↶ 15s</button><button class="btn" data-live="${esc(k)}">Live</button><input data-volume="${esc(k)}" type="range" min="0" max="1" step=".01" value="${ch.audio.volume}"><button class="btn danger" data-clip="${esc(k)}">Clip</button><button class="btn danger" data-remove="${esc(k)}">Remove</button></div></div>`).join('');
+mixer.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const ch=active.get(b.dataset.toggle);ch.audio.paused?await ch.audio.play():ch.audio.pause();renderMixer()});
+mixer.querySelectorAll('[data-rewind]').forEach(b=>b.onclick=()=>rewindChannel(b.dataset.rewind));
+mixer.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>goLive(b.dataset.live));
+mixer.querySelectorAll('[data-clip]').forEach(b=>b.onclick=()=>saveClip(b.dataset.clip));
+mixer.querySelectorAll('[data-volume]').forEach(r=>r.oninput=()=>active.get(r.dataset.volume).audio.volume=+r.value);
+mixer.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>removeChannel(b.dataset.remove));
 }
-function normalizeResults(data){
- const pools=[data?.stations,data?.liveStations,data?.results?.stations,data?.results,data?.hits,data?.data].find(Array.isArray)||[];
- return pools.filter(x=>x&&typeof x==='object').map(x=>({id:x.id||x.stationId||x.contentId,iheartId:x.id||x.stationId||x.contentId,name:x.name||x.title||x.stationName||'Unknown station',callSign:x.callLetters||x.callSign||x.callsign||'',frequency:x.frequency||x.freq||'',band:x.band||'',city:x.city||x.market?.city||x.marketName||'',state:x.state||x.market?.state||'',description:x.description||x.slogan||x.format||'',logo:x.logo||x.logoUrl||x.image||x.imageUrl||x.assets?.logo,official:x.website||x.site||x.url||((x.id||x.stationId)?`https://www.iheart.com/live/${x.id||x.stationId}/`:'')})).filter(x=>x.id);
+async function playRandom(){
+let i=Math.floor(Math.random()*PRESETS.length);if(PRESETS.length>1&&i===lastRandom)i=(i+1)%PRESETS.length;lastRandom=i;scannerIndex=i;await playSolo(PRESETS[i]);setStatus(`Random station: ${PRESETS[i].name}.`);
 }
+async function scanNext(reason='Scanner'){
+scannerIndex=(scannerIndex+1)%PRESETS.length;await playSolo(PRESETS[scannerIndex]);setStatus(`${reason}: ${PRESETS[scannerIndex].name}.`);
+}
+function startScanner(){
+if(scannerTimer)return;scannerBtn.classList.add('active');scannerBtn.textContent='📡 Stop scanner';scannerState.textContent='Scanner running';scanNext();const ms=Number(document.getElementById('scanInterval').value)*1000;scannerTimer=setInterval(()=>scanNext(),ms)
+}
+function stopScanner(){if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;scannerBtn.classList.remove('active');scannerBtn.textContent='📡 Scanner';scannerState.textContent='Scanner off'}
+function toggleScanner(){scannerTimer?stopScanner():startScanner()}
+function metadataLooksLikeAd(text=''){return /\b(advertisement|commercial|sponsored|sponsor|ad break|traffic and weather)\b/i.test(text)}
+function startAudioHeuristic(ch){
+clearInterval(analyserTimer);silenceStarted=0;
+try{
+audioContext=audioContext||new (window.AudioContext||window.webkitAudioContext)();
+if(ch.audio._analysed)return;
+const source=audioContext.createMediaElementSource(ch.audio),analyser=audioContext.createAnalyser();analyser.fftSize=256;source.connect(analyser);analyser.connect(audioContext.destination);ch.audio._analysed=true;const data=new Uint8Array(analyser.frequencyBinCount);
+analyserTimer=setInterval(()=>{if(!autoAdSwitch.checked||ch.audio.paused)return;analyser.getByteFrequencyData(data);const avg=data.reduce((a,b)=>a+b,0)/data.length;if(avg<2){if(!silenceStarted)silenceStarted=Date.now();if(Date.now()-silenceStarted>7000){silenceStarted=0;scanNext('Auto-switch after extended silence')}}else silenceStarted=0;const meta=[document.title,navigator.mediaSession?.metadata?.title,navigator.mediaSession?.metadata?.artist].filter(Boolean).join(' ');if(metadataLooksLikeAd(meta))scanNext('Auto-switch after ad-like metadata')},1200)
+}catch{setStatus('Experimental ad detection is enabled, but this stream/browser blocks audio analysis. Scanner and random still work.')}
+}
+function normalizeResults(data){const pool=[data?.stations,data?.liveStations,data?.results?.stations,data?.results,data?.hits,data?.data].find(Array.isArray)||[];return pool.map(x=>({id:x.id||x.stationId||x.contentId,iheartId:x.id||x.stationId||x.contentId,name:x.name||x.title||x.stationName||'Unknown station',callSign:x.callLetters||x.callSign||'',frequency:x.frequency||'',city:x.city||x.market?.city||'',state:x.state||x.market?.state||'',description:x.description||x.slogan||x.format||'',logo:x.logo||x.logoUrl||x.imageUrl||x.assets?.logo})).filter(x=>x.id)}
 async function searchIHeart(){
- const q=searchInput.value.trim();if(!q){setStatus('Enter a station, city, frequency, call sign or genre.');return}
- results.innerHTML='<div class="empty">Searching iHeart…</div>';resultCount.textContent='Searching…';
- try{
-  const r=await fetch(`/api/iheart?action=search&q=${encodeURIComponent(q)}`);if(!r.ok)throw new Error(`Search failed (${r.status})`);
-  const data=await r.json();const rows=normalizeResults(data).slice(0,40);resultCount.textContent=`${rows.length} result${rows.length===1?'':'s'}`;
-  if(!rows.length){results.innerHTML=`<div class="empty">No live stations found. <a style="color:#9fd0ff" target="_blank" rel="noopener" href="https://www.iheart.com/search/?q=${encodeURIComponent(q)}">Search on iHeart</a></div>`;return}
-  results.innerHTML=rows.map((s,i)=>`<div class="result">${s.logo?`<img src="${esc(s.logo)}" alt="">`:'<div></div>'}<div><div class="name">${esc(s.name)}</div><div class="desc">${esc([s.callSign,s.frequency,s.city,s.state,s.description].filter(Boolean).join(' • '))}</div></div><button class="btn primary" data-result="${i}">Add to mixer</button></div>`).join('');
-  results.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>addChannel(rows[+b.dataset.result],true));
- }catch(e){resultCount.textContent='Search unavailable';results.innerHTML=`<div class="empty">${esc(e.message)}<br><br><a style="color:#9fd0ff" target="_blank" rel="noopener" href="https://www.iheart.com/search/?q=${encodeURIComponent(q)}">Open this search on iHeart</a></div>`;setStatus('iHeart search could not be reached. The direct iHeart search link is available.')}
+const q=searchInput.value.trim();if(!q){setStatus('Enter a station, city, frequency, call sign or genre.');return}
+results.innerHTML='<div class="empty">Searching iHeart…</div>';resultCount.textContent='Searching…';
+try{const r=await fetch(`/api/iheart?action=search&q=${encodeURIComponent(q)}`);if(!r.ok)throw new Error(`Search failed (${r.status})`);const rows=normalizeResults(await r.json()).slice(0,40);resultCount.textContent=`${rows.length} results`;results.innerHTML=rows.length?rows.map((s,i)=>`<div class="result">${s.logo?`<img src="${esc(s.logo)}" alt="">`:'<div></div>'}<div><div class="name">${esc(s.name)}</div><div class="desc">${esc([s.callSign,s.frequency,s.city,s.state,s.description].filter(Boolean).join(' • '))}</div></div><button class="btn primary" data-result="${i}">Add to mixer</button></div>`).join(''):'<div class="empty">No live stations found.</div>';results.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>addChannel(rows[+b.dataset.result],true))}catch(e){resultCount.textContent='Search unavailable';results.innerHTML='<div class="empty">Search unavailable. Try the official iHeart search.</div>';setStatus(e.message)}
 }
-document.getElementById('searchBtn').onclick=searchIHeart;document.getElementById('stopAllBtn').onclick=stopAll;searchInput.addEventListener('keydown',e=>{if(e.key==='Enter')searchIHeart()});renderPresets();renderMixer();
+document.getElementById('searchBtn').onclick=searchIHeart;
+document.getElementById('randomBtn').onclick=playRandom;
+scannerBtn.onclick=toggleScanner;
+document.getElementById('nextScanBtn').onclick=()=>scanNext('Manual scan');
+document.getElementById('stopAllBtn').onclick=stopAll;
+document.getElementById('scanInterval').onchange=()=>{if(scannerTimer){stopScanner();startScanner()}};
+autoAdSwitch.onchange=()=>{localStorage.setItem('radioAutoAdSwitch',autoAdSwitch.checked?'1':'0');if(autoAdSwitch.checked){const first=[...active.values()].find(ch=>!ch.audio.paused);if(first)startAudioHeuristic(first);setStatus('Experimental auto-switch enabled. It may detect extended silence or ad-like metadata when the browser exposes them.')}else{clearInterval(analyserTimer);setStatus('Experimental auto-switch disabled.')}};
+searchInput.addEventListener('keydown',e=>{if(e.key==='Enter')searchIHeart()});
+autoAdSwitch.checked=localStorage.getItem('radioAutoAdSwitch')==='1';
+renderPresets();renderMixer();
 </script>
 </body></html>
