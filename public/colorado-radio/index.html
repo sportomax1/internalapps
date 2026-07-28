@@ -1,342 +1,115 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#07111f" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Colorado Radio" />
-  <title>Colorado Radio Player</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Colorado Radio Mixer</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
   <style>
-    :root{
-      --bg:#07111f; --panel:#0d1b2f; --panel2:#10233f; --text:#eef6ff; --muted:#9fb1c6;
-      --line:rgba(255,255,255,.11); --brand:#69b7ff; --brand2:#8ee6c8; --danger:#ff6b6b; --ok:#65e68b; --warn:#ffd166;
-      --shadow:0 24px 70px rgba(0,0,0,.36); --radius:24px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 20% 5%,rgba(105,183,255,.22),transparent 30%),radial-gradient(circle at 85% 12%,rgba(142,230,200,.18),transparent 28%),linear-gradient(180deg,#06101e,#0b1220 50%,#050912);color:var(--text)}
-    body{overflow-x:hidden}
-    button,input{font:inherit}
-    .app{min-height:100%;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));display:grid;place-items:center}
-    .shell{width:min(1120px,100%);display:grid;gap:18px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .title{display:flex;align-items:center;gap:12px}
-    .logo{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand),var(--brand2));box-shadow:0 14px 35px rgba(105,183,255,.25);font-size:27px}
-    h1{font-size:clamp(24px,4vw,42px);line-height:1;margin:0;letter-spacing:-.04em}
-    .sub{color:var(--muted);font-size:14px;margin-top:6px}
-    .pill{border:1px solid var(--line);border-radius:999px;padding:9px 12px;color:var(--muted);background:rgba(255,255,255,.04);font-size:13px;white-space:nowrap}
-    .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:start}
-    @media (max-width:850px){.grid{grid-template-columns:1fr}.pill{display:none}.app{padding:12px}header{align-items:flex-start}.logo{width:46px;height:46px;border-radius:15px}}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.045));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(18px);overflow:hidden}
-    .player{padding:22px;display:grid;gap:18px}
-    .now{display:grid;grid-template-columns:86px 1fr;gap:16px;align-items:center}
-    .badge{width:86px;height:86px;border-radius:25px;background:linear-gradient(135deg,#1b3d68,#14233f);display:grid;place-items:center;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
-    .badge .freq{font-size:25px;font-weight:900;letter-spacing:-.06em}.badge .band{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-top:-2px}.badge:before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 90deg,transparent,rgba(255,255,255,.14),transparent);animation:spin 7s linear infinite;opacity:.55}.badge>div{position:relative;text-align:center}.paused:before{animation-play-state:paused;opacity:.22}@keyframes spin{to{transform:rotate(360deg)}}
-    .stationName{font-size:clamp(26px,5vw,48px);font-weight:950;letter-spacing:-.055em;line-height:.98;margin:0}.meta{margin-top:8px;color:var(--muted);font-size:14px;display:flex;gap:8px;flex-wrap:wrap}.dot{width:7px;height:7px;border-radius:99px;background:var(--warn);display:inline-block;box-shadow:0 0 18px var(--warn)}.dot.playing{background:var(--ok);box-shadow:0 0 18px var(--ok)}.dot.error{background:var(--danger);box-shadow:0 0 18px var(--danger)}
-    .controls{display:grid;grid-template-columns:auto auto 1fr auto;gap:10px;align-items:center}.btn{border:0;border-radius:16px;padding:13px 15px;min-height:48px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:rgba(255,255,255,.09);color:var(--text);cursor:pointer;border:1px solid rgba(255,255,255,.12);transition:.16s transform,.16s background}.btn:hover{background:rgba(255,255,255,.14);transform:translateY(-1px)}.btn:active{transform:translateY(1px)}.primary{background:linear-gradient(135deg,var(--brand),#3f82ff);color:#03101e;font-weight:900;border:0;min-width:92px}.primary:hover{background:linear-gradient(135deg,#8fcaff,#66a3ff)}
-    .vol{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}.vol input{width:100%;accent-color:var(--brand)}
-    audio{width:100%;filter:drop-shadow(0 10px 18px rgba(0,0,0,.18))}
-    .statusBox{border-radius:18px;background:rgba(0,0,0,.18);border:1px solid var(--line);padding:13px;color:var(--muted);font-size:13px;line-height:1.4;min-height:44px}.statusBox strong{color:var(--text)}
-    .visual{height:86px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.12));border:1px solid var(--line);overflow:hidden}.bars{height:100%;display:flex;align-items:end;gap:4px;padding:12px}.bar{flex:1;min-width:3px;border-radius:999px;background:linear-gradient(180deg,var(--brand2),var(--brand));height:18%;opacity:.85;transition:height .12s linear}
-    .stations{padding:14px;display:grid;gap:10px}.station{width:100%;min-height:92px;text-align:left;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.055);color:var(--text);padding:14px;cursor:pointer;display:grid;grid-template-columns:74px 1fr auto;gap:12px;align-items:center;transition:.16s}.station:hover{background:rgba(255,255,255,.095);transform:translateY(-1px)}.station.active{outline:2px solid rgba(105,183,255,.55);background:rgba(105,183,255,.12)}.miniFreq{font-size:20px;font-weight:950;letter-spacing:-.06em}.miniBand{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800}.sName{font-weight:850;font-size:16px}.sDesc{color:var(--muted);font-size:12px;margin-top:4px}.type{font-size:11px;color:#05101b;background:linear-gradient(135deg,var(--brand2),var(--brand));border-radius:999px;padding:6px 9px;font-weight:900;text-transform:uppercase;white-space:nowrap}
-    .tools{padding:16px;display:grid;gap:14px}.tools h2{font-size:16px;margin:0}.row{display:flex;gap:8px}.row input{flex:1;min-width:0;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);padding:12px}.row input::placeholder{color:#708197}.small{font-size:12px;color:var(--muted);line-height:1.45}.links{display:flex;gap:8px;flex-wrap:wrap}.linkBtn{text-decoration:none;color:var(--text);border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:999px;padding:9px 11px;font-size:12px}.hidden{display:none}.footer{color:var(--muted);font-size:12px;text-align:center;line-height:1.45;padding-bottom:10px}
-
-    @media (max-width:600px){
-      html,body{min-height:100%;overscroll-behavior-y:none}
-      .app{display:block;padding:max(10px,env(safe-area-inset-top)) 10px calc(18px + env(safe-area-inset-bottom))}
-      .shell{gap:12px}
-      header{padding:2px 4px 0}
-      .title{gap:10px}
-      .logo{width:44px;height:44px;border-radius:14px;font-size:23px}
-      h1{font-size:25px}
-      .sub{font-size:12px;line-height:1.25;max-width:250px}
-      .card{border-radius:20px}
-      .player{padding:16px;gap:14px;position:relative}
-      .now{grid-template-columns:68px 1fr;gap:12px}
-      .badge{width:68px;height:68px;border-radius:20px}
-      .badge .freq{font-size:21px}
-      .stationName{font-size:29px;line-height:1}
-      .meta{font-size:12px;gap:6px;line-height:1.35}
-      .visual{height:62px;border-radius:16px}
-      .bars{padding:9px;gap:3px}
-      .controls{grid-template-columns:52px minmax(96px,1fr) 52px;gap:8px}
-      .controls .vol{grid-column:1/-1;order:4;padding:2px 2px 0}
-      .btn{padding:11px 12px;min-height:50px}
-      .primary{min-width:0;font-size:16px}
-      audio{height:46px}
-      .statusBox{padding:11px 12px;font-size:12px;border-radius:15px;word-break:break-word}
-      .links{display:grid;grid-template-columns:1fr 1fr}
-      .linkBtn{text-align:center;border-radius:14px;padding:11px 8px}
-      .stations{padding:10px;gap:8px}
-      .station{grid-template-columns:62px 1fr;min-height:84px;padding:12px;border-radius:17px}
-      .station .type{display:none}
-      .miniFreq{font-size:19px}
-      .sName{font-size:15px}
-      .sDesc{font-size:11px;line-height:1.35}
-      .tools{padding:14px}
-      .row{display:grid;grid-template-columns:1fr}
-      .row input{min-height:48px;font-size:16px}
-      .footer{font-size:11px;padding:0 8px 4px}
-    }
-    @media (min-width:601px) and (max-width:850px){
-      .app{padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
-      .shell{max-width:720px}
-      .stations{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .station{grid-template-columns:64px 1fr}
-      .station .type{display:none}
-    }
-    @media (min-width:1100px){
-      .player{position:sticky;top:18px}
-    }
-    @media (hover:none){
-      .btn:hover,.station:hover{transform:none}
-    }
-    @media (prefers-reduced-motion:reduce){
-      *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
-    }
+    :root{--bg:#06101e;--panel:#0d1b2f;--text:#eef6ff;--muted:#9fb1c6;--line:rgba(255,255,255,.11);--brand:#69b7ff;--brand2:#8ee6c8;--danger:#ff6b6b;--ok:#65e68b;--warn:#ffd166;--shadow:0 22px 65px rgba(0,0,0,.35)}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 15% 0,rgba(105,183,255,.22),transparent 28%),radial-gradient(circle at 90% 5%,rgba(142,230,200,.15),transparent 25%),linear-gradient(180deg,#06101e,#090f19);color:var(--text)}
+    button,input{font:inherit}.app{min-height:100vh;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+    .shell{width:min(1200px,100%);margin:auto;display:grid;gap:16px}header{display:flex;justify-content:space-between;gap:12px;align-items:center}.title{display:flex;gap:12px;align-items:center}.logo{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;font-size:27px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#04101c;box-shadow:0 12px 34px rgba(105,183,255,.25)}h1{margin:0;font-size:clamp(25px,4vw,42px);letter-spacing:-.045em}.sub{color:var(--muted);font-size:13px;margin-top:5px}.warning{font-size:12px;color:#1a1300;background:var(--warn);padding:8px 11px;border-radius:999px;font-weight:800}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.04));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+    .toolbar{padding:14px;display:grid;grid-template-columns:1fr auto auto;gap:9px}.search{min-width:0;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.23);color:var(--text);padding:13px 14px;font-size:16px}.btn{border:1px solid var(--line);border-radius:14px;min-height:46px;padding:10px 14px;background:rgba(255,255,255,.08);color:var(--text);cursor:pointer;touch-action:manipulation}.btn:hover{background:rgba(255,255,255,.14)}.primary{background:linear-gradient(135deg,var(--brand),#4d8fff);color:#03101e;border:0;font-weight:900}.danger{background:rgba(255,107,107,.14);color:#ffd6d6}.small{font-size:12px;color:var(--muted)}
+    .layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{padding:14px;display:grid;gap:11px}.sectionHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.sectionHead h2{margin:0;font-size:17px}.count{color:var(--muted);font-size:12px}
+    .list{display:grid;gap:9px}.station{display:grid;grid-template-columns:66px 1fr auto;gap:11px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.045)}.freq{font-size:19px;font-weight:950;letter-spacing:-.05em}.band{font-size:10px;color:var(--muted);font-weight:800}.name{font-weight:850}.desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}.stationActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stationActions .btn{min-height:40px;padding:8px 10px;font-size:12px}
+    .mixer{display:grid;gap:10px}.channel{border:1px solid var(--line);border-radius:18px;background:rgba(0,0,0,.18);padding:12px;display:grid;gap:10px}.channelTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.channelName{font-weight:900}.live{font-size:10px;border-radius:999px;padding:5px 8px;background:rgba(101,230,139,.15);color:var(--ok);font-weight:900}.channelControls{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}.channelControls input{width:100%;accent-color:var(--brand)}audio{display:none}
+    .results{display:grid;gap:8px}.result{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.04)}.result img{width:52px;height:52px;border-radius:12px;object-fit:cover;background:#10233f}.result .btn{font-size:12px;padding:8px 10px}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px}.status{padding:11px 14px;color:var(--muted);font-size:12px;line-height:1.4}.footer{text-align:center;color:var(--muted);font-size:11px;padding:2px 8px}
+    @media(max-width:850px){.layout{grid-template-columns:1fr}.warning{display:none}}@media(max-width:600px){.app{padding:10px 10px calc(18px + env(safe-area-inset-bottom))}.logo{width:44px;height:44px;border-radius:14px}.sub{max-width:260px}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.station{grid-template-columns:58px 1fr}.stationActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.result{grid-template-columns:46px 1fr}.result img{width:46px;height:46px}.result .btn{grid-column:1/-1}.section{padding:10px}.channelControls{grid-template-columns:1fr 1fr}.channelControls input{grid-column:1/-1;grid-row:2}.btn{min-height:48px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <main class="app">
-    <section class="shell">
-      <header>
-        <div class="title"><div class="logo">📻</div><div><h1>Colorado Radio</h1><div class="sub">One-tap Denver sports, country, rock, and talk streams</div></div></div>
-        <div class="pill">SPA • HLS + AAC • Fire TV friendly</div>
-      </header>
-
-      <section class="grid">
-        <div class="card player">
-          <div class="now">
-            <div id="badge" class="badge paused"><div><div id="bigFreq" class="freq">104.3</div><div id="bigBand" class="band">FM</div></div></div>
-            <div><h2 id="stationName" class="stationName">104.3 The Fan</h2><div class="meta"><span><span id="statusDot" class="dot"></span> <span id="playState">Ready</span></span><span id="stationMeta">Sports • Denver/Boulder</span></div></div>
-          </div>
-
-          <div class="visual"><div id="bars" class="bars"></div></div>
-
-          <div class="controls">
-            <button id="prevBtn" class="btn" title="Previous station" aria-label="Previous station">⏮</button>
-            <button id="playBtn" class="btn primary" aria-label="Play selected station">Play</button>
-            <div class="vol">🔈 <input id="volume" aria-label="Volume" type="range" min="0" max="1" step="0.01" value="0.8" /> 🔊</div>
-            <button id="nextBtn" class="btn" title="Next station" aria-label="Next station">⏭</button>
-          </div>
-
-          <audio id="audio" controls playsinline preload="none"></audio>
-          <div id="status" class="statusBox"><strong>Ready.</strong> Pick a station and press Play. iPhone/Fire TV require a tap before audio starts.</div>
-          <div class="links"><a id="officialLink" class="linkBtn" href="#" target="_blank" rel="noopener">Official station page ↗</a><a id="streamLink" class="linkBtn" href="#" target="_blank" rel="noopener">Open raw stream ↗</a></div>
-        </div>
-
-        <div class="card stations" id="stationList"></div>
-      </section>
-
-      <section class="card tools">
-        <h2>Test / replace a stream URL</h2>
-        <div class="row"><input id="customUrl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste MP3, AAC, or .m3u8 stream URL" /><button id="testBtn" class="btn primary">Test</button></div>
-        <div class="small">If one station changes its stream later, paste the new stream here to test it. The app supports normal AAC/MP3 streams and HLS .m3u8 streams. Some live sports broadcasts can be blacked out or restricted by the broadcaster.</div>
-      </section>
-
-      <div class="footer">For personal/private listening apps. Respect each broadcaster’s terms, ads, geo restrictions, and game blackout rules.</div>
-    </section>
-  </main>
-
+<main class="app"><div class="shell">
+<header><div class="title"><div class="logo">📻</div><div><h1>Colorado Radio Mixer</h1><div class="sub">Colorado presets + searchable iHeart live-radio library</div></div></div><div class="warning">Multiple streams can sound chaotic</div></header>
+<section class="card toolbar">
+<input id="searchInput" class="search" type="search" placeholder="Search iHeart: station, city, frequency or genre…" autocomplete="off">
+<button id="searchBtn" class="btn primary">Search iHeart</button>
+<button id="stopAllBtn" class="btn danger">Stop all</button>
+</section>
+<div id="status" class="card status">Play one station normally, or add several to the mixer. Browsers require a tap before audio can start.</div>
+<section class="layout">
+  <div class="card section"><div class="sectionHead"><h2>Colorado presets</h2><span id="presetCount" class="count"></span></div><div id="presetList" class="list"></div></div>
+  <div class="card section"><div class="sectionHead"><h2>Active mixer</h2><span id="mixerCount" class="count">0 playing</span></div><div id="mixer" class="mixer"><div class="empty">No active streams.</div></div></div>
+</section>
+<section class="card section">
+  <div class="sectionHead"><h2>iHeart search results</h2><span id="resultCount" class="count">Search the nationwide library</span></div>
+  <div id="results" class="results"><div class="empty">Try “Denver”, “sports”, “classic rock”, “New York” or a call sign.</div></div>
+</section>
+<div class="footer">Search uses iHeart catalog data through this app’s same-origin proxy. Availability, ads, geoblocks and game blackouts are controlled by broadcasters.</div>
+</div></main>
 <script>
-const STATIONS = [
-  {
-    name: '104.3 The Fan', frequency: '104.3', band: 'FM', callSign: 'KKFN', category: 'Sports', area: 'Denver/Boulder',
-    official: 'https://denversports.com/',
-    stream: 'https://bonneville.cdnstream1.com/2612_48.aac',
-    notes: 'Denver sports talk. Direct AAC stream.'
-  },
-  {
-    name: '98.5 KYGO', frequency: '98.5', band: 'FM', callSign: 'KYGO', category: 'Country', area: 'Denver',
-    official: 'https://kygo.com/',
-    stream: 'https://bonneville.cdnstream1.com/2710_48.aac',
-    notes: 'Country. Direct AAC stream.'
-  },
-  {
-    name: '97.3 KBCO', frequency: '97.3', band: 'FM', callSign: 'KBCO', category: 'Rock', area: 'Denver/Boulder',
-    official: 'https://kbco.iheart.com/',
-    stream: 'https://stream.revma.ihrhls.com/zc2804/hls.m3u8',
-    notes: 'iHeart HLS stream. Uses hls.js when needed.'
-  },
-  {
-    name: 'KOA 850 / 94.1', frequency: '850', band: 'AM', callSign: 'KOA', category: 'News/Talk/Sports', area: 'Denver/Colorado',
-    official: 'https://koacolorado.iheart.com/',
-    stream: 'https://stream.revma.ihrhls.com/zc389/hls.m3u8',
-    notes: 'iHeart HLS stream. Broncos/game broadcasts may be restricted.'
-  },
-  {
-    name: 'Altitude Sports Radio', frequency: '92.5', band: 'FM', callSign: 'KKSE', category: 'Sports', area: 'Denver',
-    official: 'https://www.altitudesportsradio.com/',
-    stream: 'https://playerservices.streamtheworld.com/api/livestream-redirect/KKSEFMAAC.aac',
-    notes: 'Nuggets, Avalanche, Rapids. Direct StreamTheWorld AAC.'
-  },
-  {
-    name: '103.5 The Fox', frequency: '103.5', band: 'FM', callSign: 'KRFX', category: 'Rock', area: 'Denver',
-    official: 'https://thefox.iheart.com/',
-    stream: 'https://stream.revma.ihrhls.com/zc393',
-    notes: 'Colorado rock and Broncos partner. Direct iHeart stream.'
-  },
-  {
-    name: 'Channel 93.3', frequency: '93.3', band: 'FM', callSign: 'KTCL', category: 'Alternative', area: 'Denver',
-    official: 'https://channel933.iheart.com/',
-    stream: 'https://stream.revma.ihrhls.com/zc397',
-    notes: 'Alternative and modern rock. Direct iHeart stream.'
-  },
-  {
-    name: '106.7 The Bull', frequency: '106.7', band: 'FM', callSign: 'KWBL', category: 'Country', area: 'Denver',
-    official: 'https://1067thebull.iheart.com/',
-    stream: 'https://stream.revma.ihrhls.com/zc7784',
-    notes: 'Colorado country. Direct iHeart stream.'
-  }
+const PRESETS=[
+{name:'104.3 The Fan',frequency:'104.3',band:'FM',callSign:'KKFN',category:'Sports',area:'Denver',official:'https://denversports.com/',stream:'https://bonneville.cdnstream1.com/2612_48.aac'},
+{name:'92.5 Altitude Sports',frequency:'92.5',band:'FM',callSign:'KKSE',category:'Sports',area:'Denver',official:'https://www.altitudesportsradio.com/',stream:'https://playerservices.streamtheworld.com/api/livestream-redirect/KKSEFMAAC.aac'},
+{name:'KOA 850 / 94.1',frequency:'850',band:'AM',callSign:'KOA',category:'News/Talk/Sports',area:'Colorado',official:'https://koacolorado.iheart.com/',stream:'https://stream.revma.ihrhls.com/zc389/hls.m3u8',iheartId:389},
+{name:'98.5 KYGO',frequency:'98.5',band:'FM',callSign:'KYGO',category:'Country',area:'Denver',official:'https://kygo.com/',stream:'https://bonneville.cdnstream1.com/2710_48.aac'},
+{name:'97.3 KBCO',frequency:'97.3',band:'FM',callSign:'KBCO',category:'Rock',area:'Denver/Boulder',official:'https://kbco.iheart.com/',stream:'https://stream.revma.ihrhls.com/zc2804/hls.m3u8',iheartId:2804},
+{name:'103.5 The Fox',frequency:'103.5',band:'FM',callSign:'KRFX',category:'Classic Rock',area:'Denver',official:'https://thefox.iheart.com/',stream:'https://stream.revma.ihrhls.com/zc393/hls.m3u8',iheartId:393},
+{name:'Channel 93.3',frequency:'93.3',band:'FM',callSign:'KTCL',category:'Alternative',area:'Denver',official:'https://channel933.iheart.com/',stream:'https://stream.revma.ihrhls.com/zc397/hls.m3u8',iheartId:397},
+{name:'106.7 The Bull',frequency:'106.7',band:'FM',callSign:'KWBL',category:'Country',area:'Denver',official:'https://1067thebull.iheart.com/',stream:'https://stream.revma.ihrhls.com/zc7784/hls.m3u8',iheartId:7784}
 ];
-
-const audio = document.getElementById('audio');
-const stationList = document.getElementById('stationList');
-const playBtn = document.getElementById('playBtn');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const volume = document.getElementById('volume');
-const statusEl = document.getElementById('status');
-const dot = document.getElementById('statusDot');
-const playState = document.getElementById('playState');
-const stationName = document.getElementById('stationName');
-const stationMeta = document.getElementById('stationMeta');
-const bigFreq = document.getElementById('bigFreq');
-const bigBand = document.getElementById('bigBand');
-const badge = document.getElementById('badge');
-const officialLink = document.getElementById('officialLink');
-const streamLink = document.getElementById('streamLink');
-const customUrl = document.getElementById('customUrl');
-const testBtn = document.getElementById('testBtn');
-const bars = document.getElementById('bars');
-let current = 0;
-let hls = null;
-let manuallyRequestedPlay = false;
-
-for(let i=0;i<42;i++){
-  const b=document.createElement('div'); b.className='bar'; b.style.height=(12+Math.random()*42)+'%'; bars.appendChild(b);
+const active=new Map();
+const presetList=document.getElementById('presetList'),mixer=document.getElementById('mixer'),results=document.getElementById('results'),statusEl=document.getElementById('status');
+const resultCount=document.getElementById('resultCount'),mixerCount=document.getElementById('mixerCount'),searchInput=document.getElementById('searchInput');
+function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function keyFor(s){return String(s.iheartId||s.id||s.stream||s.name)}
+function isHls(u=''){return /\.m3u8($|\?)/i.test(u)}
+function setStatus(t){statusEl.textContent=t}
+function renderPresets(){
+ document.getElementById('presetCount').textContent=`${PRESETS.length} stations`;
+ presetList.innerHTML=PRESETS.map((s,i)=>`<div class="station"><div><div class="freq">${esc(s.frequency)}</div><div class="band">${esc(s.band)}</div></div><div><div class="name">${esc(s.name)}</div><div class="desc">${esc(s.callSign)} • ${esc(s.category)} • ${esc(s.area)}</div></div><div class="stationActions"><button class="btn primary" data-play="${i}">Play solo</button><button class="btn" data-add="${i}">Add to mix</button></div></div>`).join('');
+ presetList.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>playSolo(PRESETS[+b.dataset.play]));
+ presetList.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addChannel(PRESETS[+b.dataset.add],true));
 }
-
-function setStatus(kind, html){
-  statusEl.innerHTML = html;
-  dot.className = 'dot' + (kind === 'playing' ? ' playing' : kind === 'error' ? ' error' : '');
-  playState.textContent = kind === 'playing' ? 'Playing' : kind === 'error' ? 'Problem' : kind === 'loading' ? 'Loading' : 'Ready';
-  badge.classList.toggle('paused', kind !== 'playing');
+function stopAndDestroy(ch){ch.audio.pause();ch.audio.removeAttribute('src');ch.audio.load();if(ch.hls)ch.hls.destroy()}
+function stopAll(){active.forEach(stopAndDestroy);active.clear();renderMixer();setStatus('All streams stopped.')}
+async function playSolo(s){stopAll();await addChannel(s,true)}
+async function resolveStation(s){
+ if(s.stream)return s;
+ if(!s.iheartId&&!s.id)throw new Error('No iHeart station ID was provided.');
+ const r=await fetch(`/api/iheart?action=station&id=${encodeURIComponent(s.iheartId||s.id)}`);
+ if(!r.ok)throw new Error(`Station lookup failed (${r.status})`);
+ const data=await r.json();return {...s,...data,stream:data.stream||s.stream};
 }
-
-function renderStations(){
-  stationList.innerHTML = '';
-  STATIONS.forEach((s, idx)=>{
-    const btn=document.createElement('button');
-    btn.className='station' + (idx===current?' active':'');
-    btn.innerHTML=`<div><div class="miniFreq">${s.frequency}</div><div class="miniBand">${s.band}</div></div><div><div class="sName">${s.name}</div><div class="sDesc">${s.callSign} • ${s.area}<br>${s.notes}</div></div><div class="type">${s.category}</div>`;
-    btn.setAttribute('aria-label', `Play ${s.name} ${s.frequency} ${s.band}`);
-    btn.onclick=()=>selectStation(idx, true);
-    stationList.appendChild(btn);
-  });
+async function addChannel(input,autoplay){
+ try{
+  const s=await resolveStation(input);if(!s.stream)throw new Error('No playable stream was returned.');
+  const k=keyFor(s);if(active.has(k)){if(autoplay)await active.get(k).audio.play();return}
+  const audio=new Audio();audio.preload='none';audio.playsInline=true;audio.volume=.75;let hls=null;
+  if(isHls(s.stream)){if(audio.canPlayType('application/vnd.apple.mpegurl'))audio.src=s.stream;else if(window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true,backBufferLength:45});hls.loadSource(s.stream);hls.attachMedia(audio)}else throw new Error('This browser cannot play HLS.')}else audio.src=s.stream;
+  const ch={station:s,audio,hls};active.set(k,ch);
+  audio.addEventListener('playing',renderMixer);audio.addEventListener('pause',renderMixer);audio.addEventListener('error',()=>setStatus(`${s.name}: stream failed or is restricted.`));
+  renderMixer();if(autoplay){await audio.play();setStatus(`Playing ${s.name}${active.size>1?` with ${active.size-1} other stream(s).`:'.'}`)}
+ }catch(e){setStatus(e.message||'Unable to start station.')}
 }
-
-function updateUI(){
-  const s = STATIONS[current];
-  stationName.textContent = s.name;
-  stationMeta.textContent = `${s.category} • ${s.callSign} • ${s.area}`;
-  bigFreq.textContent = s.frequency;
-  bigBand.textContent = s.band;
-  officialLink.href = s.official;
-  streamLink.href = s.stream;
-  renderStations();
+function removeChannel(k){const ch=active.get(k);if(!ch)return;stopAndDestroy(ch);active.delete(k);renderMixer()}
+function renderMixer(){
+ mixerCount.textContent=`${active.size} active`;
+ if(!active.size){mixer.innerHTML='<div class="empty">No active streams.</div>';return}
+ mixer.innerHTML=[...active].map(([k,ch])=>`<div class="channel"><div class="channelTop"><div><div class="channelName">${esc(ch.station.name)}</div><div class="desc">${esc(ch.station.callSign||'')} ${ch.station.city?'• '+esc(ch.station.city):''}</div></div><span class="live">${ch.audio.paused?'PAUSED':'LIVE'}</span></div><div class="channelControls"><button class="btn primary" data-toggle="${esc(k)}">${ch.audio.paused?'Play':'Pause'}</button><input data-volume="${esc(k)}" type="range" min="0" max="1" step=".01" value="${ch.audio.volume}"><button class="btn danger" data-remove="${esc(k)}">Remove</button></div></div>`).join('');
+ mixer.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const ch=active.get(b.dataset.toggle);if(ch.audio.paused)await ch.audio.play();else ch.audio.pause();renderMixer()});
+ mixer.querySelectorAll('[data-volume]').forEach(r=>r.oninput=()=>{active.get(r.dataset.volume).audio.volume=+r.value});
+ mixer.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>removeChannel(b.dataset.remove));
 }
-
-function isHls(url){ return /\.m3u8($|\?)/i.test(url); }
-
-function destroyHls(){
-  if(hls){ hls.destroy(); hls = null; }
+function normalizeResults(data){
+ const pools=[data?.stations,data?.liveStations,data?.results?.stations,data?.results,data?.hits,data?.data].find(Array.isArray)||[];
+ return pools.filter(x=>x&&typeof x==='object').map(x=>({id:x.id||x.stationId||x.contentId,iheartId:x.id||x.stationId||x.contentId,name:x.name||x.title||x.stationName||'Unknown station',callSign:x.callLetters||x.callSign||x.callsign||'',frequency:x.frequency||x.freq||'',band:x.band||'',city:x.city||x.market?.city||x.marketName||'',state:x.state||x.market?.state||'',description:x.description||x.slogan||x.format||'',logo:x.logo||x.logoUrl||x.image||x.imageUrl||x.assets?.logo,official:x.website||x.site||x.url||((x.id||x.stationId)?`https://www.iheart.com/live/${x.id||x.stationId}/`:'')})).filter(x=>x.id);
 }
-
-async function loadStream(url){
-  destroyHls();
-  audio.pause();
-  audio.removeAttribute('src');
-  audio.load();
-  setStatus('loading', `<strong>Loading stream…</strong><br>${url}`);
-
-  if(isHls(url)){
-    if(audio.canPlayType('application/vnd.apple.mpegurl')){
-      audio.src = url;
-    } else if(window.Hls && Hls.isSupported()){
-      hls = new Hls({ enableWorker:true, lowLatencyMode:false, backBufferLength:60 });
-      hls.loadSource(url);
-      hls.attachMedia(audio);
-      hls.on(Hls.Events.ERROR, (_, data)=>{
-        if(data.fatal){
-          setStatus('error', `<strong>HLS stream error.</strong><br>Try the official site or paste a replacement stream URL.`);
-        }
-      });
-    } else {
-      setStatus('error', `<strong>This browser cannot play HLS streams.</strong><br>Try Safari/iPhone, Chrome with hls.js available, or open the official site.`);
-      return;
-    }
-  } else {
-    audio.src = url;
-  }
+async function searchIHeart(){
+ const q=searchInput.value.trim();if(!q){setStatus('Enter a station, city, frequency, call sign or genre.');return}
+ results.innerHTML='<div class="empty">Searching iHeart…</div>';resultCount.textContent='Searching…';
+ try{
+  const r=await fetch(`/api/iheart?action=search&q=${encodeURIComponent(q)}`);if(!r.ok)throw new Error(`Search failed (${r.status})`);
+  const data=await r.json();const rows=normalizeResults(data).slice(0,40);resultCount.textContent=`${rows.length} result${rows.length===1?'':'s'}`;
+  if(!rows.length){results.innerHTML=`<div class="empty">No live stations found. <a style="color:#9fd0ff" target="_blank" rel="noopener" href="https://www.iheart.com/search/?q=${encodeURIComponent(q)}">Search on iHeart</a></div>`;return}
+  results.innerHTML=rows.map((s,i)=>`<div class="result">${s.logo?`<img src="${esc(s.logo)}" alt="">`:'<div></div>'}<div><div class="name">${esc(s.name)}</div><div class="desc">${esc([s.callSign,s.frequency,s.city,s.state,s.description].filter(Boolean).join(' • '))}</div></div><button class="btn primary" data-result="${i}">Add to mixer</button></div>`).join('');
+  results.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>addChannel(rows[+b.dataset.result],true));
+ }catch(e){resultCount.textContent='Search unavailable';results.innerHTML=`<div class="empty">${esc(e.message)}<br><br><a style="color:#9fd0ff" target="_blank" rel="noopener" href="https://www.iheart.com/search/?q=${encodeURIComponent(q)}">Open this search on iHeart</a></div>`;setStatus('iHeart search could not be reached. The direct iHeart search link is available.')}
 }
-
-async function selectStation(idx, autoPlay=false){
-  current = (idx + STATIONS.length) % STATIONS.length;
-  updateUI();
-  await loadStream(STATIONS[current].stream);
-  if(autoPlay || manuallyRequestedPlay){ playCurrent(); }
-}
-
-async function playCurrent(){
-  manuallyRequestedPlay = true;
-  try{
-    await audio.play();
-    playBtn.textContent = 'Pause';
-    setStatus('playing', `<strong>Playing ${STATIONS[current].name}.</strong><br>${STATIONS[current].stream}`);
-  } catch(err){
-    setStatus('error', `<strong>Playback was blocked or failed.</strong><br>Tap Play again, check network, or open the official station page. ${err?.message ? '<br><small>'+err.message+'</small>' : ''}`);
-  }
-}
-
-function pauseCurrent(){
-  audio.pause();
-  playBtn.textContent = 'Play';
-  setStatus('ready', `<strong>Paused.</strong><br>${STATIONS[current].name}`);
-}
-
-playBtn.onclick=()=> audio.paused ? playCurrent() : pauseCurrent();
-prevBtn.onclick=()=>selectStation(current-1,true);
-nextBtn.onclick=()=>selectStation(current+1,true);
-volume.oninput=()=> audio.volume = Number(volume.value);
-testBtn.onclick=async()=>{
-  const url = customUrl.value.trim();
-  if(!url){ setStatus('error','<strong>Paste a stream URL first.</strong>'); return; }
-  STATIONS[current] = {...STATIONS[current], name:'Custom Test Stream', frequency:'TEST', band:'URL', callSign:'CUSTOM', category:'Test', area:'Manual URL', stream:url, official:url, notes:'User-pasted test stream.'};
-  updateUI();
-  await loadStream(url);
-  playCurrent();
-};
-
-audio.addEventListener('playing',()=>{ playBtn.textContent='Pause'; setStatus('playing', `<strong>Playing ${STATIONS[current].name}.</strong><br>${STATIONS[current].stream}`); });
-audio.addEventListener('pause',()=>{ if(!audio.ended) playBtn.textContent='Play'; });
-audio.addEventListener('waiting',()=> setStatus('loading', `<strong>Buffering…</strong><br>${STATIONS[current].name}`));
-audio.addEventListener('canplay',()=>{ if(audio.paused) setStatus('ready', `<strong>${STATIONS[current].name} is ready.</strong><br>Tap Play to listen.`); });
-audio.addEventListener('error',()=> setStatus('error', `<strong>Audio element error.</strong><br>This stream may be blocked, down, georestricted, or using a changed URL.`));
-
-setInterval(()=>{
-  const playing = !audio.paused && !audio.ended;
-  document.querySelectorAll('.bar').forEach((b,i)=>{
-    const h = playing ? 15 + Math.abs(Math.sin(Date.now()/260 + i*.38))*72 + Math.random()*8 : 10 + Math.random()*16;
-    b.style.height = Math.min(96,h)+'%';
-  });
-}, 150);
-
-audio.volume = Number(volume.value);
-updateUI();
-loadStream(STATIONS[0].stream);
+document.getElementById('searchBtn').onclick=searchIHeart;document.getElementById('stopAllBtn').onclick=stopAll;searchInput.addEventListener('keydown',e=>{if(e.key==='Enter')searchIHeart()});renderPresets();renderMixer();
 </script>
-</body>
-</html>
+</body></html>
