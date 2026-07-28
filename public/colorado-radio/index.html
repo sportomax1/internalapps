@@ -16,21 +16,21 @@
     .card{background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.04));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);backdrop-filter:blur(18px)}
     .toolbar{padding:14px;display:grid;grid-template-columns:1fr auto auto;gap:9px}.search{min-width:0;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.23);color:var(--text);padding:13px 14px;font-size:16px}.btn{border:1px solid var(--line);border-radius:14px;min-height:46px;padding:10px 14px;background:rgba(255,255,255,.08);color:var(--text);cursor:pointer;touch-action:manipulation}.btn:hover{background:rgba(255,255,255,.14)}.primary{background:linear-gradient(135deg,var(--brand),#4d8fff);color:#03101e;border:0;font-weight:900}.danger{background:rgba(255,107,107,.14);color:#ffd6d6}.small{font-size:12px;color:var(--muted)}
     .layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{padding:14px;display:grid;gap:11px}.sectionHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.sectionHead h2{margin:0;font-size:17px}.count{color:var(--muted);font-size:12px}
-    .list{display:grid;gap:9px}.station{display:grid;grid-template-columns:66px 1fr auto;gap:11px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.045)}.freq{font-size:19px;font-weight:950;letter-spacing:-.05em}.band{font-size:10px;color:var(--muted);font-weight:800}.name{font-weight:850}.desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}.stationActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stationActions .btn{min-height:40px;padding:8px 10px;font-size:12px}
-    .mixer{display:grid;gap:10px}.channel{border:1px solid var(--line);border-radius:18px;background:rgba(0,0,0,.18);padding:12px;display:grid;gap:10px}.channelTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.channelName{font-weight:900}.live{font-size:10px;border-radius:999px;padding:5px 8px;background:rgba(101,230,139,.15);color:var(--ok);font-weight:900}.channelControls{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}.channelControls input{width:100%;accent-color:var(--brand)}audio{display:none}
+    .list{display:grid;gap:9px}.station{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:11px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.045)}.freq{font-size:19px;font-weight:950;letter-spacing:-.05em}.band{font-size:10px;color:var(--muted);font-weight:800}.name{font-weight:850}.desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}.stationActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stationActions .btn{min-height:38px;padding:7px 9px;font-size:12px}
+    .mixer{display:grid;gap:10px}.channel{border:1px solid var(--line);border-radius:18px;background:rgba(0,0,0,.18);padding:12px;display:grid;gap:10px}.channelTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.channelName{font-weight:900}.live{font-size:10px;border-radius:999px;padding:5px 8px;background:rgba(101,230,139,.15);color:var(--ok);font-weight:900}.channelControls{display:grid;grid-template-columns:auto auto auto 1fr auto;gap:8px;align-items:center}.channelControls input{width:100%;accent-color:var(--brand)}audio{display:none}
     .results{display:grid;gap:8px}.result{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.04)}.result img{width:52px;height:52px;border-radius:12px;object-fit:cover;background:#10233f}.result .btn{font-size:12px;padding:8px 10px}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px}.status{padding:11px 14px;color:var(--muted);font-size:12px;line-height:1.4}.footer{text-align:center;color:var(--muted);font-size:11px;padding:2px 8px}
-    @media(max-width:850px){.layout{grid-template-columns:1fr}.warning{display:none}}@media(max-width:600px){.app{padding:10px 10px calc(18px + env(safe-area-inset-bottom))}.logo{width:44px;height:44px;border-radius:14px}.sub{max-width:260px}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.station{grid-template-columns:58px 1fr}.stationActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.result{grid-template-columns:46px 1fr}.result img{width:46px;height:46px}.result .btn{grid-column:1/-1}.section{padding:10px}.channelControls{grid-template-columns:1fr 1fr}.channelControls input{grid-column:1/-1;grid-row:2}.btn{min-height:48px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+    @media(max-width:850px){.layout{grid-template-columns:1fr}.warning{display:none}}@media(max-width:600px){.app{padding:10px 10px calc(18px + env(safe-area-inset-bottom))}.logo{width:44px;height:44px;border-radius:14px}.sub{max-width:260px}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.station{grid-template-columns:62px minmax(0,1fr) auto}.stationActions{grid-column:auto;display:flex}.stationActions .btn{font-size:0;width:42px;padding:8px}.stationActions .btn:before{font-size:16px}.stationActions .primary:before{content:'▶'}.stationActions .mixBtn:before{content:'＋'}.result{grid-template-columns:46px 1fr}.result img{width:46px;height:46px}.result .btn{grid-column:1/-1}.section{padding:10px}.channelControls{grid-template-columns:repeat(4,1fr)}.channelControls input{grid-column:1/-1;grid-row:2}.btn{min-height:48px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
 <body>
 <main class="app"><div class="shell">
-<header><div class="title"><div class="logo">📻</div><div><h1>Colorado Radio Mixer</h1><div class="sub">Colorado presets + searchable iHeart live-radio library</div></div></div><div class="warning">Multiple streams can sound chaotic</div></header>
+<header><div class="title"><div class="logo">📻</div><div><h1>Colorado Radio Mixer</h1><div class="sub">Colorado sports presets + searchable iHeart live-radio library</div></div></div><div class="warning">Multiple streams can sound chaotic</div></header>
 <section class="card toolbar">
 <input id="searchInput" class="search" type="search" placeholder="Search iHeart: station, city, frequency or genre…" autocomplete="off">
 <button id="searchBtn" class="btn primary">Search iHeart</button>
 <button id="stopAllBtn" class="btn danger">Stop all</button>
 </section>
-<div id="status" class="card status">Play one station normally, or add several to the mixer. Browsers require a tap before audio can start.</div>
+<div id="status" class="card status">Each saved station stays on one compact line. Add several to the mixer; rewind works only when a station exposes a DVR window, and clip saving depends on browser/CORS support.</div>
 <section class="layout">
   <div class="card section"><div class="sectionHead"><h2>Colorado presets</h2><span id="presetCount" class="count"></span></div><div id="presetList" class="list"></div></div>
   <div class="card section"><div class="sectionHead"><h2>Active mixer</h2><span id="mixerCount" class="count">0 playing</span></div><div id="mixer" class="mixer"><div class="empty">No active streams.</div></div></div>
@@ -43,6 +43,8 @@
 </div></main>
 <script>
 const PRESETS=[
+{name:'K99 CSU Rams',frequency:'99.1',band:'FM',callSign:'KUAD',category:'CSU Football/MBB',area:'Northern Colorado',official:'https://k99.com/listen-live/',stream:'https://live.wostreaming.net/direct/townsquare-kuadfmaac-ibc3'},
+{name:'102.9 The Fan / CSU',frequency:'102.9',band:'FM',callSign:'KARS',category:'Sports / CSU',area:'Northern Colorado',official:'https://1029thefanfm.com/',stream:'https://live.wostreaming.net/direct/townsquare-karsfmaac-ibc3'},
 {name:'104.3 The Fan',frequency:'104.3',band:'FM',callSign:'KKFN',category:'Sports',area:'Denver',official:'https://denversports.com/',stream:'https://bonneville.cdnstream1.com/2612_48.aac'},
 {name:'92.5 Altitude Sports',frequency:'92.5',band:'FM',callSign:'KKSE',category:'Sports',area:'Denver',official:'https://www.altitudesportsradio.com/',stream:'https://playerservices.streamtheworld.com/api/livestream-redirect/KKSEFMAAC.aac'},
 {name:'KOA 850 / 94.1',frequency:'850',band:'AM',callSign:'KOA',category:'News/Talk/Sports',area:'Colorado',official:'https://koacolorado.iheart.com/',stream:'https://stream.revma.ihrhls.com/zc389/hls.m3u8',iheartId:389},
@@ -61,7 +63,7 @@ function isHls(u=''){return /\.m3u8($|\?)/i.test(u)}
 function setStatus(t){statusEl.textContent=t}
 function renderPresets(){
  document.getElementById('presetCount').textContent=`${PRESETS.length} stations`;
- presetList.innerHTML=PRESETS.map((s,i)=>`<div class="station"><div><div class="freq">${esc(s.frequency)}</div><div class="band">${esc(s.band)}</div></div><div><div class="name">${esc(s.name)}</div><div class="desc">${esc(s.callSign)} • ${esc(s.category)} • ${esc(s.area)}</div></div><div class="stationActions"><button class="btn primary" data-play="${i}">Play solo</button><button class="btn" data-add="${i}">Add to mix</button></div></div>`).join('');
+ presetList.innerHTML=PRESETS.map((s,i)=>`<div class="station"><div><div class="freq">${esc(s.frequency)}</div><div class="band">${esc(s.band)}</div></div><div><div class="name">${esc(s.name)}</div><div class="desc">${esc(s.callSign)} • ${esc(s.category)} • ${esc(s.area)}</div></div><div class="stationActions"><button class="btn primary" data-play="${i}">Play solo</button><button class="btn mixBtn" data-add="${i}">Add to mix</button></div></div>`).join('');
  presetList.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>playSolo(PRESETS[+b.dataset.play]));
  presetList.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addChannel(PRESETS[+b.dataset.add],true));
 }
@@ -87,11 +89,36 @@ async function addChannel(input,autoplay){
  }catch(e){setStatus(e.message||'Unable to start station.')}
 }
 function removeChannel(k){const ch=active.get(k);if(!ch)return;stopAndDestroy(ch);active.delete(k);renderMixer()}
+function rewindChannel(k){
+ const ch=active.get(k);if(!ch)return;
+ const a=ch.audio;
+ if(a.seekable&&a.seekable.length){const start=a.seekable.start(0),end=a.seekable.end(a.seekable.length-1);a.currentTime=Math.max(start,Math.min(end,a.currentTime-15));setStatus(`Rewound ${ch.station.name} by up to 15 seconds.`)}
+ else setStatus(`${ch.station.name} does not expose a rewindable live buffer.`)
+}
+function goLive(k){
+ const ch=active.get(k);if(!ch)return;const a=ch.audio;
+ if(a.seekable&&a.seekable.length){a.currentTime=a.seekable.end(a.seekable.length-1);setStatus(`${ch.station.name} returned to live.`)}
+ else setStatus(`${ch.station.name} is already using a non-seekable live stream.`)
+}
+async function saveClip(k){
+ const ch=active.get(k);if(!ch)return;const a=ch.audio;
+ const capture=a.captureStream||a.mozCaptureStream;
+ if(!capture||!window.MediaRecorder){setStatus('Clip saving is not supported by this browser for live radio.');return}
+ try{
+  const stream=capture.call(a);const chunks=[];const rec=new MediaRecorder(stream);
+  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  rec.onstop=()=>{const blob=new Blob(chunks,{type:rec.mimeType||'audio/webm'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`${(ch.station.callSign||ch.station.name).replace(/[^a-z0-9]+/gi,'-')}-${new Date().toISOString().replace(/[:.]/g,'-')}.webm`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus(`Saved a 15-second clip from ${ch.station.name}.`)};
+  rec.start();setStatus(`Recording 15 seconds from ${ch.station.name}…`);setTimeout(()=>{if(rec.state!=='inactive')rec.stop()},15000)
+ }catch(e){setStatus('This station blocks browser audio capture. Rewind may still work when the stream exposes a DVR window.')}
+}
 function renderMixer(){
  mixerCount.textContent=`${active.size} active`;
  if(!active.size){mixer.innerHTML='<div class="empty">No active streams.</div>';return}
- mixer.innerHTML=[...active].map(([k,ch])=>`<div class="channel"><div class="channelTop"><div><div class="channelName">${esc(ch.station.name)}</div><div class="desc">${esc(ch.station.callSign||'')} ${ch.station.city?'• '+esc(ch.station.city):''}</div></div><span class="live">${ch.audio.paused?'PAUSED':'LIVE'}</span></div><div class="channelControls"><button class="btn primary" data-toggle="${esc(k)}">${ch.audio.paused?'Play':'Pause'}</button><input data-volume="${esc(k)}" type="range" min="0" max="1" step=".01" value="${ch.audio.volume}"><button class="btn danger" data-remove="${esc(k)}">Remove</button></div></div>`).join('');
+ mixer.innerHTML=[...active].map(([k,ch])=>`<div class="channel"><div class="channelTop"><div><div class="channelName">${esc(ch.station.name)}</div><div class="desc">${esc(ch.station.callSign||'')} ${ch.station.city?'• '+esc(ch.station.city):''}</div></div><span class="live">${ch.audio.paused?'PAUSED':'LIVE'}</span></div><div class="channelControls"><button class="btn primary" data-toggle="${esc(k)}">${ch.audio.paused?'Play':'Pause'}</button><button class="btn" data-rewind="${esc(k)}">↶ 15s</button><button class="btn" data-live="${esc(k)}">Go live</button><input data-volume="${esc(k)}" type="range" min="0" max="1" step=".01" value="${ch.audio.volume}"><button class="btn danger" data-clip="${esc(k)}">Save clip</button><button class="btn danger" data-remove="${esc(k)}">Remove</button></div></div>`).join('');
  mixer.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const ch=active.get(b.dataset.toggle);if(ch.audio.paused)await ch.audio.play();else ch.audio.pause();renderMixer()});
+ mixer.querySelectorAll('[data-rewind]').forEach(b=>b.onclick=()=>rewindChannel(b.dataset.rewind));
+ mixer.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>goLive(b.dataset.live));
+ mixer.querySelectorAll('[data-clip]').forEach(b=>b.onclick=()=>saveClip(b.dataset.clip));
  mixer.querySelectorAll('[data-volume]').forEach(r=>r.oninput=()=>{active.get(r.dataset.volume).audio.volume=+r.value});
  mixer.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>removeChannel(b.dataset.remove));
 }
