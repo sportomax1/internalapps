@@ -124,7 +124,7 @@
 
           <audio id="audio" controls playsinline preload="none"></audio>
           <div id="status" class="statusBox"><strong>Ready.</strong> Pick a station and press Play. iPhone/Fire TV require a tap before audio starts.</div>
-          <div class="links"><a id="officialLink" class="linkBtn" target="_blank" rel="noreferrer">Open official site</a><a id="streamLink" class="linkBtn" target="_blank" rel="noreferrer">Open raw stream</a></div>
+          <div class="links"><a id="officialLink" class="linkBtn" href="#" target="_blank" rel="noopener">Official station page ↗</a><a id="streamLink" class="linkBtn" href="#" target="_blank" rel="noopener">Open raw stream ↗</a></div>
         </div>
 
         <div class="card stations" id="stationList"></div>
@@ -171,6 +171,24 @@ const STATIONS = [
     official: 'https://www.altitudesportsradio.com/',
     stream: 'https://playerservices.streamtheworld.com/api/livestream-redirect/KKSEFMAAC.aac',
     notes: 'Nuggets, Avalanche, Rapids. Direct StreamTheWorld AAC.'
+  },
+  {
+    name: '103.5 The Fox', frequency: '103.5', band: 'FM', callSign: 'KRFX', category: 'Rock', area: 'Denver',
+    official: 'https://thefox.iheart.com/',
+    stream: 'https://stream.revma.ihrhls.com/zc393',
+    notes: 'Colorado rock and Broncos partner. Direct iHeart stream.'
+  },
+  {
+    name: 'Channel 93.3', frequency: '93.3', band: 'FM', callSign: 'KTCL', category: 'Alternative', area: 'Denver',
+    official: 'https://channel933.iheart.com/',
+    stream: 'https://stream.revma.ihrhls.com/zc397',
+    notes: 'Alternative and modern rock. Direct iHeart stream.'
+  },
+  {
+    name: '106.7 The Bull', frequency: '106.7', band: 'FM', callSign: 'KWBL', category: 'Country', area: 'Denver',
+    official: 'https://1067thebull.iheart.com/',
+    stream: 'https://stream.revma.ihrhls.com/zc7784',
+    notes: 'Colorado country. Direct iHeart stream.'
   }
 ];
 
