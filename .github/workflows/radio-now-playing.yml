@@ -1,0 +1,44 @@
+name: Update radio now playing
+on:
+  push:
+    paths:
+      - '.github/workflows/radio-now-playing.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch radio app
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('public/colorado-radio/index.html')
+          s=p.read_text()
+          if 'id="nowPlayingCard"' in s:
+              raise SystemExit('already updated')
+          s=s.replace('.status{padding:11px 14px;font-size:12px;line-height:1.4}', '.status{padding:11px 14px;font-size:12px;line-height:1.4}.nowPlaying{padding:16px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:14px;align-items:center}.nowArt{width:72px;height:72px;border-radius:18px;display:grid;place-items:center;font-size:34px;background:linear-gradient(135deg,#69b7ff33,#8ee6c833);border:1px solid var(--line);object-fit:cover}.nowLabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand2);font-weight:900}.nowTitle{font-size:clamp(19px,3vw,29px);font-weight:950;line-height:1.1;margin-top:4px}.nowSub{color:var(--muted);font-size:13px;margin-top:6px}.metaBadge{padding:7px 10px;border-radius:999px;background:#ffffff12;color:var(--muted);font-size:11px;white-space:nowrap}.channelMeta{margin-top:6px;padding:8px 10px;border-radius:11px;background:#ffffff09;border:1px solid #ffffff0d}.channelMetaTitle{font-size:13px;font-weight:850}.channelMetaSub{font-size:11px;color:var(--muted);margin-top:2px}')
+          s=s.replace('@media(max-width:600px){', '@media(max-width:600px){.nowPlaying{grid-template-columns:56px minmax(0,1fr);padding:12px}.nowArt{width:56px;height:56px;border-radius:15px;font-size:27px}.metaBadge{grid-column:1/-1;justify-self:start}')
+          status='<div id="status" class="card status">Random plays one preset. Scanner cycles through presets.</div>'
+          card=status+'<section id="nowPlayingCard" class="card nowPlaying"><div id="nowArt" class="nowArt">📻</div><div><div class="nowLabel">Now playing</div><div id="nowTitle" class="nowTitle">Choose a station</div><div id="nowSub" class="nowSub">Song, artist, show or station information will appear here when available.</div></div><div id="nowSource" class="metaBadge">Waiting</div></section>'
+          s=s.replace(status,card)
+          s=s.replace('let scannerTimer=null,scannerCountdownTimer=null,scannerRunning=false,scannerIndex=-1,lastRandom=-1,audioContext=null,analyserTimer=null,silenceStarted=0;', 'let scannerTimer=null,scannerCountdownTimer=null,scannerRunning=false,scannerIndex=-1,lastRandom=-1,audioContext=null,analyserTimer=null,silenceStarted=0,metaTimer=null;const liveMeta=new Map();')
+          helpers=r'''function normalizeMeta(raw={},station={}){const title=raw.title||raw.trackTitle||raw.song||raw.name||raw.programName||raw.showName||'';const artist=raw.artist||raw.artistName||raw.host||raw.presenter||'';const album=raw.album||raw.albumName||'';const image=(raw.imagePath||raw.image||raw.artwork||raw.logo||'').replace(/^http:/,'https:');return{title:String(title||'').trim(),artist:String(artist||'').trim(),album:String(album||'').trim(),image,source:raw.source||'',updated:Date.now(),station}}function setLiveMeta(station,meta){if(!station||!meta)return;const clean=normalizeMeta(meta,station);if(!clean.title&&!clean.artist)return;liveMeta.set(keyFor(station),clean);renderNowPlaying();renderMixer()}function activeChannel(){return[...active.values()].find(ch=>!ch.audio.paused)||[...active.values()][0]}function renderNowPlaying(){const ch=activeChannel(),station=ch?.station;if(!station){$('#nowArt').outerHTML='<div id="nowArt" class="nowArt">📻</div>';$('#nowTitle').textContent='Choose a station';$('#nowSub').textContent='Song, artist, show or station information will appear here when available.';$('#nowSource').textContent='Waiting';return}const m=liveMeta.get(keyFor(station));if(m?.image){$('#nowArt').outerHTML=`<img id="nowArt" class="nowArt" src="${esc(m.image)}" alt="">`}else{$('#nowArt').outerHTML=`<div id="nowArt" class="nowArt">${iconForStation(station)}</div>`}$('#nowTitle').textContent=m?.title||station.name;$('#nowSub').textContent=m?[m.artist,m.album,station.name].filter(Boolean).join(' • '):[station.category,station.area].filter(Boolean).join(' • ');$('#nowSource').textContent=m?.source||(station.iheartId?'Live metadata':'Station info')}async function fetchIHeartMeta(station){if(!station?.iheartId)return;try{const r=await fetch(`https://us.api.iheart.com/api/v3/live-meta/stream/${encodeURIComponent(station.iheartId)}/currentTrackMeta?defaultMetadata=true`,{cache:'no-store'});if(r.status===204)return;if(!r.ok)throw Error();const d=await r.json();if(d?.title||d?.artist)setLiveMeta(station,{...d,source:'iHeart live'})}catch{}}function decodeMetaBytes(data){try{const bytes=data instanceof Uint8Array?data:new Uint8Array(data?.data||data||[]);let t=new TextDecoder('utf-8',{fatal:false}).decode(bytes).replace(/[\x00-\x1f]+/g,' ').replace(/\s+/g,' ').trim();const stream=t.match(/StreamTitle=['"]?([^;'\"]+)/i);if(stream)t=stream[1];const parts=t.split(/\s+-\s+/);return parts.length>1?{artist:parts.shift(),title:parts.join(' - '),source:'Stream metadata'}:{title:t,source:'Stream metadata'}}catch{return null}}function attachHlsMetadata(ch){if(!ch?.hls||ch.hls._metaAttached)return;ch.hls._metaAttached=true;ch.hls.on(Hls.Events.FRAG_PARSING_METADATA,(_,data)=>{for(const sample of data?.samples||[]){const m=decodeMetaBytes(sample.data);if(m?.title)setLiveMeta(ch.station,m)}})}function refreshLiveMetadata(){clearInterval(metaTimer);const run=()=>{for(const ch of active.values())if(!ch.audio.paused){fetchIHeartMeta(ch.station);attachHlsMetadata(ch)}renderNowPlaying()};run();metaTimer=setInterval(run,15000)}'''
+          s=s.replace('function renderPresets()',helpers+'function renderPresets()')
+          s=s.replace("const ch={station:s,audio,hls};active.set(k,ch);audio.onplaying=()=>{renderMixer();if($('#autoAdSwitch').checked)startAudioHeuristic(ch)};", "const ch={station:s,audio,hls};active.set(k,ch);attachHlsMetadata(ch);audio.onplaying=()=>{renderMixer();renderNowPlaying();refreshLiveMetadata();if($('#autoAdSwitch').checked)startAudioHeuristic(ch)};")
+          s=s.replace("active.clear();stopCaptions();renderMixer();setStatus('All streams stopped.')", "active.clear();stopCaptions();renderMixer();renderNowPlaying();setStatus('All streams stopped.')")
+          s=s.replace('active.delete(k);renderMixer()', 'active.delete(k);renderMixer();renderNowPlaying()')
+          old='<div class="channelName">${iconForStation(ch.station)} ${esc(ch.station.name)}</div><div class="desc">${esc(ch.station.callSign||\'\')}</div></div><span'
+          new='<div class="channelName">${iconForStation(ch.station)} ${esc(ch.station.name)}</div><div class="desc">${esc(ch.station.callSign||\'\')}</div>${(()=>{const m=liveMeta.get(k);return m?`<div class="channelMeta"><div class="channelMetaTitle">${esc(m.title)}</div><div class="channelMetaSub">${esc([m.artist,m.album].filter(Boolean).join(\' • \'))}</div></div>`:\'\'})()}</div><span'
+          s=s.replace(old,new)
+          s=s.replace("${s.logo?`<img src=\"${esc(s.logo)}\">`:'<div></div>'}", "${s.logo?`<img src=\"${esc(s.logo)}\" alt=\"\">`:`<div class=\"stationIcon\">${iconForStation(s)}</div>`}")
+          s=s.replace('renderPresets();renderMixer();', 'renderPresets();renderMixer();renderNowPlaying();refreshLiveMetadata();')
+          p.write_text(s)
+          PY
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add public/colorado-radio/index.html
+          git commit -m "Add live now playing metadata and UI polish"
+          git push
