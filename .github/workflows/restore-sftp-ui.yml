@@ -1,0 +1,22 @@
+name: Restore SFTP UI
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-sftp-ui.yml'
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore last good SFTP explorer
+        run: |
+          git show 454f2b820f75dc357ca6bb132619605c0a464939:public/sftp/index.html > public/sftp/index.html
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add public/sftp/index.html
+          git commit -m "Restore SFTP explorer after download enhancement staging" || exit 0
+          git push
