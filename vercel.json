@@ -1,5 +1,12 @@
 {
   "cleanUrls": true,
   "trailingSlash": true,
-  "installCommand": "npm install --omit=optional"
+  "installCommand": "npm install --omit=optional",
+  "rewrites": [
+    { "source": "/api/party/start", "destination": "/api/party?action=start" },
+    { "source": "/api/party/advance", "destination": "/api/party?action=advance" },
+    { "source": "/api/party/filter", "destination": "/api/party?action=filter" },
+    { "source": "/api/oura/key", "destination": "/api/oura?action=key-status" },
+    { "source": "/api/sleep-score", "destination": "/api/oura?action=sleep-score" }
+  ]
 }
