@@ -1,18 +1,6 @@
-# Oura Ring Sleep Trends SPA
+# Internal Apps
 
-Single-user, iPhone-first Oura Ring sleep trends dashboard.
-
-The app shows bedtime, wake time, total sleep, and sleep score trends with summary cards, vanilla canvas charts, auto insights, a bedtime-vs-wake correlation chart, raw exports, local cache fallback, and debug logs.
-
-## Files
-
-- `index.html` - source copy of the single-file vanilla HTML/CSS/JavaScript SPA
-- `public/index.html` - served copy for Vercel because this repo already uses `public/`
-- `public/apps.html` - preserved copy of the previous internal apps portal
-- `api/oura.js` - Vercel serverless proxy that keeps `OURA_KEY` server-side
-- `vercel.json` - existing Vercel static config
-
-The older `public/oura.html` explorer is still present and was not replaced.
+Collection of small personal/internal web tools served from Vercel.
 
 ## Places
 
@@ -36,35 +24,77 @@ to the server-side service role.
 ## BGA SFTP Explorer
 
 `/sftp/` is a read-only FileZilla-style browser for Board Game Arena Studio SFTP.
-The SPA calls `/api/sftp`, which is restricted to
+The SPA calls `/api/sftp`, which is hard-restricted to
 `1.studio.boardgamearena.com:2022` and supports connection testing, directory
 listing, text/code preview, and small-file download.
 
-SFTP credentials are entered by the user, remain only in the current browser
-tab, and are sent over HTTPS for each operation. They are not stored in the
-repository, localStorage, or Vercel environment variables. The API deliberately
-opens and closes SFTP on every request because Vercel Functions are stateless.
-Passwords are never written to application logs.
+### Recommended saved-credential mode
+
+Set these Vercel environment variables:
+
+```txt
+APP_PASSWORD=your_internal_apps_password
+SFTP_USERNAME=your_bga_studio_username
+SFTP_PASSWORD=your_bga_studio_sftp_password
+```
+
+Then open `/sftp/`, leave **Saved Vercel secret** selected, and enter only the
+Internal Apps password. The browser never receives `SFTP_PASSWORD`. After the
+Internal Apps password is verified, the API returns a short-lived signed token
+kept only in the current browser tab; subsequent SFTP calls use that token while
+the Vercel function reads `SFTP_PASSWORD` server-side.
+
+`SFTP_USERNAME` is optional if the user is entered manually in the SPA.
+
+If BGA Studio password authentication is disabled because an SSH key was
+uploaded, saved mode can use:
+
+```txt
+SFTP_PRIVATE_KEY=-----BEGIN OPENSSH PRIVATE KEY-----...
+SFTP_PASSPHRASE=
+SFTP_AUTH_METHOD=key
+```
+
+The private key never leaves Vercel. If both `SFTP_PRIVATE_KEY` and
+`SFTP_PASSWORD` are configured and `SFTP_AUTH_METHOD` is blank, key
+authentication is preferred. Set `SFTP_AUTH_METHOD=password` to force password
+auth.
+
+### Manual mode
+
+Manual mode remains available. The SFTP username/password stay only in the
+current browser tab's memory and are sent over HTTPS for each operation.
+If `APP_PASSWORD` (or `PERSONAL_PASSWORD`) is configured, the SFTP endpoint is
+also protected by the Internal Apps password in manual mode.
+
+### Security / architecture
+
+- The backend is locked to the BGA Studio hostname and port to avoid becoming a
+  generic TCP/SFTP proxy.
+- The API is read-only: no upload, edit, rename, delete, mkdir, chmod, or write
+  operation exists.
+- SFTP secrets and private keys are never returned by the API or written to
+  application logs.
+- Each request opens and closes SFTP because Vercel Functions are stateless.
+- The browser unlock token expires after one hour and is kept only in memory.
 
 Normal Vercel Function responses have a 4.5 MB payload ceiling, so SFTP downloads
-are capped at 4 MB and text previews return at most 1 MB.
+are capped at 4 MB and text previews return at most 1 MB. Use the local bridge
+version when larger downloads are required.
 
-## Add `OURA_KEY`
+## Oura
 
-Create a personal access token in the Oura Cloud developer portal, then add it to Vercel as an environment variable:
+The consolidated `/api/oura` function keeps `OURA_KEY` server-side and supports
+the existing Oura trends, sleep-score, and key-status routes through internal
+dispatch/rewrites.
+
+Add the Vercel variable:
 
 ```txt
 OURA_KEY=your_oura_token_here
 ```
 
-In Vercel:
-
-1. Open the project.
-2. Go to Settings -> Environment Variables.
-3. Add `OURA_KEY`.
-4. Redeploy.
-
-The frontend never receives this key. It only calls `/api/oura`.
+The frontend never receives the key.
 
 ## Local Testing
 
@@ -81,11 +111,8 @@ Then open:
 http://localhost:3000
 ```
 
-For local API testing, add `OURA_KEY` to `.env.local`:
-
-```txt
-OURA_KEY=your_oura_token_here
-```
+Use `.env.local` for development-only environment variables. Never commit real
+secrets.
 
 ## Deployment
 
@@ -95,43 +122,4 @@ Deploy normally with Vercel:
 vercel
 ```
 
-or connect this repo to a Vercel project and deploy from Git.
-
-## Common Errors
-
-- `Oura key missing in Vercel.` - `OURA_KEY` is not set for the deployment environment.
-- `Unauthorized. Check OURA_KEY.` - the token is missing, expired, revoked, malformed, or does not have the required scopes.
-- `Oura rate limit hit.` - wait a few minutes and refresh.
-- `Bad JSON from /api/oura.` - the API route returned a non-JSON response; check Vercel function logs.
-- `Using cache` - the live API failed, so the app loaded the last successful response from `localStorage`.
-- Empty charts - no sleep records were returned for the selected date range.
-
-## Debugging
-
-Open Settings and turn on Debug mode. The app logs:
-
-- App loaded
-- Fetch started
-- API response
-- Records loaded
-- Cache hit/miss
-- Chart rendered
-- Error details
-- Export events
-
-The Vercel function also logs API calls, response counts, normalization results, and helpful error details.
-
-## Oura API Notes
-
-The API route uses Oura API v2 endpoints under:
-
-```txt
-https://api.ouraring.com/v2/usercollection
-```
-
-It fetches `sleep` records and merges `daily_readiness` when available.
-
-Official docs:
-
-- https://cloud.ouraring.com/docs/authentication
-- https://cloud.ouraring.com/docs/error-handling
+or connect this repo to the existing Vercel project and deploy from Git.
