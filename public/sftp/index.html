@@ -1,403 +1,94 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BGA SFTP Explorer</title>
 <style>
-:root{--bg:#090d12;--panel:#101720;--panel2:#0c1219;--line:#263241;--text:#e8eef6;--muted:#8ea0b4;--blue:#2788f5;--green:#3bd47f;--red:#ff6573;--yellow:#ffd166;--hover:#172331;--selected:#123b63}
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
-button,input,select{font:inherit}.app{height:100%;display:grid;grid-template-rows:auto 1fr 190px}
-.top{display:flex;gap:9px;align-items:end;padding:10px 12px;background:#0c1219;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.brand{font-size:16px;font-weight:800;align-self:center;white-space:nowrap;margin-right:6px}.brand b{color:var(--blue)}
-.field{display:grid;gap:4px;min-width:110px}.field.host{flex:1;min-width:220px}.field.user{width:180px}.field.pass{width:190px}.field.auth{width:150px}
-.field label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-input,select{height:37px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--text);padding:0 10px;outline:none}
-input:focus,select:focus{border-color:var(--blue)}input:disabled{opacity:.7}
-.btn{height:37px;border:1px solid var(--line);border-radius:7px;background:#182432;color:var(--text);padding:0 13px;font-weight:700;cursor:pointer}
-.btn:hover{background:#213246}.btn.primary{background:#116bc4;border-color:#2385e7}.btn.primary:hover{background:#1680e6}.btn.danger{background:#402028;border-color:#71323f}
-.main{display:grid;grid-template-columns:250px minmax(420px,1fr) minmax(320px,40%);min-height:0}
-.pane{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--panel);border-right:1px solid var(--line)}.pane:last-child{border-right:0}
-.head{min-height:48px;padding:8px 10px;border-bottom:1px solid var(--line);background:#0f161e;display:flex;align-items:center;gap:8px}
-.dot{width:9px;height:9px;border-radius:50%;background:#657181}.dot.on{background:var(--green);box-shadow:0 0 0 4px rgba(59,212,127,.08)}
-.title{font-weight:800}.sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.side{padding:10px;overflow:auto}.side button{display:block;width:100%;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text);padding:9px 10px;text-align:left;cursor:pointer}
-.side button:hover{background:var(--hover);border-color:var(--line)}
-.note{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d141c;color:var(--muted);font-size:11px}
-.status-grid{display:grid;gap:7px;margin-top:10px}.status-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}.status-row b{color:var(--text);font-weight:650}
-.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:3px 7px;background:#0d141c;font-size:10px;color:var(--muted)}
-.pill.good{border-color:#225d3e;color:#66df9b}.pill.warn{border-color:#665527;color:#ffd166}
-.pathbar{display:flex;gap:6px;width:100%}.pathbar input{flex:1}.iconbtn{width:37px;height:37px;border:1px solid var(--line);border-radius:7px;background:#182432;color:var(--text);cursor:pointer}.iconbtn:hover{background:#213246}
-.filter{width:150px}.files{min-height:0;flex:1;overflow:auto}.empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}
-table{width:100%;border-collapse:collapse;table-layout:fixed}th{position:sticky;top:0;background:#0d141c;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;padding:0;border-bottom:1px solid var(--line);z-index:1}
-th button{width:100%;border:0;background:transparent;color:inherit;text-align:left;padding:8px;cursor:pointer;font:inherit;text-transform:inherit;letter-spacing:inherit}
-th button:hover{color:var(--text)}td{padding:8px;border-bottom:1px solid #1d2733;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-tbody tr{cursor:default}tbody tr:hover{background:var(--hover)}tbody tr.sel{background:var(--selected)}.file-name{display:flex;align-items:center;gap:7px}
-.preview{flex:1;min-height:0;overflow:auto;background:#090f15}.preview pre{margin:0;padding:13px;white-space:pre;tab-size:2;min-width:max-content;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d8e4f2}
-.meta{border-top:1px solid var(--line);padding:8px 10px;color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:8px}
-.console{display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--line);background:#080c11}.console-head{height:34px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid var(--line);gap:8px}
-.console-head .title{font-size:12px}.console-actions{margin-left:auto;display:flex;gap:6px}.tiny{height:25px;border:1px solid var(--line);border-radius:5px;background:#151f2a;color:var(--muted);font-size:11px;padding:0 8px;cursor:pointer}
-.log{flex:1;overflow:auto;padding:7px 10px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a8b7c8}.line{white-space:pre-wrap;word-break:break-word}.line.info{color:#9fb2c6}.line.ok{color:#64df9a}.line.warn{color:#ffd166}.line.err{color:#ff8290}
-.toast{position:fixed;right:14px;bottom:204px;z-index:10;max-width:min(520px,calc(100vw - 28px));padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#17222f;box-shadow:0 12px 30px rgba(0,0,0,.35)}.toast.bad{border-color:#7a3440}
-.hidden{display:none!important}.status{margin-left:auto;color:var(--muted);font-size:11px;white-space:nowrap}.saved-note{font-size:10px;color:#66df9b;margin-top:3px}
-@media(max-width:1100px){.main{grid-template-columns:210px 1fr}.preview-pane{position:fixed;right:0;top:112px;bottom:190px;width:min(540px,88vw);z-index:4;box-shadow:-12px 0 30px rgba(0,0,0,.35)}}
-@media(max-width:760px){body{overflow:auto}.app{height:auto;min-height:100%;grid-template-rows:auto auto 190px}.main{grid-template-columns:1fr}.pane{min-height:360px}.preview-pane{position:static;width:auto;box-shadow:none}.field.host{display:none}.field.user,.field.pass,.field.auth{width:calc(50% - 5px);min-width:150px}.top .btn{flex:1}.console{height:190px}}
+:root{--bg:#090d12;--p:#101720;--p2:#0c1219;--line:#263241;--text:#e8eef6;--muted:#8ea0b4;--blue:#2788f5;--green:#3bd47f;--red:#ff6573;--hover:#172331;--sel:#123b63}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:var(--bg);color:var(--text);font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+button,input,select,textarea{font:inherit}.app{height:100%;display:grid;grid-template-rows:auto 1fr 170px}.top{display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding:10px 12px;background:var(--p2);border-bottom:1px solid var(--line)}
+.brand{font-weight:850;font-size:16px;margin-right:auto;align-self:center}.brand b{color:var(--blue)}.f{display:grid;gap:3px}.f label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}.f.user{width:175px}.f.pass{width:190px}.f.mode{width:150px}
+input,select{height:36px;border:1px solid var(--line);border-radius:7px;background:#0b1118;color:var(--text);padding:0 9px;outline:none}input:focus,select:focus{border-color:var(--blue)}
+.btn,.ib,.side button,.tiny{border:1px solid var(--line);border-radius:7px;background:#182432;color:var(--text);cursor:pointer}.btn{height:36px;padding:0 13px;font-weight:750}.btn.primary{background:#116bc4;border-color:#2385e7}.btn.danger{background:#402028;border-color:#71323f}.btn:hover,.ib:hover,.side button:hover,.tiny:hover{filter:brightness(1.16)}
+.main{display:grid;grid-template-columns:235px minmax(410px,1fr) minmax(320px,40%);min-height:0}.pane{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--p);border-right:1px solid var(--line)}.pane:last-child{border:0}.head{min-height:48px;display:flex;align-items:center;gap:7px;padding:7px 9px;background:#0f161e;border-bottom:1px solid var(--line)}
+.dot{width:9px;height:9px;border-radius:50%;background:#657181}.dot.on{background:var(--green)}.title{font-weight:800}.sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.side{padding:9px;overflow:auto}.side button{width:100%;display:block;padding:8px 9px;text-align:left;margin-bottom:5px;background:transparent}.side .create{color:#78e2aa}.side .update{color:#8ec5ff}.side .delete{color:#ff96a0;border-color:#65323b}.sep{height:1px;background:var(--line);margin:8px 0}
+.status{display:grid;gap:5px;margin:10px 2px;color:var(--muted);font-size:11px}.status div{display:flex;justify-content:space-between;gap:8px}.status b{color:var(--text)}.note{margin-top:9px;padding:8px;border:1px solid var(--line);border-radius:7px;background:#0d141c;color:var(--muted);font-size:11px}
+.pathbar{display:flex;gap:5px;flex:1}.pathbar input{flex:1}.ib{width:36px;height:36px}.filter{width:145px}.files{flex:1;overflow:auto;min-height:0}table{width:100%;border-collapse:collapse;table-layout:fixed}th{position:sticky;top:0;background:#0d141c;color:var(--muted);font-size:10px;text-transform:uppercase;text-align:left;padding:8px;border-bottom:1px solid var(--line)}td{padding:8px;border-bottom:1px solid #1d2733;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}tr:hover{background:var(--hover)}tr.sel{background:var(--sel)}.empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--muted);padding:20px}.preview{flex:1;min-height:0;overflow:auto;background:#090f15}.preview pre{margin:0;padding:12px;white-space:pre;min-width:max-content;font:12px/1.5 ui-monospace,Consolas,monospace}.editor{width:100%;height:100%;min-height:260px;border:0;resize:none;background:#090f15;color:#d8e4f2;padding:12px;outline:none;font:12px/1.5 ui-monospace,Consolas,monospace}
+.actions{margin-left:auto;display:flex;gap:5px}.tiny{height:29px;padding:0 8px;font-size:11px}.tiny.primary{background:#116bc4;color:white}.meta{padding:7px 9px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:8px}
+.console{display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--line);background:#080c11}.console .head{min-height:32px;height:32px;padding:4px 9px}.log{flex:1;overflow:auto;padding:6px 9px;font:11px/1.45 ui-monospace,Consolas,monospace;color:#a8b7c8}.l.ok{color:#64df9a}.l.err{color:#ff8290}.l.warn{color:#ffd166}.toast{position:fixed;right:14px;bottom:185px;max-width:520px;padding:9px 11px;background:#17222f;border:1px solid var(--line);border-radius:8px;z-index:20}.toast.bad{border-color:#7a3440}.hidden{display:none!important}
+@media(max-width:1050px){.main{grid-template-columns:210px 1fr}.previewPane{position:fixed;right:0;top:105px;bottom:170px;width:min(540px,88vw);z-index:5;box-shadow:-10px 0 25px #0008}}@media(max-width:760px){body{overflow:auto}.app{height:auto;grid-template-rows:auto auto 170px}.main{grid-template-columns:1fr}.pane{min-height:330px}.previewPane{position:static;width:auto;box-shadow:none}.f.user,.f.pass,.f.mode{width:calc(50% - 4px);min-width:145px}}
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top">
-  <div class="brand">BGA <b>SFTP Explorer</b></div>
-  <div class="field host"><label>Server</label><input value="1.studio.boardgamearena.com" disabled></div>
-  <div class="field"><label>Port</label><input value="2022" disabled style="width:80px"></div>
-  <div class="field auth"><label>Auth mode</label>
-    <select id="authMode">
-      <option value="saved">Saved Vercel secret</option>
-      <option value="manual">Manual SFTP password</option>
-    </select>
-  </div>
-  <div class="field pass"><label>Internal Apps password</label><input id="appPassword" type="password" autocomplete="current-password" placeholder="APP_PASSWORD"></div>
-  <div class="field user"><label>SFTP user</label><input id="username" autocomplete="username" placeholder="Optional if saved"></div>
-  <div id="manualPasswordField" class="field pass hidden"><label>SFTP password</label><input id="password" type="password" autocomplete="off" placeholder="Manual only"></div>
-  <button id="connect" class="btn primary">Connect</button>
+ <div class="brand">BGA <b>SFTP Explorer</b></div>
+ <div class="f mode"><label>Auth mode</label><select id="mode"><option value="saved">Saved Vercel secret</option><option value="manual">Manual SFTP password</option></select></div>
+ <div class="f pass"><label>Internal Apps password</label><input id="appPw" type="password" placeholder="APP_PASSWORD"></div>
+ <div class="f user"><label>SFTP user</label><input id="user" placeholder="Optional if saved"></div>
+ <div class="f pass hidden" id="sftpPwWrap"><label>SFTP password</label><input id="sftpPw" type="password" placeholder="Manual mode only"></div>
+ <button id="connect" class="btn primary">Connect</button>
 </header>
-
 <main class="main">
-  <section class="pane">
-    <div class="head"><span id="dot" class="dot"></span><div><div id="connectionTitle" class="title">Disconnected</div><div id="connectionSub" class="sub">Checking server configuration…</div></div></div>
-    <div class="side">
-      <button data-path=".">📁 Home / default</button>
-      <button data-path="/">🗂 Root</button>
-      <button id="refresh">↻ Refresh current</button>
-      <button id="diagnose">🩺 Test connection</button>
-      <button id="copyPath">⧉ Copy current path</button>
-
-      <div class="status-grid">
-        <div class="status-row"><span>App gate</span><b id="appGateStatus">Checking…</b></div>
-        <div class="status-row"><span>Saved auth</span><b id="savedAuthStatus">Checking…</b></div>
-        <div class="status-row"><span>Saved user</span><b id="savedUserStatus">Checking…</b></div>
-        <div class="status-row"><span>Mode</span><b id="modeStatus">—</b></div>
-      </div>
-
-      <div id="savedNote" class="note">
-        Saved mode keeps the BGA SFTP secret entirely on Vercel. Your browser sends the Internal Apps password once to unlock a short-lived in-memory token; the SFTP password/private key is never returned to the page.
-      </div>
-      <div class="note">
-        Read-only by design. No upload, edit, rename, delete, mkdir, chmod, or write API exists. Each request opens and closes its own SFTP connection because Vercel Functions are stateless.
-      </div>
-      <div class="note">
-        Vercel limitation: previews are capped at 1 MB and downloads at 4 MB. Use the local bridge version when you need larger files.
-      </div>
-    </div>
-  </section>
-
-  <section class="pane">
-    <div class="head">
-      <div class="pathbar"><button id="up" class="iconbtn" title="Parent">↑</button><input id="path" value="." spellcheck="false"><button id="go" class="iconbtn" title="Go">→</button></div>
-      <input id="filter" class="filter" placeholder="Filter…">
-    </div>
-    <div class="files">
-      <table>
-        <thead><tr>
-          <th style="width:48%"><button data-sort="name">Name <span id="sort-name"></span></button></th>
-          <th style="width:15%"><button data-sort="size">Size <span id="sort-size"></span></button></th>
-          <th style="width:20%"><button data-sort="modifyTime">Modified <span id="sort-modifyTime"></span></button></th>
-          <th style="width:17%"><button data-sort="type">Type <span id="sort-type"></span></button></th>
-        </tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
-      <div id="fileEmpty" class="empty">Unlock and connect to BGA Studio SFTP.</div>
-    </div>
-  </section>
-
-  <section class="pane preview-pane" id="previewPane">
-    <div class="head"><div style="min-width:0"><div id="previewTitle" class="title">Preview</div><div id="previewPath" class="sub">Select a text/code file</div></div><div class="status" id="itemStatus"></div><button id="download" class="iconbtn hidden" title="Download">⇩</button></div>
-    <div id="preview" class="preview"><div class="empty">Click a file to preview it. Double-click a folder to open it.</div></div>
-    <div class="meta"><span id="meta">No file selected</span><span>READ ONLY</span></div>
-  </section>
+ <section class="pane">
+  <div class="head"><span id="dot" class="dot"></span><div><div id="connTitle" class="title">Disconnected</div><div id="connSub" class="sub">Checking server…</div></div></div>
+  <div class="side">
+   <button data-go=".">📁 Home / default</button><button data-go="/">🗂 Root</button><button id="refresh">↻ Refresh</button><button id="test">🩺 Test connection</button><button id="copyPath">⧉ Copy path</button>
+   <div class="sep"></div>
+   <button id="newFolder" class="create">＋ New folder</button><button id="newFile" class="create">＋ New text file</button><button id="upload" class="create">↑ Upload file</button><input id="uploadInput" type="file" class="hidden">
+   <button id="rename" class="update">↔ Rename / move selected</button><button id="delete" class="delete">🗑 Delete selected</button>
+   <div class="status"><div><span>App gate</span><b id="stGate">…</b></div><div><span>Saved auth</span><b id="stSaved">…</b></div><div><span>CRUD</span><b id="stCrud">…</b></div><div><span>Mode</span><b id="stMode">—</b></div></div>
+   <div class="note">C/U/D requires APP_PASSWORD unlock plus browser confirmation and matching server-side confirmation. Delete also requires typing the exact item name.</div>
+   <div class="note">Host locked to 1.studio.boardgamearena.com:2022. Preview 1 MB, download 4 MB, upload/update about 2.5 MB.</div>
+  </div>
+ </section>
+ <section class="pane">
+  <div class="head"><div class="pathbar"><button id="up" class="ib">↑</button><input id="path" value="."><button id="go" class="ib">→</button></div><input id="filter" class="filter" placeholder="Filter…"></div>
+  <div class="files"><table><thead><tr><th style="width:50%">Name</th><th style="width:15%">Size</th><th style="width:21%">Modified</th><th style="width:14%">Type</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty">Unlock and connect.</div></div>
+ </section>
+ <section class="pane previewPane">
+  <div class="head"><div style="min-width:0"><div id="pvTitle" class="title">Preview</div><div id="pvPath" class="sub">Select a file</div></div><div class="actions"><button id="edit" class="tiny hidden">Edit</button><button id="save" class="tiny primary hidden">Save</button><button id="cancel" class="tiny hidden">Cancel</button><button id="download" class="tiny hidden">Download</button></div></div>
+  <div id="preview" class="preview"><div class="empty">Click a file to preview it. Double-click a folder to open.</div></div>
+  <div class="meta"><span id="meta">No file selected</span><span>CRUD • CONFIRM</span></div>
+ </section>
 </main>
-
-<section class="console">
-  <div class="console-head"><div class="title">Debug console</div><div class="sub">Secrets are never logged or returned</div><div class="console-actions"><button id="copyLog" class="tiny">Copy</button><button id="clearLog" class="tiny">Clear</button></div></div>
-  <div id="log" class="log"></div>
-</section>
-</div>
-
-<div id="toast" class="toast hidden"></div>
-
+<section class="console"><div class="head"><div class="title">Debug console</div><div class="sub">Secrets are never logged/returned</div><div class="actions"><button id="copyLog" class="tiny">Copy</button><button id="clearLog" class="tiny">Clear</button></div></div><div id="log" class="log"></div></section>
+</div><div id="toast" class="toast hidden"></div>
 <script>
 (()=>{'use strict';
-const API='/api/sftp';
-const $=id=>document.getElementById(id);
-let connected=false,currentPath='.',entries=[],selected=null;
-let serverStatus={appProtected:true,savedAuthConfigured:false,savedUsernameConfigured:false,savedAuthMethod:null};
-let appToken='',tokenExpiresAt=null,sortKey='name',sortDir=1;
-const TEXT_EXT=new Set('txt md markdown json js mjs cjs ts tsx jsx css scss less html htm php py rb java c h cpp hpp cs go rs sql xml yaml yml ini cfg conf env gitignore sh bash zsh ps1 bat cmd csv tsv log svg tpl view inc'.split(' '));
-
-function stamp(){return new Date().toLocaleTimeString()}
-function log(msg,type='info'){
-  const div=document.createElement('div'); div.className='line '+type; div.textContent=`[${stamp()}] ${msg}`;
-  $('log').appendChild(div); $('log').scrollTop=$('log').scrollHeight;
-  console[type==='err'?'error':type==='warn'?'warn':'log']('[BGA SFTP]',msg);
-}
-function toast(msg,bad=false){
-  const el=$('toast'); el.textContent=msg; el.classList.toggle('bad',bad); el.classList.remove('hidden');
-  clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.add('hidden'),4500);
-}
-function mode(){return $('authMode').value}
-function humanSize(n){if(!Number.isFinite(n)||n<0)return'—';const u=['B','KB','MB','GB'];let i=0,v=n;while(v>=1024&&i<u.length-1){v/=1024;i++}return`${i&&v<10?v.toFixed(1):Math.round(v)} ${u[i]}`}
-function fmtDate(v){if(!v)return'—';const d=new Date(Number(v)||v);return Number.isNaN(d.getTime())?'—':d.toLocaleString()}
-function basename(p){const x=String(p||'').replace(/\/+$/,'');return x.split('/').pop()||x||'/'}
-function ext(n){const b=basename(n),i=b.lastIndexOf('.');return i>=0?b.slice(i+1).toLowerCase():''}
-function parentPath(p){const x=String(p||'.').replace(/\/+$/,'');if(x==='/'||x==='.')return x;const i=x.lastIndexOf('/');if(i<0)return'.';return i===0?'/':x.slice(0,i)}
-function isText(item){return item.type==='-'&&(TEXT_EXT.has(ext(item.name))||item.size<128*1024)}
-function fileIcon(item){if(item.type==='d')return'📁';const e=ext(item.name);if(['php','js','ts','css','html','json','sql'].includes(e))return'🧩';if(['png','jpg','jpeg','gif','webp','svg'].includes(e))return'🖼️';return'📄'}
-function authBody(){
-  const body={authMode:mode(),username:$('username').value.trim(),appToken};
-  if(mode()==='manual') body.password=$('password').value;
-  return body;
-}
-
-async function rawPost(body,expectBlob=false){
-  const started=performance.now();
-  let res;
-  try{
-    res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  }catch(error){
-    log(`Network failure: ${error.message}`,'err');
-    throw new Error('Could not reach the Vercel SFTP API.');
-  }
-  const rid=res.headers.get('x-sftp-request-id')||'-';
-  log(`← ${body.action||'?'} HTTP ${res.status} request=${rid} ${Math.round(performance.now()-started)}ms`,res.ok?'ok':'err');
-  if(!res.ok){
-    let data={}; try{data=await res.json()}catch{}
-    const message=[data.error,data.hint,data.code?`Code: ${data.code}`:'',data.requestId?`Request: ${data.requestId}`:''].filter(Boolean).join(' | ')||`HTTP ${res.status}`;
-    const err=new Error(message); err.code=data.code||''; err.status=res.status; throw err;
-  }
-  return expectBlob?res.blob():res.json();
-}
-
-async function loadServerStatus(){
-  try{
-    log('→ status');
-    const data=await rawPost({action:'status'});
-    serverStatus=data;
-    $('appGateStatus').textContent=data.appProtected?'Enabled':'Not configured';
-    $('savedAuthStatus').textContent=data.savedAuthConfigured?(data.savedAuthMethod==='key'?'SSH key':'Password'):'Not configured';
-    $('savedUserStatus').textContent=data.savedUsernameConfigured?'Configured':'Enter manually';
-    if(data.savedAuthConfigured&&data.appProtected){
-      $('authMode').value='saved';
-    }else{
-      $('authMode').value='manual';
-    }
-    updateModeUI();
-    $('connectionSub').textContent=data.savedAuthConfigured?'Ready for saved or manual auth':'Manual SFTP credentials available';
-    log(`Server status: appGate=${data.appProtected?'on':'off'} savedAuth=${data.savedAuthMethod||'none'} savedUser=${data.savedUsernameConfigured?'yes':'no'}`,'ok');
-  }catch(error){
-    $('connectionSub').textContent='Could not read API status';
-    log(`Status check failed: ${error.message}`,'warn');
-  }
-}
-
-async function ensureUnlocked(){
-  if(!serverStatus.appProtected) return true;
-  if(appToken && (!tokenExpiresAt || Date.now()<tokenExpiresAt-5000)) return true;
-
-  const appPassword=$('appPassword').value;
-  if(!appPassword){
-    toast('Enter the Internal Apps password first.',true);
-    log('Internal Apps password is required.','warn');
-    return false;
-  }
-
-  log('→ unlock');
-  try{
-    const data=await rawPost({action:'unlock',appPassword});
-    appToken=data.token||'';
-    tokenExpiresAt=data.expiresAt?new Date(data.expiresAt).getTime():null;
-    $('appPassword').value='';
-    log(`Internal Apps unlocked${data.expiresAt?` until ${new Date(data.expiresAt).toLocaleTimeString()}`:''}; password cleared from form.`,'ok');
-    return true;
-  }catch(error){
-    appToken=''; tokenExpiresAt=null;
-    toast(error.message,true); log(`Unlock failed: ${error.message}`,'err'); return false;
-  }
-}
-
-function validateSftpInputs(){
-  if(mode()==='saved'){
-    if(!serverStatus.savedAuthConfigured){
-      toast('Saved SFTP credentials are not configured in Vercel.',true); return false;
-    }
-    if(!serverStatus.savedUsernameConfigured&&!$('username').value.trim()){
-      toast('Enter the SFTP username or configure SFTP_USERNAME in Vercel.',true); return false;
-    }
-  }else{
-    if(!$('username').value.trim()||!$('password').value){
-      toast('Manual mode requires SFTP username and password.',true); return false;
-    }
-  }
-  return true;
-}
-
-async function api(action,extra={},expectBlob=false){
-  if(!(await ensureUnlocked())) throw new Error('Internal Apps unlock required.');
-  const body={action,...authBody(),...extra};
-  log(`→ ${action}${extra.path?` path=${extra.path}`:''} mode=${mode()}`);
-  try{
-    return await rawPost(body,expectBlob);
-  }catch(error){
-    if(error.code==='APP_AUTH_FAILED'){
-      appToken=''; tokenExpiresAt=null;
-      $('appPassword').focus();
-    }
-    throw error;
-  }
-}
-
-async function testConnection(load=true){
-  if(!validateSftpInputs())return false;
-  if(serverStatus.appProtected && !(await ensureUnlocked()))return false;
-  $('connect').disabled=true; $('connect').textContent='Connecting…';
-  log(`Testing BGA SFTP authentication using ${mode()} mode…`);
-  try{
-    const data=await api('test');
-    connected=true; $('dot').classList.add('on');
-    const displayUser=$('username').value.trim()||(serverStatus.savedUsernameConfigured?'saved user':'SFTP user');
-    $('connectionTitle').textContent=`Connected: ${displayUser}`;
-    $('connectionSub').textContent=`${data.cwd} • ${data.itemCount} items • ${data.authMode}`;
-    $('modeStatus').textContent=data.authMode;
-    $('connect').textContent='Disconnect'; $('connect').classList.remove('primary'); $('connect').classList.add('danger');
-    log(`Authentication succeeded. cwd=${data.cwd} items=${data.itemCount}`,'ok');
-    if(load)await loadPath(data.cwd||'.');
-    return true;
-  }catch(error){
-    connected=false; $('dot').classList.remove('on'); $('connectionTitle').textContent='Connection failed'; $('connectionSub').textContent='See debug console';
-    $('connect').textContent='Connect'; toast(error.message,true); log(error.message,'err'); return false;
-  }finally{$('connect').disabled=false}
-}
-
-function disconnect(){
-  connected=false; entries=[]; selected=null; appToken=''; tokenExpiresAt=null;
-  $('password').value=''; $('appPassword').value='';
-  $('dot').classList.remove('on'); $('connectionTitle').textContent='Disconnected'; $('connectionSub').textContent='Secrets forgotten from this tab';
-  $('connect').textContent='Connect'; $('connect').classList.add('primary'); $('connect').classList.remove('danger');
-  $('rows').innerHTML=''; $('fileEmpty').classList.remove('hidden'); $('fileEmpty').textContent='Disconnected. Unlock and reconnect.';
-  $('modeStatus').textContent='—'; resetPreview(); log('Disconnected locally; in-memory unlock token and manual password cleared.','ok');
-}
-
-async function loadPath(p){
-  if(!connected){toast('Connect first.',true);return}
-  const target=String(p||'.').trim()||'.';
-  try{
-    const data=await api('list',{path:target});
-    currentPath=data.path; entries=data.entries||[]; $('path').value=currentPath; selected=null; renderRows();
-    log(`Loaded ${entries.length} item(s) from ${currentPath}.`,'ok');
-  }catch(error){toast(error.message,true);log(`List failed: ${error.message}`,'err')}
-}
-
-function compareEntries(a,b){
-  const ad=a.type==='d',bd=b.type==='d';
-  if(ad!==bd)return ad?-1:1;
-  let av=a[sortKey],bv=b[sortKey];
-  if(sortKey==='size'||sortKey==='modifyTime'){av=Number(av)||0;bv=Number(bv)||0;return(av-bv)*sortDir}
-  return String(av??'').localeCompare(String(bv??''),undefined,{numeric:true,sensitivity:'base'})*sortDir;
-}
-
-function updateSortIndicators(){
-  ['name','size','modifyTime','type'].forEach(k=>{$(`sort-${k}`).textContent=k===sortKey?(sortDir===1?'▲':'▼'):''});
-}
-
-function renderRows(){
-  const q=$('filter').value.trim().toLowerCase();
-  const visible=entries.filter(x=>!q||x.name.toLowerCase().includes(q)).sort(compareEntries);
-  const tbody=$('rows'); tbody.innerHTML='';
-  $('fileEmpty').classList.toggle('hidden',visible.length>0);
-  $('fileEmpty').textContent=entries.length?'No matching files.':'This folder is empty.';
-  $('itemStatus').textContent=`${visible.length}/${entries.length}`;
-  updateSortIndicators();
-
-  for(const item of visible){
-    const tr=document.createElement('tr');
-    if(selected?.path===item.path)tr.classList.add('sel');
-    tr.innerHTML=`<td><div class="file-name"><span>${fileIcon(item)}</span><span title="${escapeAttr(item.name)}">${escapeHtml(item.name)}</span></div></td><td>${item.type==='d'?'—':humanSize(item.size)}</td><td>${fmtDate(item.modifyTime)}</td><td>${item.type==='d'?'Folder':'File'}</td>`;
-    tr.addEventListener('click',()=>selectItem(item,tr));
-    tr.addEventListener('dblclick',()=>{if(item.type==='d')loadPath(item.path)});
-    tbody.appendChild(tr);
-  }
-}
-
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function escapeAttr(s){return escapeHtml(s)}
-
-async function selectItem(item,tr){
-  selected=item; document.querySelectorAll('#rows tr').forEach(x=>x.classList.remove('sel')); tr.classList.add('sel');
-  $('previewTitle').textContent=item.name; $('previewPath').textContent=item.path;
-  $('meta').textContent=`${item.type==='d'?'Folder':humanSize(item.size)} • modified ${fmtDate(item.modifyTime)}`;
-  $('download').classList.toggle('hidden',item.type==='d');
-
-  if(item.type==='d'){
-    $('preview').innerHTML='<div class="empty">Folder selected. Double-click it to open.</div>'; return;
-  }
-  if(!isText(item)){
-    $('preview').innerHTML='<div class="empty">Binary or unknown file type. Use Download for files up to 4 MB.</div>'; return;
-  }
-
-  $('preview').innerHTML='<div class="empty">Loading preview…</div>';
-  try{
-    const data=await api('read',{path:item.path});
-    const pre=document.createElement('pre'); pre.textContent=data.text; $('preview').innerHTML=''; $('preview').appendChild(pre);
-    $('meta').textContent=`${humanSize(data.totalBytes)}${data.truncated?` • preview truncated at ${humanSize(data.limitBytes)}`:''} • modified ${fmtDate(item.modifyTime)}`;
-    log(`Previewed ${item.path} (${humanSize(data.totalBytes)}).`,'ok');
-  }catch(error){
-    $('preview').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`; log(`Preview failed: ${error.message}`,'err');
-  }
-}
-
-async function downloadSelected(){
-  if(!selected||selected.type==='d')return;
-  try{
-    const blob=await api('download',{path:selected.path},true);
-    const url=URL.createObjectURL(blob),a=document.createElement('a'); a.href=url; a.download=selected.name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000); log(`Downloaded ${selected.path}.`,'ok');
-  }catch(error){toast(error.message,true);log(`Download failed: ${error.message}`,'err')}
-}
-
-function resetPreview(){
-  $('previewTitle').textContent='Preview'; $('previewPath').textContent='Select a text/code file'; $('preview').innerHTML='<div class="empty">Click a file to preview it. Double-click a folder to open it.</div>';
-  $('meta').textContent='No file selected'; $('download').classList.add('hidden'); $('itemStatus').textContent='';
-}
-
-function updateModeUI(){
-  const saved=mode()==='saved';
-  $('manualPasswordField').classList.toggle('hidden',saved);
-  $('savedNote').classList.toggle('hidden',!saved);
-  if(saved)$('password').value='';
-  $('modeStatus').textContent=saved?'saved':'manual';
-}
-
-$('connect').addEventListener('click',()=>connected?disconnect():testConnection(true));
-$('diagnose').addEventListener('click',()=>testConnection(false));
-$('refresh').addEventListener('click',()=>loadPath(currentPath));
-$('up').addEventListener('click',()=>loadPath(parentPath(currentPath)));
-$('go').addEventListener('click',()=>loadPath($('path').value));
-$('path').addEventListener('keydown',e=>{if(e.key==='Enter')loadPath($('path').value)});
-$('filter').addEventListener('input',renderRows);
-$('download').addEventListener('click',downloadSelected);
-$('authMode').addEventListener('change',()=>{if(connected)disconnect();updateModeUI()});
-$('appPassword').addEventListener('keydown',e=>{if(e.key==='Enter'&&!connected)testConnection(true)});
-$('password').addEventListener('keydown',e=>{if(e.key==='Enter'&&!connected)testConnection(true)});
-$('username').addEventListener('keydown',e=>{if(e.key==='Enter'&&!connected)testConnection(true)});
-document.querySelectorAll('[data-path]').forEach(b=>b.addEventListener('click',()=>loadPath(b.dataset.path)));
-document.querySelectorAll('[data-sort]').forEach(b=>b.addEventListener('click',()=>{
-  const key=b.dataset.sort; if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=1} renderRows();
-}));
-$('copyPath').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(currentPath);toast('Path copied.')}catch{toast('Could not copy path.',true)}});
-$('clearLog').addEventListener('click',()=>{$('log').innerHTML=''});
-$('copyLog').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('log').innerText);toast('Debug log copied.')}catch{toast('Could not copy log.',true)}});
-
-resetPreview(); updateSortIndicators(); log('BGA SFTP Explorer loaded. Read-only mode.'); loadServerStatus();
+const API='/api/sftp',$=id=>document.getElementById(id),TEXT=new Set('txt md markdown json js mjs cjs ts tsx jsx css scss less html htm php py rb java c h cpp hpp cs go rs sql xml yaml yml ini cfg conf env gitignore sh bash zsh ps1 bat cmd csv tsv log svg tpl view inc'.split(' '));
+let connected=false,cwd='.',items=[],selected=null,token='',tokenExp=0,status={appProtected:true,savedAuthConfigured:false,savedUsernameConfigured:false,crudEnabled:false,uploadLimitBytes:2560*1024},pvText='',pvTruncated=false,editing=false;
+function log(m,t=''){const d=document.createElement('div');d.className='l '+t;d.textContent=`[${new Date().toLocaleTimeString()}] ${m}`;$('log').appendChild(d);$('log').scrollTop=1e9;console.log('[BGA SFTP]',m)}
+function toast(m,b=false){const e=$('toast');e.textContent=m;e.classList.toggle('bad',b);e.classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add('hidden'),4200)}
+function size(n){if(!Number.isFinite(+n))return'—';let v=+n,i=0,u=['B','KB','MB','GB'];while(v>=1024&&i<3){v/=1024;i++}return`${i&&v<10?v.toFixed(1):Math.round(v)} ${u[i]}`}
+function date(v){const d=new Date(Number(v)||v);return v&&!isNaN(d)?d.toLocaleString():'—'}function base(p){const x=String(p||'').replace(/\/+$/,'');return x.split('/').pop()||'/'}function parent(p){const x=String(p||'.').replace(/\/+$/,'');if(x==='/'||x==='.')return x;const i=x.lastIndexOf('/');return i<0?'.':i===0?'/':x.slice(0,i)}function join(p,n){n=String(n).replace(/^\/+|\/+$/g,'');return p==='/'?`/${n}`:p==='.'?`./${n}`:`${p.replace(/\/+$/,'')}/${n}`}function valid(n){return n&&n!=='.'&&n!=='..'&&!/[\\/\0]/.test(n)}
+function textFile(x){const e=base(x.name).split('.').pop().toLowerCase();return x.type==='-'&&(TEXT.has(e)||x.size<131072)}function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function auth(){const b={authMode:$('mode').value,username:$('user').value.trim(),appToken:token};if(b.authMode==='manual')b.password=$('sftpPw').value;return b}
+async function post(body,blob=false){const t=performance.now(),r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),rid=r.headers.get('x-sftp-request-id')||'-';log(`← ${body.action} ${r.status} ${Math.round(performance.now()-t)}ms #${rid}`,r.ok?'ok':'err');if(!r.ok){let d={};try{d=await r.json()}catch{}const e=new Error([d.error,d.hint,d.code&&`Code: ${d.code}`].filter(Boolean).join(' | ')||`HTTP ${r.status}`);e.code=d.code||'';throw e}return blob?r.blob():r.json()}
+async function loadStatus(){try{status=await post({action:'status'});$('stGate').textContent=status.appProtected?'Enabled':'Missing';$('stSaved').textContent=status.savedAuthConfigured?(status.savedAuthMethod==='key'?'SSH key':'Password'):'Missing';$('stCrud').textContent=status.crudEnabled?'Enabled':'APP_PASSWORD needed';if(status.savedAuthConfigured&&status.appProtected)$('mode').value='saved';else $('mode').value='manual';modeUI();$('connSub').textContent=status.savedAuthConfigured?'Saved/manual auth ready':'Manual auth available'}catch(e){$('connSub').textContent='API status failed';log(e.message,'err')}}
+async function unlock(){if(!status.appProtected)return true;if(token&&Date.now()<tokenExp-5000)return true;const pw=$('appPw').value;if(!pw){toast('Enter Internal Apps password.',true);return false}try{const d=await post({action:'unlock',appPassword:pw});token=d.token||'';tokenExp=d.expiresAt?new Date(d.expiresAt).getTime():0;$('appPw').value='';log('Internal Apps unlocked; password cleared.','ok');return true}catch(e){toast(e.message,true);log(e.message,'err');return false}}
+async function api(action,extra={},blob=false){if(!(await unlock()))throw new Error('Unlock required');const body={action,...auth(),...extra};log(`→ ${action}${extra.path?` ${extra.path}`:''}`);try{return await post(body,blob)}catch(e){if(e.code==='APP_AUTH_FAILED'){token='';tokenExp=0}throw e}}
+function inputsOK(){if($('mode').value==='saved'){if(!status.savedAuthConfigured){toast('Saved SFTP auth is not configured.',true);return false}if(!status.savedUsernameConfigured&&!$('user').value.trim()){toast('Enter SFTP username or set SFTP_USERNAME.',true);return false}}else if(!$('user').value.trim()||!$('sftpPw').value){toast('Manual mode needs SFTP username/password.',true);return false}return true}
+async function connect(load=true){if(!inputsOK())return;if(status.appProtected&&!(await unlock()))return;$('connect').disabled=true;$('connect').textContent='Connecting…';try{const d=await api('test');connected=true;$('dot').classList.add('on');$('connTitle').textContent='Connected';$('connSub').textContent=`${d.cwd} • ${d.itemCount} items • ${d.authMode}`;$('stMode').textContent=d.authMode;$('connect').textContent='Disconnect';$('connect').className='btn danger';if(load)await list(d.cwd||'.')}catch(e){toast(e.message,true);log(e.message,'err');$('connTitle').textContent='Connection failed'}finally{$('connect').disabled=false}}
+function disconnect(){connected=false;items=[];selected=null;token='';tokenExp=0;$('sftpPw').value='';$('appPw').value='';$('dot').classList.remove('on');$('connTitle').textContent='Disconnected';$('connSub').textContent='Secrets forgotten';$('connect').textContent='Connect';$('connect').className='btn primary';$('rows').innerHTML='';$('empty').classList.remove('hidden');resetPreview()}
+async function list(p){if(!connected)return toast('Connect first.',true);try{const d=await api('list',{path:p||'.'});cwd=d.path;items=d.entries||[];$('path').value=cwd;selected=null;render();resetPreview();log(`Loaded ${items.length} item(s).`,'ok')}catch(e){toast(e.message,true);log(e.message,'err')}}
+function render(){const q=$('filter').value.toLowerCase(),v=items.filter(x=>!q||x.name.toLowerCase().includes(q)).sort((a,b)=>(a.type==='d')!==(b.type==='d')?(a.type==='d'?-1:1):a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));$('rows').innerHTML='';$('empty').classList.toggle('hidden',v.length>0);$('empty').textContent=items.length?'No matching files.':'Folder is empty.';for(const x of v){const tr=document.createElement('tr');if(selected?.path===x.path)tr.className='sel';tr.innerHTML=`<td>${x.type==='d'?'📁':'📄'} ${esc(x.name)}</td><td>${x.type==='d'?'—':size(x.size)}</td><td>${date(x.modifyTime)}</td><td>${x.type==='d'?'Folder':'File'}</td>`;tr.onclick=()=>select(x,tr);tr.ondblclick=()=>x.type==='d'&&list(x.path);$('rows').appendChild(tr)}}
+async function select(x,tr){selected=x;editing=false;pvText='';pvTruncated=false;document.querySelectorAll('#rows tr').forEach(r=>r.classList.remove('sel'));tr.classList.add('sel');$('pvTitle').textContent=x.name;$('pvPath').textContent=x.path;$('meta').textContent=`${x.type==='d'?'Folder':size(x.size)} • ${date(x.modifyTime)}`;$('download').classList.toggle('hidden',x.type==='d');$('edit').classList.add('hidden');$('save').classList.add('hidden');$('cancel').classList.add('hidden');if(x.type==='d')return $('preview').innerHTML='<div class="empty">Folder selected. Double-click to open.</div>';if(!textFile(x))return $('preview').innerHTML='<div class="empty">Binary/unknown file. Download, rename, delete, or upload an overwrite.</div>';try{$('preview').innerHTML='<div class="empty">Loading…</div>';const d=await api('read',{path:x.path});pvText=d.text;pvTruncated=!!d.truncated;const pre=document.createElement('pre');pre.textContent=d.text;$('preview').innerHTML='';$('preview').appendChild(pre);$('meta').textContent=`${size(d.totalBytes)}${d.truncated?' • truncated':''} • ${date(x.modifyTime)}`;if(!pvTruncated)$('edit').classList.remove('hidden')}catch(e){$('preview').innerHTML=`<div class="empty">${esc(e.message)}</div>`}}
+async function download(){if(!selected||selected.type==='d')return;try{const b=await api('download',{path:selected.path},true),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=selected.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}catch(e){toast(e.message,true)}}
+function mutOK(){if(!connected){toast('Connect first.',true);return false}if(!status.crudEnabled){toast('CRUD requires APP_PASSWORD in Vercel.',true);return false}return true}function conf(k,t){return{confirmMutation:k,confirmTarget:t}}
+async function mkdir(){if(!mutOK())return;const n=prompt('New folder name:');if(n===null)return;const c=n.trim();if(!valid(c))return toast('Invalid folder name.',true);const p=join(cwd,c);if(!confirm(`CREATE folder?\n\n${p}`))return;try{await api('mkdir',{path:p,...conf('create',p)});toast('Folder created.');await list(cwd)}catch(e){toast(e.message,true)}}
+async function newFile(){if(!mutOK())return;const n=prompt('New text/code file name:');if(n===null)return;const c=n.trim();if(!valid(c))return toast('Invalid file name.',true);const p=join(cwd,c);if(!confirm(`CREATE empty file?\n\n${p}`))return;try{await api('write',{path:p,writeMode:'create',text:'',...conf('create',p)});toast('File created.');await list(cwd)}catch(e){toast(e.message,true)}}
+function b64(buf){const a=new Uint8Array(buf);let s='';for(let i=0;i<a.length;i+=32768)s+=String.fromCharCode(...a.subarray(i,i+32768));return btoa(s)}
+async function upload(file){if(!file||!mutOK())return;const lim=+status.uploadLimitBytes||2560*1024;if(file.size>lim)return toast(`Limit ${size(lim)}.`,true);const p=join(cwd,file.name),old=items.find(x=>x.name===file.name);if(old?.type==='d')return toast('Folder with same name exists.',true);const mode=old?'update':'create';if(!confirm(`${old?'OVERWRITE':'CREATE'} remote file?\n\n${p}\n${size(file.size)}`))return;try{await api('write',{path:p,writeMode:mode,contentBase64:b64(await file.arrayBuffer()),...conf(mode,p)});toast(old?'File overwritten.':'File uploaded.');await list(cwd)}catch(e){toast(e.message,true)}finally{$('uploadInput').value=''}}
+async function rename(){if(!mutOK()||!selected)return toast('Select an item first.',true);const from=selected.path,r=prompt('Rename/move to remote path:',from);if(r===null)return;let to=r.trim();if(!to)return;if(!/[\/]/.test(to))to=join(parent(from),to);if(to===from)return;const ct=`${from} -> ${to}`;if(!confirm(`UPDATE path?\n\nFROM ${from}\nTO   ${to}`))return;try{await api('rename',{from,to,...conf('update',ct)});toast('Renamed/moved.');await list(cwd)}catch(e){toast(e.message,true)}}
+async function del(){if(!mutOK()||!selected)return toast('Select an item first.',true);const p=selected.path,dir=selected.type==='d',typed=prompt(`${dir?'DELETE FOLDER + ALL CONTENTS':'DELETE FILE'}\n\n${p}\n\nType exact item name to confirm:\n${selected.name}`);if(typed===null||typed!==selected.name)return toast('Delete cancelled.',true);if(!confirm(`FINAL DELETE CONFIRMATION\n\n${p}${dir?'\n\nRecursive: all contents will be deleted.':''}`))return;try{await api('delete',{path:p,recursive:dir,...conf('delete',p)});toast('Deleted.');await list(cwd)}catch(e){toast(e.message,true)}}
+function edit(){if(!mutOK()||!selected||selected.type==='d'||!textFile(selected))return toast('Select a text/code file.',true);if(pvTruncated)return toast('Truncated previews cannot be edited safely.',true);editing=true;const t=document.createElement('textarea');t.id='editor';t.className='editor';t.value=pvText;$('preview').innerHTML='';$('preview').appendChild(t);$('edit').classList.add('hidden');$('save').classList.remove('hidden');$('cancel').classList.remove('hidden');t.focus()}
+async function save(){if(!editing||!selected)return;const p=selected.path,text=$('editor').value,n=new TextEncoder().encode(text).length,lim=+status.uploadLimitBytes||2560*1024;if(n>lim)return toast(`Save limit ${size(lim)}.`,true);if(!confirm(`UPDATE remote file?\n\n${p}\n\nOverwrite with editor contents (${size(n)})?`))return;try{await api('write',{path:p,writeMode:'update',text,...conf('update',p)});toast('Saved.');await list(cwd)}catch(e){toast(e.message,true)}}
+function cancel(){if(!editing)return;if(!confirm('Discard unsaved changes?'))return;editing=false;const p=document.createElement('pre');p.textContent=pvText;$('preview').innerHTML='';$('preview').appendChild(p);$('edit').classList.remove('hidden');$('save').classList.add('hidden');$('cancel').classList.add('hidden')}
+function resetPreview(){editing=false;pvText='';pvTruncated=false;$('pvTitle').textContent='Preview';$('pvPath').textContent='Select a file';$('preview').innerHTML='<div class="empty">Click a file to preview it. Double-click a folder to open.</div>';$('meta').textContent='No file selected';$('download').classList.add('hidden');$('edit').classList.add('hidden');$('save').classList.add('hidden');$('cancel').classList.add('hidden')}
+function modeUI(){const saved=$('mode').value==='saved';$('sftpPwWrap').classList.toggle('hidden',saved);if(saved)$('sftpPw').value='';$('stMode').textContent=saved?'saved':'manual'}
+$('connect').onclick=()=>connected?disconnect():connect(true);$('test').onclick=()=>connect(false);$('refresh').onclick=()=>list(cwd);$('up').onclick=()=>list(parent(cwd));$('go').onclick=()=>list($('path').value);$('path').onkeydown=e=>e.key==='Enter'&&list($('path').value);$('filter').oninput=render;document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>list(b.dataset.go));$('mode').onchange=()=>{if(connected)disconnect();modeUI()};$('newFolder').onclick=mkdir;$('newFile').onclick=newFile;$('upload').onclick=()=>mutOK()&&$('uploadInput').click();$('uploadInput').onchange=()=>upload($('uploadInput').files?.[0]);$('rename').onclick=rename;$('delete').onclick=del;$('edit').onclick=edit;$('save').onclick=save;$('cancel').onclick=cancel;$('download').onclick=download;$('copyPath').onclick=()=>navigator.clipboard.writeText(cwd).then(()=>toast('Path copied.')).catch(()=>toast('Copy failed.',true));$('clearLog').onclick=()=>$('log').innerHTML='';$('copyLog').onclick=()=>navigator.clipboard.writeText($('log').innerText).then(()=>toast('Log copied.')).catch(()=>toast('Copy failed.',true));$('appPw').onkeydown=e=>e.key==='Enter'&&!connected&&connect(true);$('sftpPw').onkeydown=e=>e.key==='Enter'&&!connected&&connect(true);
+resetPreview();modeUI();log('BGA SFTP Explorer loaded. CRUD confirmations enabled.');loadStatus();
 })();
 </script>
-</body>
-</html>
+</body></html>
