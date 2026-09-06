@@ -1,0 +1,37 @@
+name: Wire SFTP Mobile App
+on:
+  push:
+    paths:
+      - '.github/workflows/wire-sftp-mobile.yml'
+permissions:
+  contents: write
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject mobile module
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('public/sftp/index.html')
+          s=p.read_text()
+          tag='<script src="/sftp/mobile-app.js"></script>'
+          if tag not in s:
+              marker='<script src="/sftp/power-tools.js"></script>'
+              if marker in s:
+                  s=s.replace(marker, marker+'\n'+tag)
+              else:
+                  marker='<script src="/sftp/download-tools.js"></script>'
+                  s=s.replace(marker, marker+'\n'+tag)
+              p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/sftp/index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Enable native-style mobile SFTP layout"
+            git push
+          fi
