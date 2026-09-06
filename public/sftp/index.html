@@ -1,1 +1,630 @@
-PLACEHOLDER
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BGA SFTP Explorer</title>
+<style>
+:root{--bg:#090d12;--panel:#101720;--panel2:#0c1219;--line:#263241;--text:#e8eef6;--muted:#8ea0b4;--blue:#2788f5;--green:#3bd47f;--red:#ff6573;--yellow:#ffd166;--hover:#172331;--selected:#123b63}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+button,input,select{font:inherit}.app{height:100%;display:grid;grid-template-rows:auto 1fr 190px}
+.top{display:flex;gap:9px;align-items:end;padding:10px 12px;background:#0c1219;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-size:16px;font-weight:800;align-self:center;white-space:nowrap;margin-right:6px}.brand b{color:var(--blue)}
+.field{display:grid;gap:4px;min-width:110px}.field.host{flex:1;min-width:220px}.field.user{width:180px}.field.pass{width:190px}.field.auth{width:150px}
+.field label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+input,select{height:37px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--text);padding:0 10px;outline:none}
+input:focus,select:focus{border-color:var(--blue)}input:disabled{opacity:.7}
+.btn{height:37px;border:1px solid var(--line);border-radius:7px;background:#182432;color:var(--text);padding:0 13px;font-weight:700;cursor:pointer}
+.btn:hover{background:#213246}.btn.primary{background:#116bc4;border-color:#2385e7}.btn.primary:hover{background:#1680e6}.btn.danger{background:#402028;border-color:#71323f}
+.main{display:grid;grid-template-columns:250px minmax(420px,1fr) minmax(320px,40%);min-height:0}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--panel);border-right:1px solid var(--line)}.pane:last-child{border-right:0}
+.head{min-height:48px;padding:8px 10px;border-bottom:1px solid var(--line);background:#0f161e;display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:#657181}.dot.on{background:var(--green);box-shadow:0 0 0 4px rgba(59,212,127,.08)}
+.title{font-weight:800}.sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side{padding:10px;overflow:auto}.side button{display:block;width:100%;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text);padding:9px 10px;text-align:left;cursor:pointer}
+.side button:hover{background:var(--hover);border-color:var(--line)}
+.note{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d141c;color:var(--muted);font-size:11px}
+.status-grid{display:grid;gap:7px;margin-top:10px}.status-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}.status-row b{color:var(--text);font-weight:650}
+.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:3px 7px;background:#0d141c;font-size:10px;color:var(--muted)}
+.pill.good{border-color:#225d3e;color:#66df9b}.pill.warn{border-color:#665527;color:#ffd166}
+.pathbar{display:flex;gap:6px;width:100%}.pathbar input{flex:1}.iconbtn{width:37px;height:37px;border:1px solid var(--line);border-radius:7px;background:#182432;color:var(--text);cursor:pointer}.iconbtn:hover{background:#213246}
+.filter{width:150px}.files{min-height:0;flex:1;overflow:auto}.empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}
+table{width:100%;border-collapse:collapse;table-layout:fixed}th{position:sticky;top:0;background:#0d141c;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;padding:0;border-bottom:1px solid var(--line);z-index:1}
+th button{width:100%;border:0;background:transparent;color:inherit;text-align:left;padding:8px;cursor:pointer;font:inherit;text-transform:inherit;letter-spacing:inherit}
+th button:hover{color:var(--text)}td{padding:8px;border-bottom:1px solid #1d2733;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+tbody tr{cursor:default}tbody tr:hover{background:var(--hover)}tbody tr.sel{background:var(--selected)}.file-name{display:flex;align-items:center;gap:7px}
+.preview{flex:1;min-height:0;overflow:auto;background:#090f15}.preview pre{margin:0;padding:13px;white-space:pre;tab-size:2;min-width:max-content;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d8e4f2}
+.meta{border-top:1px solid var(--line);padding:8px 10px;color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:8px}
+.console{display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--line);background:#080c11}.console-head{height:34px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid var(--line);gap:8px}
+.console-head .title{font-size:12px}.console-actions{margin-left:auto;display:flex;gap:6px}.tiny{height:25px;border:1px solid var(--line);border-radius:5px;background:#151f2a;color:var(--muted);font-size:11px;padding:0 8px;cursor:pointer}
+.log{flex:1;overflow:auto;padding:7px 10px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a8b7c8}.line{white-space:pre-wrap;word-break:break-word}.line.info{color:#9fb2c6}.line.ok{color:#64df9a}.line.warn{color:#ffd166}.line.err{color:#ff8290}
+.toast{position:fixed;right:14px;bottom:204px;z-index:10;max-width:min(520px,calc(100vw - 28px));padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#17222f;box-shadow:0 12px 30px rgba(0,0,0,.35)}.toast.bad{border-color:#7a3440}
+.hidden{display:none!important}.status{margin-left:auto;color:var(--muted);font-size:11px;white-space:nowrap}.saved-note{font-size:10px;color:#66df9b;margin-top:3px}
+.action-sep{height:1px;background:var(--line);margin:9px 0}.mutate-btn{border-color:#36485c!important;background:#111b26!important}.mutate-btn:hover{background:#1b2b3c!important}.mutate-btn.delete{color:#ff96a0;border-color:#65323b!important}.mutate-btn.create{color:#78e2aa}.mutate-btn.update{color:#8ec5ff}
+.editor{width:100%;height:100%;min-height:260px;resize:none;border:0;border-radius:0;background:#090f15;color:#d8e4f2;padding:13px;outline:none;tab-size:2;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.head-actions{margin-left:auto;display:flex;gap:6px;align-items:center}.head-actions .tiny{height:30px}.tiny.primary{background:#116bc4;color:#fff;border-color:#2385e7}.tiny.danger{color:#ff96a0;border-color:#65323b}.tiny:disabled{opacity:.45;cursor:not-allowed}
+.media-preview{width:100%;height:100%;min-height:260px;display:flex;align-items:center;justify-content:center;background:#090f15;overflow:auto;padding:12px}.media-preview img{display:block;max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 8px 28px rgba(0,0,0,.35)}.pdf-preview{width:100%;height:100%;min-height:420px;border:0;background:#fff}.preview-pane.fullscreen-fallback{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;z-index:1000!important;box-shadow:none!important;border:0!important}.preview-pane.fullscreen-fallback .preview{min-height:0}.preview-pane:fullscreen{background:var(--panel)}.preview-pane:fullscreen .preview{min-height:0}
+@media(max-width:1100px){.main{grid-template-columns:210px 1fr}.preview-pane{position:fixed;right:0;top:112px;bottom:190px;width:min(540px,88vw);z-index:4;box-shadow:-12px 0 30px rgba(0,0,0,.35)}}
+@media(max-width:760px){body{overflow:auto}.app{height:auto;min-height:100%;grid-template-rows:auto auto 190px}.main{grid-template-columns:1fr}.pane{min-height:360px}.preview-pane{position:static;width:auto;box-shadow:none}.field.host{display:none}.field.user,.field.pass,.field.auth{width:calc(50% - 5px);min-width:150px}.top .btn{flex:1}.console{height:190px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="brand">BGA <b>SFTP Explorer</b></div>
+  <div class="field host"><label>Server</label><input value="1.studio.boardgamearena.com" disabled></div>
+  <div class="field"><label>Port</label><input value="2022" disabled style="width:80px"></div>
+  <div class="field auth"><label>Auth mode</label>
+    <select id="authMode">
+      <option value="saved">Saved Vercel secret</option>
+      <option value="manual">Manual SFTP password</option>
+    </select>
+  </div>
+  <div class="field pass"><label>Internal Apps password</label><input id="appPassword" type="password" autocomplete="current-password" placeholder="APP_PASSWORD"></div>
+  <div class="field user"><label>SFTP user</label><input id="username" autocomplete="username" placeholder="Optional if saved"></div>
+  <div id="manualPasswordField" class="field pass hidden"><label>SFTP password</label><input id="password" type="password" autocomplete="off" placeholder="Manual only"></div>
+  <button id="connect" class="btn primary">Connect</button>
+</header>
+
+<main class="main">
+  <section class="pane">
+    <div class="head"><span id="dot" class="dot"></span><div><div id="connectionTitle" class="title">Disconnected</div><div id="connectionSub" class="sub">Checking server configuration…</div></div></div>
+    <div class="side">
+      <button data-path=".">📁 Home / default</button>
+      <button data-path="/">🗂 Root</button>
+      <button id="refresh">↻ Refresh current</button>
+      <button id="diagnose">🩺 Test connection</button>
+      <button id="copyPath">⧉ Copy current path</button>
+      <div class="action-sep"></div>
+      <button id="newFolder" class="mutate-btn create">＋ New folder</button>
+      <button id="newFile" class="mutate-btn create">＋ New text file</button>
+      <button id="uploadFile" class="mutate-btn create">↑ Upload file</button>
+      <button id="renameItem" class="mutate-btn update">↔ Rename / move selected</button>
+      <button id="deleteItem" class="mutate-btn delete">🗑 Delete selected</button>
+      <input id="uploadInput" type="file" class="hidden">
+
+      <div class="status-grid">
+        <div class="status-row"><span>App gate</span><b id="appGateStatus">Checking…</b></div>
+        <div class="status-row"><span>Saved auth</span><b id="savedAuthStatus">Checking…</b></div>
+        <div class="status-row"><span>Saved user</span><b id="savedUserStatus">Checking…</b></div>
+        <div class="status-row"><span>Mode</span><b id="modeStatus">—</b></div>
+        <div class="status-row"><span>CRUD</span><b id="crudStatus">Checking…</b></div>
+      </div>
+
+      <div id="savedNote" class="note">
+        Saved mode keeps the BGA SFTP secret entirely on Vercel. Your browser sends the Internal Apps password once to unlock a short-lived in-memory token; the SFTP password/private key is never returned to the page.
+      </div>
+      <div class="note">
+        CRUD is enabled after the Internal Apps password is unlocked. Create, update, rename/move, and delete all require an explicit browser confirmation plus a matching server-side confirmation payload.
+      </div>
+      <div class="note">
+        Vercel limitation: previews are capped at 1 MB, downloads at 4 MB, and uploads/updates at about 2.5 MB. Use the local bridge version for larger transfers.
+      </div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="head">
+      <div class="pathbar"><button id="up" class="iconbtn" title="Parent">↑</button><input id="path" value="." spellcheck="false"><button id="go" class="iconbtn" title="Go">→</button></div>
+      <input id="filter" class="filter" placeholder="Filter…">
+    </div>
+    <div class="files">
+      <table>
+        <thead><tr>
+          <th style="width:48%"><button data-sort="name">Name <span id="sort-name"></span></button></th>
+          <th style="width:15%"><button data-sort="size">Size <span id="sort-size"></span></button></th>
+          <th style="width:20%"><button data-sort="modifyTime">Modified <span id="sort-modifyTime"></span></button></th>
+          <th style="width:17%"><button data-sort="type">Type <span id="sort-type"></span></button></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div id="fileEmpty" class="empty">Unlock and connect to BGA Studio SFTP.</div>
+    </div>
+  </section>
+
+  <section class="pane preview-pane" id="previewPane">
+    <div class="head">
+      <div style="min-width:0"><div id="previewTitle" class="title">Preview</div><div id="previewPath" class="sub">Select a text/code file</div></div>
+      <div class="status" id="itemStatus"></div>
+      <div class="head-actions">
+        <button id="editFile" class="tiny hidden">Edit</button>
+        <button id="saveFile" class="tiny primary hidden">Save</button>
+        <button id="cancelEdit" class="tiny hidden">Cancel</button>
+        <button id="fullscreenPreview" class="tiny hidden" title="Full screen preview">⛶</button>
+        <button id="download" class="iconbtn hidden" title="Download">⇩</button>
+      </div>
+    </div>
+    <div id="preview" class="preview"><div class="empty">Click a file to preview it. Double-click a folder to open it.</div></div>
+    <div class="meta"><span id="meta">No file selected</span><span>CRUD • CONFIRMATIONS REQUIRED</span></div>
+  </section>
+</main>
+
+<section class="console">
+  <div class="console-head"><div class="title">Debug console</div><div class="sub">Secrets are never logged or returned</div><div class="console-actions"><button id="copyLog" class="tiny">Copy</button><button id="clearLog" class="tiny">Clear</button></div></div>
+  <div id="log" class="log"></div>
+</section>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+(()=>{'use strict';
+const API='/api/sftp';
+const $=id=>document.getElementById(id);
+let connected=false,currentPath='.',entries=[],selected=null;
+let serverStatus={appProtected:true,savedAuthConfigured:false,savedUsernameConfigured:false,savedAuthMethod:null,crudEnabled:false,uploadLimitBytes:2560*1024};
+let appToken='',tokenExpiresAt=null,sortKey='name',sortDir=1;
+let previewText='',previewTruncated=false,editing=false,previewObjectUrl='',fallbackFullscreen=false;
+const TEXT_EXT=new Set('txt md markdown json js mjs cjs ts tsx jsx css scss less html htm php py rb java c h cpp hpp cs go rs sql xml yaml yml ini cfg conf env gitignore sh bash zsh ps1 bat cmd csv tsv log svg tpl view inc'.split(' '));
+
+function stamp(){return new Date().toLocaleTimeString()}
+function log(msg,type='info'){
+  const div=document.createElement('div'); div.className='line '+type; div.textContent=`[${stamp()}] ${msg}`;
+  $('log').appendChild(div); $('log').scrollTop=$('log').scrollHeight;
+  console[type==='err'?'error':type==='warn'?'warn':'log']('[BGA SFTP]',msg);
+}
+function toast(msg,bad=false){
+  const el=$('toast'); el.textContent=msg; el.classList.toggle('bad',bad); el.classList.remove('hidden');
+  clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.add('hidden'),4500);
+}
+function mode(){return $('authMode').value}
+function humanSize(n){if(!Number.isFinite(n)||n<0)return'—';const u=['B','KB','MB','GB'];let i=0,v=n;while(v>=1024&&i<u.length-1){v/=1024;i++}return`${i&&v<10?v.toFixed(1):Math.round(v)} ${u[i]}`}
+function fmtDate(v){if(!v)return'—';const d=new Date(Number(v)||v);return Number.isNaN(d.getTime())?'—':d.toLocaleString()}
+function basename(p){const x=String(p||'').replace(/\/+$/,'');return x.split('/').pop()||x||'/'}
+function ext(n){const b=basename(n),i=b.lastIndexOf('.');return i>=0?b.slice(i+1).toLowerCase():''}
+function parentPath(p){const x=String(p||'.').replace(/\/+$/,'');if(x==='/'||x==='.')return x;const i=x.lastIndexOf('/');if(i<0)return'.';return i===0?'/':x.slice(0,i)}
+function joinRemote(parent,name){const clean=String(name||'').replace(/^\/+|\/+$/g,'');if(parent==='/')return`/${clean}`;if(parent==='.')return`./${clean}`;return`${String(parent).replace(/\/+$/,'')}/${clean}`}
+function validName(name){return !!name&&name!=='.'&&name!=='..'&&!/[\\/\0]/.test(name)}
+function isText(item){return item.type==='-'&&(TEXT_EXT.has(ext(item.name))||item.size<128*1024)}
+function mediaKind(item){const e=ext(item?.name);if(['png','jpg','jpeg','gif','webp'].includes(e))return'image';if(e==='pdf')return'pdf';return''}
+function mediaMime(item){const e=ext(item?.name);return e==='jpg'||e==='jpeg'?'image/jpeg':e==='png'?'image/png':e==='gif'?'image/gif':e==='webp'?'image/webp':e==='pdf'?'application/pdf':'application/octet-stream'}
+function fileIcon(item){if(item.type==='d')return'📁';const e=ext(item.name);if(['php','js','ts','css','html','json','sql'].includes(e))return'🧩';if(['png','jpg','jpeg','gif','webp','svg'].includes(e))return'🖼️';if(e==='pdf')return'📕';return'📄'}
+function authBody(){
+  const body={authMode:mode(),username:$('username').value.trim(),appToken};
+  if(mode()==='manual') body.password=$('password').value;
+  return body;
+}
+
+async function rawPost(body,expectBlob=false){
+  const started=performance.now();
+  let res;
+  try{
+    res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  }catch(error){
+    log(`Network failure: ${error.message}`,'err');
+    throw new Error('Could not reach the Vercel SFTP API.');
+  }
+  const rid=res.headers.get('x-sftp-request-id')||'-';
+  log(`← ${body.action||'?'} HTTP ${res.status} request=${rid} ${Math.round(performance.now()-started)}ms`,res.ok?'ok':'err');
+  if(!res.ok){
+    let data={}; try{data=await res.json()}catch{}
+    const message=[data.error,data.hint,data.code?`Code: ${data.code}`:'',data.requestId?`Request: ${data.requestId}`:''].filter(Boolean).join(' | ')||`HTTP ${res.status}`;
+    const err=new Error(message); err.code=data.code||''; err.status=res.status; throw err;
+  }
+  return expectBlob?res.blob():res.json();
+}
+
+async function loadServerStatus(){
+  try{
+    log('→ status');
+    const data=await rawPost({action:'status'});
+    serverStatus=data;
+    $('appGateStatus').textContent=data.appProtected?'Enabled':'Not configured';
+    $('savedAuthStatus').textContent=data.savedAuthConfigured?(data.savedAuthMethod==='key'?'SSH key':'Password'):'Not configured';
+    $('savedUserStatus').textContent=data.savedUsernameConfigured?'Configured':'Enter manually';
+    $('crudStatus').textContent=data.crudEnabled?'Enabled':'APP_PASSWORD required';
+    if(data.savedAuthConfigured&&data.appProtected){
+      $('authMode').value='saved';
+    }else{
+      $('authMode').value='manual';
+    }
+    updateModeUI();
+    $('connectionSub').textContent=data.savedAuthConfigured?'Ready for saved or manual auth':'Manual SFTP credentials available';
+    log(`Server status: appGate=${data.appProtected?'on':'off'} savedAuth=${data.savedAuthMethod||'none'} savedUser=${data.savedUsernameConfigured?'yes':'no'} crud=${data.crudEnabled?'on':'off'}`,'ok');
+  }catch(error){
+    $('connectionSub').textContent='Could not read API status';
+    log(`Status check failed: ${error.message}`,'warn');
+  }
+}
+
+async function ensureUnlocked(){
+  if(!serverStatus.appProtected) return true;
+  if(appToken && (!tokenExpiresAt || Date.now()<tokenExpiresAt-5000)) return true;
+
+  const appPassword=$('appPassword').value;
+  if(!appPassword){
+    toast('Enter the Internal Apps password first.',true);
+    log('Internal Apps password is required.','warn');
+    return false;
+  }
+
+  log('→ unlock');
+  try{
+    const data=await rawPost({action:'unlock',appPassword});
+    appToken=data.token||'';
+    tokenExpiresAt=data.expiresAt?new Date(data.expiresAt).getTime():null;
+    $('appPassword').value='';
+    log(`Internal Apps unlocked${data.expiresAt?` until ${new Date(data.expiresAt).toLocaleTimeString()}`:''}; password cleared from form.`,'ok');
+    return true;
+  }catch(error){
+    appToken=''; tokenExpiresAt=null;
+    toast(error.message,true); log(`Unlock failed: ${error.message}`,'err'); return false;
+  }
+}
+
+function validateSftpInputs(){
+  if(mode()==='saved'){
+    if(!serverStatus.savedAuthConfigured){
+      toast('Saved SFTP credentials are not configured in Vercel.',true); return false;
+    }
+    if(!serverStatus.savedUsernameConfigured&&!$('username').value.trim()){
+      toast('Enter the SFTP username or configure SFTP_USERNAME in Vercel.',true); return false;
+    }
+  }else{
+    if(!$('username').value.trim()||!$('password').value){
+      toast('Manual mode requires SFTP username and password.',true); return false;
+    }
+  }
+  return true;
+}
+
+async function api(action,extra={},expectBlob=false){
+  if(!(await ensureUnlocked())) throw new Error('Internal Apps unlock required.');
+  const body={action,...authBody(),...extra};
+  log(`→ ${action}${extra.path?` path=${extra.path}`:''} mode=${mode()}`);
+  try{
+    return await rawPost(body,expectBlob);
+  }catch(error){
+    if(error.code==='APP_AUTH_FAILED'){
+      appToken=''; tokenExpiresAt=null;
+      $('appPassword').focus();
+    }
+    throw error;
+  }
+}
+
+async function testConnection(load=true){
+  if(!validateSftpInputs())return false;
+  if(serverStatus.appProtected && !(await ensureUnlocked()))return false;
+  $('connect').disabled=true; $('connect').textContent='Connecting…';
+  log(`Testing BGA SFTP authentication using ${mode()} mode…`);
+  try{
+    const data=await api('test');
+    connected=true; $('dot').classList.add('on');
+    const displayUser=$('username').value.trim()||(serverStatus.savedUsernameConfigured?'saved user':'SFTP user');
+    $('connectionTitle').textContent=`Connected: ${displayUser}`;
+    $('connectionSub').textContent=`${data.cwd} • ${data.itemCount} items • ${data.authMode}`;
+    $('modeStatus').textContent=data.authMode;
+    $('connect').textContent='Disconnect'; $('connect').classList.remove('primary'); $('connect').classList.add('danger');
+    log(`Authentication succeeded. cwd=${data.cwd} items=${data.itemCount}`,'ok');
+    if(load)await loadPath(data.cwd||'.');
+    return true;
+  }catch(error){
+    connected=false; $('dot').classList.remove('on'); $('connectionTitle').textContent='Connection failed'; $('connectionSub').textContent='See debug console';
+    $('connect').textContent='Connect'; toast(error.message,true); log(error.message,'err'); return false;
+  }finally{$('connect').disabled=false}
+}
+
+function disconnect(){
+  connected=false; entries=[]; selected=null; appToken=''; tokenExpiresAt=null;
+  $('password').value=''; $('appPassword').value='';
+  $('dot').classList.remove('on'); $('connectionTitle').textContent='Disconnected'; $('connectionSub').textContent='Secrets forgotten from this tab';
+  $('connect').textContent='Connect'; $('connect').classList.add('primary'); $('connect').classList.remove('danger');
+  $('rows').innerHTML=''; $('fileEmpty').classList.remove('hidden'); $('fileEmpty').textContent='Disconnected. Unlock and reconnect.';
+  $('modeStatus').textContent='—'; resetPreview(); log('Disconnected locally; in-memory unlock token and manual password cleared.','ok');
+}
+
+async function loadPath(p){
+  if(!connected){toast('Connect first.',true);return}
+  const target=String(p||'.').trim()||'.';
+  try{
+    const data=await api('list',{path:target});
+    currentPath=data.path; entries=data.entries||[]; $('path').value=currentPath; selected=null; renderRows();
+    log(`Loaded ${entries.length} item(s) from ${currentPath}.`,'ok');
+  }catch(error){toast(error.message,true);log(`List failed: ${error.message}`,'err')}
+}
+
+function compareEntries(a,b){
+  const ad=a.type==='d',bd=b.type==='d';
+  if(ad!==bd)return ad?-1:1;
+  let av=a[sortKey],bv=b[sortKey];
+  if(sortKey==='size'||sortKey==='modifyTime'){av=Number(av)||0;bv=Number(bv)||0;return(av-bv)*sortDir}
+  return String(av??'').localeCompare(String(bv??''),undefined,{numeric:true,sensitivity:'base'})*sortDir;
+}
+
+function updateSortIndicators(){
+  ['name','size','modifyTime','type'].forEach(k=>{$(`sort-${k}`).textContent=k===sortKey?(sortDir===1?'▲':'▼'):''});
+}
+
+function renderRows(){
+  const q=$('filter').value.trim().toLowerCase();
+  const visible=entries.filter(x=>!q||x.name.toLowerCase().includes(q)).sort(compareEntries);
+  const tbody=$('rows'); tbody.innerHTML='';
+  $('fileEmpty').classList.toggle('hidden',visible.length>0);
+  $('fileEmpty').textContent=entries.length?'No matching files.':'This folder is empty.';
+  $('itemStatus').textContent=`${visible.length}/${entries.length}`;
+  updateSortIndicators();
+
+  for(const item of visible){
+    const tr=document.createElement('tr');
+    if(selected?.path===item.path)tr.classList.add('sel');
+    tr.innerHTML=`<td><div class="file-name"><span>${fileIcon(item)}</span><span title="${escapeAttr(item.name)}">${escapeHtml(item.name)}</span></div></td><td>${item.type==='d'?'—':humanSize(item.size)}</td><td>${fmtDate(item.modifyTime)}</td><td>${item.type==='d'?'Folder':'File'}</td>`;
+    tr.addEventListener('click',()=>selectItem(item,tr));
+    tr.addEventListener('dblclick',()=>{if(item.type==='d')loadPath(item.path)});
+    tbody.appendChild(tr);
+  }
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escapeAttr(s){return escapeHtml(s)}
+
+function clearPreviewObjectUrl(){
+  if(previewObjectUrl){URL.revokeObjectURL(previewObjectUrl);previewObjectUrl=''}
+}
+
+async function previewMediaFile(item){
+  const kind=mediaKind(item);
+  if(!kind)return false;
+  const limit=Number(serverStatus.downloadLimitBytes)||4*1024*1024;
+  if(Number(item.size)>limit){
+    $('preview').innerHTML=`<div class="empty">${kind==='pdf'?'PDF':'Image'} preview is limited to ${humanSize(limit)} on Vercel. Use Download/local bridge for larger files.</div>`;
+    return true;
+  }
+  $('preview').innerHTML=`<div class="empty">Loading ${kind==='pdf'?'PDF':'image'} preview…</div>`;
+  try{
+    const raw=await api('download',{path:item.path},true);
+    const typed=new Blob([await raw.arrayBuffer()],{type:mediaMime(item)});
+    clearPreviewObjectUrl();
+    previewObjectUrl=URL.createObjectURL(typed);
+    $('preview').innerHTML='';
+    if(kind==='image'){
+      const wrap=document.createElement('div');wrap.className='media-preview';
+      const img=document.createElement('img');img.src=previewObjectUrl;img.alt=item.name;img.title='Image preview';
+      wrap.appendChild(img);$('preview').appendChild(wrap);
+    }else{
+      const frame=document.createElement('iframe');frame.className='pdf-preview';frame.src=previewObjectUrl;frame.title=`PDF preview: ${item.name}`;
+      $('preview').appendChild(frame);
+    }
+    $('meta').textContent=`${humanSize(item.size)} • ${kind==='pdf'?'PDF':'image'} preview • modified ${fmtDate(item.modifyTime)}`;
+    log(`Previewed ${kind} ${item.path} (${humanSize(item.size)}).`,'ok');
+  }catch(error){
+    clearPreviewObjectUrl();$('preview').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`;log(`${kind==='pdf'?'PDF':'Image'} preview failed: ${error.message}`,'err');
+  }
+  return true;
+}
+
+async function togglePreviewFullscreen(){
+  const pane=$('previewPane');
+  try{
+    if(document.fullscreenElement){await document.exitFullscreen();return}
+    if(pane.requestFullscreen){await pane.requestFullscreen();return}
+  }catch(error){log(`Fullscreen API unavailable: ${error.message}`,'warn')}
+  fallbackFullscreen=!fallbackFullscreen;pane.classList.toggle('fullscreen-fallback',fallbackFullscreen);
+  $('fullscreenPreview').textContent=fallbackFullscreen?'⤢':'⛶';
+}
+
+async function selectItem(item,tr){
+  clearPreviewObjectUrl(); editing=false; previewText=''; previewTruncated=false;
+  selected=item; document.querySelectorAll('#rows tr').forEach(x=>x.classList.remove('sel')); tr.classList.add('sel');
+  $('previewTitle').textContent=item.name; $('previewPath').textContent=item.path;
+  $('meta').textContent=`${item.type==='d'?'Folder':humanSize(item.size)} • modified ${fmtDate(item.modifyTime)}`;
+  $('download').classList.toggle('hidden',item.type==='d');
+  $('fullscreenPreview').classList.toggle('hidden',item.type==='d');
+  $('editFile').classList.add('hidden'); $('saveFile').classList.add('hidden'); $('cancelEdit').classList.add('hidden');
+
+  if(item.type==='d'){
+    $('preview').innerHTML='<div class="empty">Folder selected. Double-click it to open. Rename/move and delete are available from the left panel.</div>'; return;
+  }
+  if(await previewMediaFile(item))return;
+  if(!isText(item)){
+    $('preview').innerHTML='<div class="empty">Binary or unknown file type. Use Download, Rename/Move, Delete, or upload an overwrite.</div>'; return;
+  }
+
+  $('preview').innerHTML='<div class="empty">Loading preview…</div>';
+  try{
+    const data=await api('read',{path:item.path});
+    previewText=data.text; previewTruncated=data.truncated===true;
+    const pre=document.createElement('pre'); pre.textContent=data.text; $('preview').innerHTML=''; $('preview').appendChild(pre);
+    $('meta').textContent=`${humanSize(data.totalBytes)}${data.truncated?` • preview truncated at ${humanSize(data.limitBytes)}`:''} • modified ${fmtDate(item.modifyTime)}`;
+    if(!previewTruncated)$('editFile').classList.remove('hidden');
+    log(`Previewed ${item.path} (${humanSize(data.totalBytes)}).`,'ok');
+  }catch(error){
+    $('preview').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`; log(`Preview failed: ${error.message}`,'err');
+  }
+}
+
+async function downloadSelected(){
+  if(!selected||selected.type==='d')return;
+  try{
+    const blob=await api('download',{path:selected.path},true);
+    const url=URL.createObjectURL(blob),a=document.createElement('a'); a.href=url; a.download=selected.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000); log(`Downloaded ${selected.path}.`,'ok');
+  }catch(error){toast(error.message,true);log(`Download failed: ${error.message}`,'err')}
+}
+
+
+function requireMutationReady(){
+  if(!connected){toast('Connect first.',true);return false}
+  if(!serverStatus.crudEnabled){toast('CRUD requires APP_PASSWORD to be configured in Vercel.',true);return false}
+  return true;
+}
+
+function mutationExtra(kind,target){
+  return{confirmMutation:kind,confirmTarget:target};
+}
+
+async function createFolder(){
+  if(!requireMutationReady())return;
+  const name=prompt('New folder name:');
+  if(name===null)return;
+  const clean=name.trim();
+  if(!validName(clean)){toast('Use a simple folder name without slashes.',true);return}
+  const target=joinRemote(currentPath,clean);
+  if(!confirm(`CREATE folder?\n\n${target}\n\nThis will modify BGA Studio SFTP.`))return;
+  try{
+    await api('mkdir',{path:target,...mutationExtra('create',target)});
+    toast('Folder created.'); log(`Created folder ${target}.`,'ok'); await loadPath(currentPath);
+  }catch(error){toast(error.message,true);log(`Create folder failed: ${error.message}`,'err')}
+}
+
+async function createTextFile(){
+  if(!requireMutationReady())return;
+  const name=prompt('New text/code file name:');
+  if(name===null)return;
+  const clean=name.trim();
+  if(!validName(clean)){toast('Use a file name without slashes.',true);return}
+  const target=joinRemote(currentPath,clean);
+  if(!confirm(`CREATE empty file?\n\n${target}\n\nYou can select it and click Edit afterward.`))return;
+  try{
+    await api('write',{path:target,writeMode:'create',text:'',...mutationExtra('create',target)});
+    toast('File created.'); log(`Created file ${target}.`,'ok'); await loadPath(currentPath);
+  }catch(error){toast(error.message,true);log(`Create file failed: ${error.message}`,'err')}
+}
+
+function bufferToBase64(buffer){
+  const bytes=new Uint8Array(buffer); let binary=''; const step=0x8000;
+  for(let i=0;i<bytes.length;i+=step)binary+=String.fromCharCode(...bytes.subarray(i,i+step));
+  return btoa(binary);
+}
+
+async function uploadChosenFile(file){
+  if(!file||!requireMutationReady())return;
+  const limit=Number(serverStatus.uploadLimitBytes)||2560*1024;
+  if(file.size>limit){toast(`Upload is too large. Limit: ${humanSize(limit)}.`,true);return}
+  const target=joinRemote(currentPath,file.name);
+  const existing=entries.find(x=>x.name===file.name);
+  if(existing?.type==='d'){toast('A folder with that name already exists.',true);return}
+  const writeMode=existing?'update':'create';
+  const verb=existing?'OVERWRITE':'CREATE';
+  if(!confirm(`${verb} remote file?\n\n${target}\n\nLocal file: ${file.name} (${humanSize(file.size)})`))return;
+  try{
+    const contentBase64=bufferToBase64(await file.arrayBuffer());
+    await api('write',{path:target,writeMode,contentBase64,...mutationExtra(writeMode,target)});
+    toast(existing?'File overwritten.':'File uploaded.');
+    log(`${existing?'Overwrote':'Uploaded'} ${target} (${humanSize(file.size)}).`,'ok');
+    await loadPath(currentPath);
+  }catch(error){toast(error.message,true);log(`Upload failed: ${error.message}`,'err')}
+  finally{$('uploadInput').value=''}
+}
+
+async function renameSelected(){
+  if(!requireMutationReady())return;
+  if(!selected){toast('Select a file or folder first.',true);return}
+  const from=selected.path;
+  const raw=prompt('Rename or move to this remote path:',from);
+  if(raw===null)return;
+  let to=raw.trim();
+  if(!to){toast('Destination path is required.',true);return}
+  if(!/[\\/]/.test(to))to=joinRemote(parentPath(from),to);
+  if(to===from)return;
+  const target=`${from} -> ${to}`;
+  if(!confirm(`UPDATE path?\n\nFROM: ${from}\nTO:   ${to}\n\nThis renames or moves the remote item.`))return;
+  try{
+    await api('rename',{from,to,...mutationExtra('update',target)});
+    toast('Renamed/moved.'); log(`Renamed ${from} -> ${to}.`,'ok');
+    selected=null; resetPreview(); await loadPath(currentPath);
+  }catch(error){toast(error.message,true);log(`Rename failed: ${error.message}`,'err')}
+}
+
+async function deleteSelected(){
+  if(!requireMutationReady())return;
+  if(!selected){toast('Select a file or folder first.',true);return}
+  const target=selected.path;
+  const isDir=selected.type==='d';
+  const typed=prompt(`${isDir?'DELETE FOLDER RECURSIVELY':'DELETE FILE'}?\n\n${target}\n\nType the exact item name to confirm permanent deletion:\n${selected.name}`);
+  if(typed===null)return;
+  if(typed!==selected.name){toast('Delete cancelled: confirmation did not match.',true);return}
+  if(!confirm(`FINAL DELETE CONFIRMATION\n\n${target}${isDir?'\n\nAll files/subfolders inside will also be deleted.':''}`))return;
+  try{
+    await api('delete',{path:target,recursive:isDir,...mutationExtra('delete',target)});
+    toast('Deleted.'); log(`Deleted ${target}${isDir?' recursively':''}.`,'ok');
+    selected=null; resetPreview(); await loadPath(currentPath);
+  }catch(error){toast(error.message,true);log(`Delete failed: ${error.message}`,'err')}
+}
+
+function editSelected(){
+  if(!requireMutationReady())return;
+  if(!selected||selected.type==='d'||!isText(selected)){toast('Select a text/code file first.',true);return}
+  if(previewTruncated){toast('This preview is truncated, so editing is disabled to avoid overwriting unseen content.',true);return}
+  editing=true;
+  const ta=document.createElement('textarea'); ta.id='editor'; ta.className='editor'; ta.value=previewText;
+  $('preview').innerHTML=''; $('preview').appendChild(ta);
+  $('editFile').classList.add('hidden'); $('saveFile').classList.remove('hidden'); $('cancelEdit').classList.remove('hidden');
+  $('meta').textContent=`Editing ${selected.path} • Save requires UPDATE confirmation`;
+  ta.focus();
+}
+
+async function saveEdit(){
+  if(!editing||!selected)return;
+  const target=selected.path;
+  const text=$('editor')?.value??'';
+  const bytes=new TextEncoder().encode(text).length;
+  const limit=Number(serverStatus.uploadLimitBytes)||2560*1024;
+  if(bytes>limit){toast(`Edited file is too large to save. Limit: ${humanSize(limit)}.`,true);return}
+  if(!confirm(`UPDATE remote file?\n\n${target}\n\nThis overwrites the current remote contents with your editor text (${humanSize(bytes)}).`))return;
+  try{
+    await api('write',{path:target,writeMode:'update',text,...mutationExtra('update',target)});
+    previewText=text; editing=false; toast('File saved.'); log(`Updated ${target} (${humanSize(bytes)}).`,'ok');
+    await loadPath(currentPath);
+  }catch(error){toast(error.message,true);log(`Save failed: ${error.message}`,'err')}
+}
+
+function cancelEditing(){
+  if(!editing)return;
+  if(!confirm('Discard unsaved editor changes?'))return;
+  editing=false;
+  const pre=document.createElement('pre'); pre.textContent=previewText; $('preview').innerHTML=''; $('preview').appendChild(pre);
+  $('editFile').classList.remove('hidden'); $('saveFile').classList.add('hidden'); $('cancelEdit').classList.add('hidden');
+  $('meta').textContent=`${humanSize(selected?.size||0)} • modified ${fmtDate(selected?.modifyTime)}`;
+}
+
+function resetPreview(){
+  clearPreviewObjectUrl(); editing=false; previewText=''; previewTruncated=false;
+  $('previewTitle').textContent='Preview'; $('previewPath').textContent='Select a text/code file'; $('preview').innerHTML='<div class="empty">Click a file to preview it. Double-click a folder to open it.</div>';
+  $('meta').textContent='No file selected'; $('download').classList.add('hidden'); $('fullscreenPreview').classList.add('hidden'); $('editFile').classList.add('hidden'); $('saveFile').classList.add('hidden'); $('cancelEdit').classList.add('hidden'); $('itemStatus').textContent='';
+}
+
+function updateModeUI(){
+  const saved=mode()==='saved';
+  $('manualPasswordField').classList.toggle('hidden',saved);
+  $('savedNote').classList.toggle('hidden',!saved);
+  if(saved)$('password').value='';
+  $('modeStatus').textContent=saved?'saved':'manual';
+}
+
+$('connect').addEventListener('click',()=>connected?disconnect():testConnection(true));
+$('diagnose').addEventListener('click',()=>testConnection(false));
+$('refresh').addEventListener('click',()=>loadPath(currentPath));
+$('up').addEventListener('click',()=>loadPath(parentPath(currentPath)));
+$('go').addEventListener('click',()=>loadPath($('path').value));
+$('path').addEventListener('keydown',e=>{if(e.key==='Enter')loadPath($('path').value)});
+$('filter').addEventListener('input',renderRows);
+$('download').addEventListener('click',downloadSelected);
+$('fullscreenPreview').addEventListener('click',togglePreviewFullscreen);
+document.addEventListener('fullscreenchange',()=>{const active=document.fullscreenElement===$('previewPane');$('fullscreenPreview').textContent=active?'⤢':'⛶';});
+$('newFolder').addEventListener('click',createFolder);
+$('newFile').addEventListener('click',createTextFile);
+$('uploadFile').addEventListener('click',()=>{if(requireMutationReady())$('uploadInput').click()});
+$('uploadInput').addEventListener('change',()=>uploadChosenFile($('uploadInput').files?.[0]));
+$('renameItem').addEventListener('click',renameSelected);
+$('deleteItem').addEventListener('click',deleteSelected);
+$('editFile').addEventListener('click',editSelected);
+$('saveFile').addEventListener('click',saveEdit);
+$('cancelEdit').addEventListener('click',cancelEditing);
+$('authMode').addEventListener('change',()=>{if(connected)disconnect();updateModeUI()});
+$('appPassword').addEventListener('keydown',e=>{if(e.key==='Enter'&&!connected)testConnection(true)});
+$('password').addEventListener('keydown',e=>{if(e.key==='Enter'&&!connected)testConnection(true)});
+$('username').addEventListener('keydown',e=>{if(e.key==='Enter'&&!connected)testConnection(true)});
+document.querySelectorAll('[data-path]').forEach(b=>b.addEventListener('click',()=>loadPath(b.dataset.path)));
+document.querySelectorAll('[data-sort]').forEach(b=>b.addEventListener('click',()=>{
+  const key=b.dataset.sort; if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=1} renderRows();
+}));
+$('copyPath').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(currentPath);toast('Path copied.')}catch{toast('Could not copy path.',true)}});
+$('clearLog').addEventListener('click',()=>{$('log').innerHTML=''});
+$('copyLog').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('log').innerText);toast('Debug log copied.')}catch{toast('Could not copy log.',true)}});
+
+resetPreview(); updateSortIndicators(); log('BGA SFTP Explorer loaded. PNG/JPG/PDF previews and full-screen preview are enabled; CRUD mutations require explicit confirmation and APP_PASSWORD.'); loadServerStatus();
+})();
+</script>
+</body>
+</html>
