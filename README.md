@@ -23,10 +23,11 @@ to the server-side service role.
 
 ## BGA SFTP Explorer
 
-`/sftp/` is a read-only FileZilla-style browser for Board Game Arena Studio SFTP.
+`/sftp/` is a FileZilla-style CRUD browser for Board Game Arena Studio SFTP.
 The SPA calls `/api/sftp`, which is hard-restricted to
 `1.studio.boardgamearena.com:2022` and supports connection testing, directory
-listing, text/code preview, and small-file download.
+listing, text/code preview/editing, small-file upload/download, folder creation,
+rename/move, and delete.
 
 ### Recommended saved-credential mode
 
@@ -71,16 +72,22 @@ also protected by the Internal Apps password in manual mode.
 
 - The backend is locked to the BGA Studio hostname and port to avoid becoming a
   generic TCP/SFTP proxy.
-- The API is read-only: no upload, edit, rename, delete, mkdir, chmod, or write
-  operation exists.
+- Read operations are available after normal SFTP authentication.
+- Create/update/delete mutations require `APP_PASSWORD` to be configured and
+  unlocked. The SPA asks for confirmation before every mutation, and the API
+  independently verifies a matching mutation type + target before executing it.
+- Delete requires the exact selected item name to be typed in the browser, plus
+  a final confirmation. Directory deletion is recursive only when explicitly
+  requested by the SPA.
 - SFTP secrets and private keys are never returned by the API or written to
   application logs.
 - Each request opens and closes SFTP because Vercel Functions are stateless.
 - The browser unlock token expires after one hour and is kept only in memory.
 
-Normal Vercel Function responses have a 4.5 MB payload ceiling, so SFTP downloads
-are capped at 4 MB and text previews return at most 1 MB. Use the local bridge
-version when larger downloads are required.
+Normal Vercel Function payload limits constrain transfers. SFTP downloads are
+capped at 4 MB, text previews at 1 MB, and browser uploads/updates at about
+2.5 MB so base64 request bodies remain safely below the platform ceiling. Use
+the local bridge version for larger transfers.
 
 ## Oura
 
