@@ -7,7 +7,8 @@ export const config = { maxDuration: 30 };
 const ALLOWED_HOST = '1.studio.boardgamearena.com';
 const ALLOWED_PORT = 2022;
 const PREVIEW_LIMIT = 1024 * 1024;
-const MAX_DOWNLOAD = 25 * 1024 * 1024;
+const MAX_PREVIEW_SOURCE = 4 * 1024 * 1024;
+const MAX_DOWNLOAD = 4 * 1024 * 1024;
 
 function reqId() {
   return crypto.randomBytes(4).toString('hex');
@@ -155,8 +156,8 @@ export default async function handler(req, res) {
           throw error;
         }
 
-        if (stat.size > 12 * 1024 * 1024) {
-          const error = new Error('File is too large to preview. Use Download instead.');
+        if (stat.size > MAX_PREVIEW_SOURCE) {
+          const error = new Error('File is too large to preview through the Vercel SFTP tool.');
           error.statusCode = 413;
           throw error;
         }
@@ -198,7 +199,7 @@ export default async function handler(req, res) {
         }
 
         if (stat.size > MAX_DOWNLOAD) {
-          const error = new Error(`Downloads are limited to ${Math.round(MAX_DOWNLOAD / 1024 / 1024)} MB through this Vercel tool.`);
+          const error = new Error(`Downloads are limited to ${Math.round(MAX_DOWNLOAD / 1024 / 1024)} MB because Vercel Functions cap normal response payloads at 4.5 MB.`);
           error.statusCode = 413;
           throw error;
         }
