@@ -33,6 +33,22 @@ Supabase project before deploying. The migration preserves the existing
 `places` table, enables RLS, removes public CRUD policies, and grants access only
 to the server-side service role.
 
+## BGA SFTP Explorer
+
+`/sftp/` is a read-only FileZilla-style browser for Board Game Arena Studio SFTP.
+The SPA calls `/api/sftp`, which is restricted to
+`1.studio.boardgamearena.com:2022` and supports connection testing, directory
+listing, text/code preview, and small-file download.
+
+SFTP credentials are entered by the user, remain only in the current browser
+tab, and are sent over HTTPS for each operation. They are not stored in the
+repository, localStorage, or Vercel environment variables. The API deliberately
+opens and closes SFTP on every request because Vercel Functions are stateless.
+Passwords are never written to application logs.
+
+Normal Vercel Function responses have a 4.5 MB payload ceiling, so SFTP downloads
+are capped at 4 MB and text previews return at most 1 MB.
+
 ## Add `OURA_KEY`
 
 Create a personal access token in the Oura Cloud developer portal, then add it to Vercel as an environment variable:
