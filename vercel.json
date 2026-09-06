@@ -1,5 +1,5 @@
 {
   "cleanUrls": true,
   "trailingSlash": true,
-  "installCommand": "npm install"
+  "installCommand": "npm install --omit=optional"
 }
