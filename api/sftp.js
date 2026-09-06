@@ -9,7 +9,9 @@ const ALLOWED_PORT = 2022;
 const PREVIEW_LIMIT = 1024 * 1024;
 const MAX_PREVIEW_SOURCE = 4 * 1024 * 1024;
 const MAX_DOWNLOAD = 4 * 1024 * 1024;
+const MAX_UPLOAD = 2560 * 1024; // 2.5 MB raw; base64 stays below Vercel request limits
 const APP_TOKEN_TTL_MS = 60 * 60 * 1000;
+const MUTATION_ACTIONS = new Set(['mkdir', 'write', 'rename', 'delete']);
 
 function reqId() {
   return crypto.randomBytes(4).toString('hex');
@@ -24,6 +26,13 @@ function safeEqual(a, b) {
   const right = Buffer.from(String(b ?? ''));
   if (left.length !== right.length) return false;
   return crypto.timingSafeEqual(left, right);
+}
+
+function httpError(message, statusCode = 400, code = '') {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  if (code) error.code = code;
+  return error;
 }
 
 function mintAppToken(secret) {
@@ -63,9 +72,13 @@ function statusPayload() {
     savedAuthMethod: savedKeyConfigured ? 'key' : savedPasswordConfigured ? 'password' : null,
     host: ALLOWED_HOST,
     port: ALLOWED_PORT,
-    readOnly: true,
+    readOnly: false,
+    crudEnabled: !!appSecret(),
+    mutationRequiresAppPassword: true,
     previewLimitBytes: PREVIEW_LIMIT,
     downloadLimitBytes: MAX_DOWNLOAD,
+    uploadLimitBytes: MAX_UPLOAD,
+    mutationActions: [...MUTATION_ACTIONS],
   };
 }
 
@@ -75,10 +88,11 @@ function appGate(body = {}) {
 
   if (!secret) {
     if (mode === 'saved') {
-      const error = new Error('Saved SFTP credentials require APP_PASSWORD (or PERSONAL_PASSWORD) to be configured in Vercel.');
-      error.statusCode = 503;
-      error.code = 'APP_PASSWORD_NOT_CONFIGURED';
-      throw error;
+      throw httpError(
+        'Saved SFTP credentials require APP_PASSWORD (or PERSONAL_PASSWORD) to be configured in Vercel.',
+        503,
+        'APP_PASSWORD_NOT_CONFIGURED',
+      );
     }
     return { protected: false };
   }
@@ -91,10 +105,28 @@ function appGate(body = {}) {
     return { protected: true };
   }
 
-  const error = new Error('Incorrect or expired Internal Apps password.');
-  error.statusCode = 401;
-  error.code = 'APP_AUTH_FAILED';
-  throw error;
+  throw httpError('Incorrect or expired Internal Apps password.', 401, 'APP_AUTH_FAILED');
+}
+
+function requireMutationAuthorization(body, gate, expectedKind, expectedTarget) {
+  if (!appSecret() || !gate?.protected) {
+    throw httpError(
+      'Create, update, and delete operations require APP_PASSWORD to be configured and unlocked.',
+      503,
+      'SFTP_MUTATION_GATE_REQUIRED',
+    );
+  }
+
+  const kind = String(body.confirmMutation || '').toLowerCase();
+  const target = String(body.confirmTarget || '');
+
+  if (kind !== expectedKind || target !== expectedTarget) {
+    throw httpError(
+      `Server-side ${expectedKind.toUpperCase()} confirmation is missing or does not match the target.`,
+      400,
+      'SFTP_MUTATION_CONFIRMATION_REQUIRED',
+    );
+  }
 }
 
 function normalizePrivateKey(raw) {
@@ -115,10 +147,11 @@ function credentials(body = {}) {
     const savedPassword = String(process.env.SFTP_PASSWORD || '');
 
     if (!username) {
-      const error = new Error('No SFTP username was supplied and SFTP_USERNAME is not configured.');
-      error.statusCode = 503;
-      error.code = 'SFTP_USERNAME_MISSING';
-      throw error;
+      throw httpError(
+        'No SFTP username was supplied and SFTP_USERNAME is not configured.',
+        503,
+        'SFTP_USERNAME_MISSING',
+      );
     }
 
     const useKey = configuredMethod === 'key' || (!configuredMethod && !!savedKey);
@@ -126,10 +159,11 @@ function credentials(body = {}) {
 
     if (useKey) {
       if (!savedKey) {
-        const error = new Error('SFTP_AUTH_METHOD is key, but SFTP_PRIVATE_KEY is not configured.');
-        error.statusCode = 503;
-        error.code = 'SFTP_PRIVATE_KEY_MISSING';
-        throw error;
+        throw httpError(
+          'SFTP_AUTH_METHOD is key, but SFTP_PRIVATE_KEY is not configured.',
+          503,
+          'SFTP_PRIVATE_KEY_MISSING',
+        );
       }
       return {
         mode,
@@ -141,35 +175,35 @@ function credentials(body = {}) {
 
     if (usePassword) {
       if (!savedPassword) {
-        const error = new Error('SFTP_AUTH_METHOD is password, but SFTP_PASSWORD is not configured.');
-        error.statusCode = 503;
-        error.code = 'SFTP_PASSWORD_MISSING';
-        throw error;
+        throw httpError(
+          'SFTP_AUTH_METHOD is password, but SFTP_PASSWORD is not configured.',
+          503,
+          'SFTP_PASSWORD_MISSING',
+        );
       }
       return { mode, username, password: savedPassword };
     }
 
-    const error = new Error('No saved SFTP authentication is configured. Add SFTP_PASSWORD or SFTP_PRIVATE_KEY in Vercel.');
-    error.statusCode = 503;
-    error.code = 'SFTP_SAVED_CREDENTIALS_MISSING';
-    throw error;
+    throw httpError(
+      'No saved SFTP authentication is configured. Add SFTP_PASSWORD or SFTP_PRIVATE_KEY in Vercel.',
+      503,
+      'SFTP_SAVED_CREDENTIALS_MISSING',
+    );
   }
 
   const username = suppliedUsername;
   const password = String(body.password || '');
 
   if (!username || !password) {
-    const error = new Error('SFTP username and password are required for manual mode.');
-    error.statusCode = 400;
-    error.code = 'SFTP_MANUAL_CREDENTIALS_MISSING';
-    throw error;
+    throw httpError(
+      'SFTP username and password are required for manual mode.',
+      400,
+      'SFTP_MANUAL_CREDENTIALS_MISSING',
+    );
   }
 
   if (username.length > 128 || password.length > 512) {
-    const error = new Error('Credential fields are too long.');
-    error.statusCode = 400;
-    error.code = 'SFTP_CREDENTIALS_TOO_LONG';
-    throw error;
+    throw httpError('Credential fields are too long.', 400, 'SFTP_CREDENTIALS_TOO_LONG');
   }
 
   return { mode: 'manual', username, password };
@@ -178,12 +212,17 @@ function credentials(body = {}) {
 function remotePath(value) {
   const raw = String(value ?? '.').trim() || '.';
   if (raw.length > 2048 || raw.includes('\0')) {
-    const error = new Error('Invalid remote path.');
-    error.statusCode = 400;
-    error.code = 'INVALID_REMOTE_PATH';
-    throw error;
+    throw httpError('Invalid remote path.', 400, 'INVALID_REMOTE_PATH');
   }
   return raw;
+}
+
+function mutablePath(value) {
+  const target = remotePath(value);
+  if (target === '.' || target === '/' || target === '') {
+    throw httpError('The SFTP root/default directory itself cannot be modified.', 400, 'PROTECTED_REMOTE_PATH');
+  }
+  return target;
 }
 
 function childPath(parent, name) {
@@ -195,6 +234,49 @@ function childPath(parent, name) {
 function maskedUser(username) {
   if (!username) return '-';
   return `${username.slice(0, 1)}***(${username.length})`;
+}
+
+function decodeWriteBuffer(body = {}) {
+  if (Object.prototype.hasOwnProperty.call(body, 'text')) {
+    const buffer = Buffer.from(String(body.text ?? ''), 'utf8');
+    if (buffer.length > MAX_UPLOAD) {
+      throw httpError(
+        `Uploads/updates are limited to ${Math.round(MAX_UPLOAD / 1024 / 1024 * 10) / 10} MB on the Vercel-hosted explorer.`,
+        413,
+        'SFTP_UPLOAD_TOO_LARGE',
+      );
+    }
+    return buffer;
+  }
+
+  const raw = String(body.contentBase64 || '');
+  if (!raw) {
+    throw httpError('No file content was supplied.', 400, 'SFTP_WRITE_CONTENT_MISSING');
+  }
+
+  if (raw.length > Math.ceil(MAX_UPLOAD * 4 / 3) + 16) {
+    throw httpError(
+      `Uploads are limited to ${Math.round(MAX_UPLOAD / 1024 / 1024 * 10) / 10} MB on the Vercel-hosted explorer.`,
+      413,
+      'SFTP_UPLOAD_TOO_LARGE',
+    );
+  }
+
+  let buffer;
+  try {
+    buffer = Buffer.from(raw, 'base64');
+  } catch {
+    throw httpError('Upload content was not valid base64.', 400, 'SFTP_INVALID_BASE64');
+  }
+
+  if (buffer.length > MAX_UPLOAD) {
+    throw httpError(
+      `Uploads are limited to ${Math.round(MAX_UPLOAD / 1024 / 1024 * 10) / 10} MB on the Vercel-hosted explorer.`,
+      413,
+      'SFTP_UPLOAD_TOO_LARGE',
+    );
+  }
+  return buffer;
 }
 
 function safeError(error) {
@@ -212,6 +294,8 @@ function safeError(error) {
     hint = 'The BGA SFTP server refused the connection on port 2022.';
   } else if (code === 'APP_AUTH_FAILED') {
     hint = 'Re-enter the Internal Apps password to unlock the SFTP tool.';
+  } else if (/permission/i.test(raw)) {
+    hint = 'The BGA Studio SFTP account does not have permission for this operation/path.';
   }
 
   return { message: raw.slice(0, 500), code: code || null, hint };
@@ -220,7 +304,9 @@ function safeError(error) {
 async function withSftp(auth, id, operation) {
   const client = new SftpClient(`internalapps-${id}`);
   const started = Date.now();
-  console.log(`[sftp:${id}] connect start host=${ALLOWED_HOST} port=${ALLOWED_PORT} mode=${auth.mode} user=${maskedUser(auth.username)}`);
+  console.log(
+    `[sftp:${id}] connect start host=${ALLOWED_HOST} port=${ALLOWED_PORT} mode=${auth.mode} user=${maskedUser(auth.username)}`,
+  );
 
   const connectConfig = {
     host: ALLOWED_HOST,
@@ -283,10 +369,7 @@ export default async function handler(req, res) {
       }
 
       if (!safeEqual(String(req.body?.appPassword || ''), secret)) {
-        const error = new Error('Incorrect Internal Apps password.');
-        error.statusCode = 401;
-        error.code = 'APP_AUTH_FAILED';
-        throw error;
+        throw httpError('Incorrect Internal Apps password.', 401, 'APP_AUTH_FAILED');
       }
 
       const token = mintAppToken(secret);
@@ -299,7 +382,7 @@ export default async function handler(req, res) {
       });
     }
 
-    appGate(req.body);
+    const gate = appGate(req.body);
     const auth = credentials(req.body);
     res.setHeader('X-SFTP-Auth-Mode', auth.mode);
 
@@ -334,7 +417,13 @@ export default async function handler(req, res) {
       });
 
       console.log(`[sftp:${id}] list path=${target} count=${result.length}`);
-      return res.status(200).json({ ok: true, path: target, entries: result, authMode: auth.mode, requestId: id });
+      return res.status(200).json({
+        ok: true,
+        path: target,
+        entries: result,
+        authMode: auth.mode,
+        requestId: id,
+      });
     }
 
     if (action === 'read') {
@@ -343,15 +432,15 @@ export default async function handler(req, res) {
         const stat = await client.stat(target);
 
         if (stat.isDirectory) {
-          const error = new Error('Cannot preview a directory.');
-          error.statusCode = 400;
-          throw error;
+          throw httpError('Cannot preview a directory.', 400, 'SFTP_READ_DIRECTORY');
         }
 
         if (stat.size > MAX_PREVIEW_SOURCE) {
-          const error = new Error('File is too large to preview through the Vercel SFTP tool.');
-          error.statusCode = 413;
-          throw error;
+          throw httpError(
+            'File is too large to preview through the Vercel SFTP tool.',
+            413,
+            'SFTP_PREVIEW_TOO_LARGE',
+          );
         }
 
         const data = await client.get(target);
@@ -361,9 +450,11 @@ export default async function handler(req, res) {
         for (const byte of sample) if (byte === 0) nuls += 1;
 
         if (nuls > 4) {
-          const error = new Error('This appears to be a binary file. Use Download instead.');
-          error.statusCode = 415;
-          throw error;
+          throw httpError(
+            'This appears to be a binary file. Use Download instead.',
+            415,
+            'SFTP_BINARY_PREVIEW',
+          );
         }
 
         const view = buffer.subarray(0, PREVIEW_LIMIT);
@@ -385,15 +476,15 @@ export default async function handler(req, res) {
         const stat = await client.stat(target);
 
         if (stat.isDirectory) {
-          const error = new Error('Cannot download a directory.');
-          error.statusCode = 400;
-          throw error;
+          throw httpError('Cannot download a directory.', 400, 'SFTP_DOWNLOAD_DIRECTORY');
         }
 
         if (stat.size > MAX_DOWNLOAD) {
-          const error = new Error(`Downloads are limited to ${Math.round(MAX_DOWNLOAD / 1024 / 1024)} MB because Vercel Functions cap normal response payloads at 4.5 MB.`);
-          error.statusCode = 413;
-          throw error;
+          throw httpError(
+            `Downloads are limited to ${Math.round(MAX_DOWNLOAD / 1024 / 1024)} MB because Vercel Functions cap normal response payloads.`,
+            413,
+            'SFTP_DOWNLOAD_TOO_LARGE',
+          );
         }
 
         const data = await client.get(target);
@@ -406,6 +497,111 @@ export default async function handler(req, res) {
       res.setHeader('Content-Length', String(buffer.length));
       res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
       return res.status(200).send(buffer);
+    }
+
+    if (action === 'mkdir') {
+      const target = mutablePath(req.body?.path);
+      requireMutationAuthorization(req.body, gate, 'create', target);
+
+      await withSftp(auth, id, async (client) => {
+        const exists = await client.exists(target);
+        if (exists) {
+          throw httpError('A file or folder already exists at that path.', 409, 'SFTP_TARGET_EXISTS');
+        }
+        await client.mkdir(target, false);
+      });
+
+      console.log(`[sftp:${id}] mkdir path=${target}`);
+      return res.status(200).json({ ok: true, action, path: target, requestId: id });
+    }
+
+    if (action === 'write') {
+      const target = mutablePath(req.body?.path);
+      const writeMode = String(req.body?.writeMode || '').toLowerCase();
+      if (!['create', 'update'].includes(writeMode)) {
+        throw httpError('writeMode must be create or update.', 400, 'SFTP_WRITE_MODE_INVALID');
+      }
+      requireMutationAuthorization(req.body, gate, writeMode, target);
+      const buffer = decodeWriteBuffer(req.body);
+
+      await withSftp(auth, id, async (client) => {
+        const exists = await client.exists(target);
+        if (writeMode === 'create' && exists) {
+          throw httpError('The target already exists. Use Update/Overwrite instead.', 409, 'SFTP_TARGET_EXISTS');
+        }
+        if (writeMode === 'update' && !exists) {
+          throw httpError('The target no longer exists. Refresh and try again.', 404, 'SFTP_TARGET_MISSING');
+        }
+        if (exists === 'd') {
+          throw httpError('Cannot write file contents to a directory.', 400, 'SFTP_WRITE_DIRECTORY');
+        }
+        await client.put(buffer, target);
+      });
+
+      console.log(`[sftp:${id}] write mode=${writeMode} path=${target} bytes=${buffer.length}`);
+      return res.status(200).json({
+        ok: true,
+        action,
+        writeMode,
+        path: target,
+        bytes: buffer.length,
+        requestId: id,
+      });
+    }
+
+    if (action === 'rename') {
+      const from = mutablePath(req.body?.from);
+      const to = mutablePath(req.body?.to);
+      const confirmationTarget = `${from} -> ${to}`;
+      requireMutationAuthorization(req.body, gate, 'update', confirmationTarget);
+
+      if (from === to) {
+        throw httpError('Source and destination are the same.', 400, 'SFTP_RENAME_SAME_PATH');
+      }
+
+      await withSftp(auth, id, async (client) => {
+        const sourceExists = await client.exists(from);
+        if (!sourceExists) {
+          throw httpError('The source path no longer exists.', 404, 'SFTP_SOURCE_MISSING');
+        }
+        const destinationExists = await client.exists(to);
+        if (destinationExists) {
+          throw httpError('The destination path already exists.', 409, 'SFTP_DESTINATION_EXISTS');
+        }
+        await client.rename(from, to);
+      });
+
+      console.log(`[sftp:${id}] rename from=${from} to=${to}`);
+      return res.status(200).json({ ok: true, action, from, to, requestId: id });
+    }
+
+    if (action === 'delete') {
+      const target = mutablePath(req.body?.path);
+      requireMutationAuthorization(req.body, gate, 'delete', target);
+      const recursive = req.body?.recursive === true;
+
+      const deletedType = await withSftp(auth, id, async (client) => {
+        const exists = await client.exists(target);
+        if (!exists) {
+          throw httpError('The target no longer exists.', 404, 'SFTP_TARGET_MISSING');
+        }
+        if (exists === 'd') {
+          await client.rmdir(target, recursive);
+          return 'directory';
+        }
+        await client.delete(target, false);
+        return exists === 'l' ? 'symlink' : 'file';
+      });
+
+      console.log(`[sftp:${id}] delete type=${deletedType} recursive=${recursive} path=${target}`);
+      return res.status(200).json({
+        ok: true,
+        action,
+        path: target,
+        deletedType,
+        recursive,
+        requestId: id,
+      });
     }
 
     return res.status(400).json({ ok: false, error: 'Unknown action.', requestId: id });
