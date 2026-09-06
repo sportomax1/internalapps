@@ -43,6 +43,7 @@ tbody tr{cursor:default}tbody tr:hover{background:var(--hover)}tbody tr.sel{back
 .action-sep{height:1px;background:var(--line);margin:9px 0}.mutate-btn{border-color:#36485c!important;background:#111b26!important}.mutate-btn:hover{background:#1b2b3c!important}.mutate-btn.delete{color:#ff96a0;border-color:#65323b!important}.mutate-btn.create{color:#78e2aa}.mutate-btn.update{color:#8ec5ff}
 .editor{width:100%;height:100%;min-height:260px;resize:none;border:0;border-radius:0;background:#090f15;color:#d8e4f2;padding:13px;outline:none;tab-size:2;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .head-actions{margin-left:auto;display:flex;gap:6px;align-items:center}.head-actions .tiny{height:30px}.tiny.primary{background:#116bc4;color:#fff;border-color:#2385e7}.tiny.danger{color:#ff96a0;border-color:#65323b}.tiny:disabled{opacity:.45;cursor:not-allowed}
+.media-preview{width:100%;height:100%;min-height:260px;display:flex;align-items:center;justify-content:center;background:#090f15;overflow:auto;padding:12px}.media-preview img{display:block;max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 8px 28px rgba(0,0,0,.35)}.pdf-preview{width:100%;height:100%;min-height:420px;border:0;background:#fff}.preview-pane.fullscreen-fallback{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;z-index:1000!important;box-shadow:none!important;border:0!important}.preview-pane.fullscreen-fallback .preview{min-height:0}.preview-pane:fullscreen{background:var(--panel)}.preview-pane:fullscreen .preview{min-height:0}
 @media(max-width:1100px){.main{grid-template-columns:210px 1fr}.preview-pane{position:fixed;right:0;top:112px;bottom:190px;width:min(540px,88vw);z-index:4;box-shadow:-12px 0 30px rgba(0,0,0,.35)}}
 @media(max-width:760px){body{overflow:auto}.app{height:auto;min-height:100%;grid-template-rows:auto auto 190px}.main{grid-template-columns:1fr}.pane{min-height:360px}.preview-pane{position:static;width:auto;box-shadow:none}.field.host{display:none}.field.user,.field.pass,.field.auth{width:calc(50% - 5px);min-width:150px}.top .btn{flex:1}.console{height:190px}}
 </style>
@@ -129,6 +130,7 @@ tbody tr{cursor:default}tbody tr:hover{background:var(--hover)}tbody tr.sel{back
         <button id="editFile" class="tiny hidden">Edit</button>
         <button id="saveFile" class="tiny primary hidden">Save</button>
         <button id="cancelEdit" class="tiny hidden">Cancel</button>
+        <button id="fullscreenPreview" class="tiny hidden" title="Full screen preview">⛶</button>
         <button id="download" class="iconbtn hidden" title="Download">⇩</button>
       </div>
     </div>
@@ -152,7 +154,7 @@ const $=id=>document.getElementById(id);
 let connected=false,currentPath='.',entries=[],selected=null;
 let serverStatus={appProtected:true,savedAuthConfigured:false,savedUsernameConfigured:false,savedAuthMethod:null,crudEnabled:false,uploadLimitBytes:2560*1024};
 let appToken='',tokenExpiresAt=null,sortKey='name',sortDir=1;
-let previewText='',previewTruncated=false,editing=false;
+let previewText='',previewTruncated=false,editing=false,previewObjectUrl='',fallbackFullscreen=false;
 const TEXT_EXT=new Set('txt md markdown json js mjs cjs ts tsx jsx css scss less html htm php py rb java c h cpp hpp cs go rs sql xml yaml yml ini cfg conf env gitignore sh bash zsh ps1 bat cmd csv tsv log svg tpl view inc'.split(' '));
 
 function stamp(){return new Date().toLocaleTimeString()}
@@ -174,7 +176,9 @@ function parentPath(p){const x=String(p||'.').replace(/\/+$/,'');if(x==='/'||x==
 function joinRemote(parent,name){const clean=String(name||'').replace(/^\/+|\/+$/g,'');if(parent==='/')return`/${clean}`;if(parent==='.')return`./${clean}`;return`${String(parent).replace(/\/+$/,'')}/${clean}`}
 function validName(name){return !!name&&name!=='.'&&name!=='..'&&!/[\\/\0]/.test(name)}
 function isText(item){return item.type==='-'&&(TEXT_EXT.has(ext(item.name))||item.size<128*1024)}
-function fileIcon(item){if(item.type==='d')return'📁';const e=ext(item.name);if(['php','js','ts','css','html','json','sql'].includes(e))return'🧩';if(['png','jpg','jpeg','gif','webp','svg'].includes(e))return'🖼️';return'📄'}
+function mediaKind(item){const e=ext(item?.name);if(['png','jpg','jpeg','gif','webp'].includes(e))return'image';if(e==='pdf')return'pdf';return''}
+function mediaMime(item){const e=ext(item?.name);return e==='jpg'||e==='jpeg'?'image/jpeg':e==='png'?'image/png':e==='gif'?'image/gif':e==='webp'?'image/webp':e==='pdf'?'application/pdf':'application/octet-stream'}
+function fileIcon(item){if(item.type==='d')return'📁';const e=ext(item.name);if(['php','js','ts','css','html','json','sql'].includes(e))return'🧩';if(['png','jpg','jpeg','gif','webp','svg'].includes(e))return'🖼️';if(e==='pdf')return'📕';return'📄'}
 function authBody(){
   const body={authMode:mode(),username:$('username').value.trim(),appToken};
   if(mode()==='manual') body.password=$('password').value;
@@ -354,17 +358,64 @@ function renderRows(){
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function escapeAttr(s){return escapeHtml(s)}
 
+function clearPreviewObjectUrl(){
+  if(previewObjectUrl){URL.revokeObjectURL(previewObjectUrl);previewObjectUrl=''}
+}
+
+async function previewMediaFile(item){
+  const kind=mediaKind(item);
+  if(!kind)return false;
+  const limit=Number(serverStatus.downloadLimitBytes)||4*1024*1024;
+  if(Number(item.size)>limit){
+    $('preview').innerHTML=`<div class="empty">${kind==='pdf'?'PDF':'Image'} preview is limited to ${humanSize(limit)} on Vercel. Use Download/local bridge for larger files.</div>`;
+    return true;
+  }
+  $('preview').innerHTML=`<div class="empty">Loading ${kind==='pdf'?'PDF':'image'} preview…</div>`;
+  try{
+    const raw=await api('download',{path:item.path},true);
+    const typed=new Blob([await raw.arrayBuffer()],{type:mediaMime(item)});
+    clearPreviewObjectUrl();
+    previewObjectUrl=URL.createObjectURL(typed);
+    $('preview').innerHTML='';
+    if(kind==='image'){
+      const wrap=document.createElement('div');wrap.className='media-preview';
+      const img=document.createElement('img');img.src=previewObjectUrl;img.alt=item.name;img.title='Image preview';
+      wrap.appendChild(img);$('preview').appendChild(wrap);
+    }else{
+      const frame=document.createElement('iframe');frame.className='pdf-preview';frame.src=previewObjectUrl;frame.title=`PDF preview: ${item.name}`;
+      $('preview').appendChild(frame);
+    }
+    $('meta').textContent=`${humanSize(item.size)} • ${kind==='pdf'?'PDF':'image'} preview • modified ${fmtDate(item.modifyTime)}`;
+    log(`Previewed ${kind} ${item.path} (${humanSize(item.size)}).`,'ok');
+  }catch(error){
+    clearPreviewObjectUrl();$('preview').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`;log(`${kind==='pdf'?'PDF':'Image'} preview failed: ${error.message}`,'err');
+  }
+  return true;
+}
+
+async function togglePreviewFullscreen(){
+  const pane=$('previewPane');
+  try{
+    if(document.fullscreenElement){await document.exitFullscreen();return}
+    if(pane.requestFullscreen){await pane.requestFullscreen();return}
+  }catch(error){log(`Fullscreen API unavailable: ${error.message}`,'warn')}
+  fallbackFullscreen=!fallbackFullscreen;pane.classList.toggle('fullscreen-fallback',fallbackFullscreen);
+  $('fullscreenPreview').textContent=fallbackFullscreen?'⤢':'⛶';
+}
+
 async function selectItem(item,tr){
-  editing=false; previewText=''; previewTruncated=false;
+  clearPreviewObjectUrl(); editing=false; previewText=''; previewTruncated=false;
   selected=item; document.querySelectorAll('#rows tr').forEach(x=>x.classList.remove('sel')); tr.classList.add('sel');
   $('previewTitle').textContent=item.name; $('previewPath').textContent=item.path;
   $('meta').textContent=`${item.type==='d'?'Folder':humanSize(item.size)} • modified ${fmtDate(item.modifyTime)}`;
   $('download').classList.toggle('hidden',item.type==='d');
+  $('fullscreenPreview').classList.toggle('hidden',item.type==='d');
   $('editFile').classList.add('hidden'); $('saveFile').classList.add('hidden'); $('cancelEdit').classList.add('hidden');
 
   if(item.type==='d'){
     $('preview').innerHTML='<div class="empty">Folder selected. Double-click it to open. Rename/move and delete are available from the left panel.</div>'; return;
   }
+  if(await previewMediaFile(item))return;
   if(!isText(item)){
     $('preview').innerHTML='<div class="empty">Binary or unknown file type. Use Download, Rename/Move, Delete, or upload an overwrite.</div>'; return;
   }
@@ -390,6 +441,7 @@ async function downloadSelected(){
     setTimeout(()=>URL.revokeObjectURL(url),1000); log(`Downloaded ${selected.path}.`,'ok');
   }catch(error){toast(error.message,true);log(`Download failed: ${error.message}`,'err')}
 }
+
 
 function requireMutationReady(){
   if(!connected){toast('Connect first.',true);return false}
@@ -527,9 +579,9 @@ function cancelEditing(){
 }
 
 function resetPreview(){
-  editing=false; previewText=''; previewTruncated=false;
+  clearPreviewObjectUrl(); editing=false; previewText=''; previewTruncated=false;
   $('previewTitle').textContent='Preview'; $('previewPath').textContent='Select a text/code file'; $('preview').innerHTML='<div class="empty">Click a file to preview it. Double-click a folder to open it.</div>';
-  $('meta').textContent='No file selected'; $('download').classList.add('hidden'); $('editFile').classList.add('hidden'); $('saveFile').classList.add('hidden'); $('cancelEdit').classList.add('hidden'); $('itemStatus').textContent='';
+  $('meta').textContent='No file selected'; $('download').classList.add('hidden'); $('fullscreenPreview').classList.add('hidden'); $('editFile').classList.add('hidden'); $('saveFile').classList.add('hidden'); $('cancelEdit').classList.add('hidden'); $('itemStatus').textContent='';
 }
 
 function updateModeUI(){
@@ -548,6 +600,8 @@ $('go').addEventListener('click',()=>loadPath($('path').value));
 $('path').addEventListener('keydown',e=>{if(e.key==='Enter')loadPath($('path').value)});
 $('filter').addEventListener('input',renderRows);
 $('download').addEventListener('click',downloadSelected);
+$('fullscreenPreview').addEventListener('click',togglePreviewFullscreen);
+document.addEventListener('fullscreenchange',()=>{const active=document.fullscreenElement===$('previewPane');$('fullscreenPreview').textContent=active?'⤢':'⛶';});
 $('newFolder').addEventListener('click',createFolder);
 $('newFile').addEventListener('click',createTextFile);
 $('uploadFile').addEventListener('click',()=>{if(requireMutationReady())$('uploadInput').click()});
@@ -569,7 +623,7 @@ $('copyPath').addEventListener('click',async()=>{try{await navigator.clipboard.w
 $('clearLog').addEventListener('click',()=>{$('log').innerHTML=''});
 $('copyLog').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('log').innerText);toast('Debug log copied.')}catch{toast('Could not copy log.',true)}});
 
-resetPreview(); updateSortIndicators(); log('BGA SFTP Explorer loaded. CRUD mutations require explicit confirmation and APP_PASSWORD.'); loadServerStatus();
+resetPreview(); updateSortIndicators(); log('BGA SFTP Explorer loaded. PNG/JPG/PDF previews and full-screen preview are enabled; CRUD mutations require explicit confirmation and APP_PASSWORD.'); loadServerStatus();
 })();
 </script>
 </body>
