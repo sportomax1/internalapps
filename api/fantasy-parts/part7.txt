@@ -1,0 +1,7 @@
+ment.body.classList.add('cardmode');
+$('#summaryBtn').onclick=()=>{$('#tablewrap').classList.add('summaryOnly');$('#summaryBtn').classList.add('on');$('#detailBtn').classList.remove('on')};
+$('#detailBtn').onclick=()=>{$('#tablewrap').classList.remove('summaryOnly');$('#detailBtn').classList.add('on');$('#summaryBtn').classList.remove('on')};
+$('#closeCareer').onclick=()=>$('#careerModal').classList.remove('open');
+$('#careerModal').onclick=e=>{if(e.target.id==='careerModal')$('#careerModal').classList.remove('open')};
+renderTeamMenu();
+</script></body></html>
