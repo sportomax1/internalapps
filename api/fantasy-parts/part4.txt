@@ -1,0 +1,99 @@
+iLog.unshift({time:started,url,filter,status:r.status,ok:r.ok,preview:text.slice(0,1800)});apiLog=apiLog.slice(0,30);renderApiLog();if(!r.ok)throw Error(`${r.status} ${r.statusText}\n${text.slice(0,700)}`);try{return JSON.parse(text)}catch{throw Error('ESPN returned non-JSON data')}}catch(e){if(!r){apiLog.unshift({time:started,url,filter,status:'FETCH ERROR',ok:false,preview:String(e)});apiLog=apiLog.slice(0,30);renderApiLog()}throw e}}
+function seasonStat(p,year,projected=false){
+ const arr=[...(p.stats||[]),...(p.playerPoolEntry?.stats||[])];
+ const source=projected?1:0;
+ let exact=arr.find(s=>num(s.seasonId)===num(year)&&num(s.statSourceId)===source&&num(s.statSplitTypeId)===0);
+ if(exact)return exact;
+ return arr.find(s=>num(s.seasonId)===num(year)&&num(s.statSourceId)===source)||null;
+}
+function inferGames(p,year){
+ const weekly=(p.stats||[]).filter(s=>num(s.seasonId)===num(year)&&num(s.statSourceId)===0&&num(s.statSplitTypeId)===1&&num(s.scoringPeriodId)>0&&num(s.scoringPeriodId)<=18);
+ let played=0;
+ for(const s of weekly){
+   const x=s.stats||{};
+   // Any logged offensive event = played. Include pass attempts/completions, rush attempts,
+   // targets/receptions, yards, TDs, INTs and fumbles so zero-yard appearances still count.
+   const ids=['0','1','3','4','20','23','24','25','40','41','42','43','53','68','69','70','71','72','73'];
+   if(ids.some(k=>Math.abs(num(x[k]))>0)) played++;
+ }
+ return played;
+}
+function parse(entry,year,projected=false){
+ const p=entry.player||entry.playerPoolEntry?.player||entry, pos=POS[num(p.defaultPositionId)];if(!pos)return null;
+ const st=seasonStat(p,year,projected);if(!st||!st.stats)return null;const x=st.stats;
+ let age=num(p.age);if(!age&&p.dateOfBirth){let bd=new Date(p.dateOfBirth), now=new Date();age=now.getFullYear()-bd.getFullYear()-((now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))?1:0)}
+ const row={id:String(p.id||entry.id),name:p.fullName||p.displayName||'Unknown',age:age||0,pos,team:TEAM[num(st.proTeamId||p.proTeamId)]||'—',teamId:num(st.proTeamId||p.proTeamId),
+  gp:inferGames(p,year),passYds:num(x['3']??x['22']),passTD:num(x['4']),ints:num(x['20']),rushAtt:num(x['23']),rushYds:num(x['24']??x['40']),rushTD:num(x['25']),
+  rec:num(x['41']??x['53']),recYds:num(x['42']),recTD:num(x['43']),lostFum:num(x['72']),projected,healthPct:null,healthLabel:'Loading…'};
+ row.totalTD=row.passTD+row.rushTD+row.recTD;
+ row.totalYds=row.passYds+row.rushYds+row.recYds;
+ row.turnovers=row.ints+row.lostFum;
+ // ESPN standard/non-PPR offense: 1/25 pass yds, 4/pass TD, -2 INT, 1/10 rush+rec yds, 6 rush+rec TD, -2 fumble lost.
+ row.fantasy=row.passYds/25+row.passTD*4-row.ints*2+row.rushYds/10+row.rushTD*6+row.recYds/10+row.recTD*6+row.rec*.5-row.lostFum*2;
+ row.head=`https://a.espncdn.com/i/headshots/nfl/players/full/${row.id}.png`;row.logo=row.team!=='—'&&row.team!=='FA'?`https://a.espncdn.com/i/teamlogos/nfl/500/${row.team.toLowerCase()}.png`:'';
+ return row
+}
+async function enrichAges(year){
+ // Fantasy player-pool payload does not reliably include age. ESPN Core athlete profiles do.
+ // Do this after the fast stats render so age lookups never block the main table.
+ const queue=players.filter(p=>!p.age);
+ let i=0, workers=Math.min(16,queue.length);
+ async function worker(){
+   while(i<queue.length){
+     const p=queue[i++];
+     try{
+       const u=`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/${year}/athletes/${p.id}?lang=en&region=us`;
+       calls++; const r=await fetch(u); if(!r.ok) continue; const a=await r.json();
+       if(a.age) p.age=num(a.age);
+       else if(a.dateOfBirth){let bd=new Date(a.dateOfBirth),d=new Date();p.age=d.getFullYear()-bd.getFullYear()-((d.getMonth()<bd.getMonth()||(d.getMonth()===bd.getMonth()&&d.getDate()<bd.getDate()))?1:0)}
+     }catch{}
+   }
+ }
+ await Promise.all(Array.from({length:workers},worker)); render();
+}
+function healthLabel(pct){if(pct==null)return '—';if(pct>=90)return 'Excellent';if(pct>=80)return 'Good';if(pct>=65)return 'Fair';return 'Risk'}
+async function enrichHealth(baseYear){
+ const years=[baseYear-1,baseYear-2,baseYear-3].filter(y=>y>=2018), ids=new Set(players.map(p=>p.id));
+ healthMap=new Map(players.map(p=>[p.id,[]]));
+ await Promise.all(years.map(async y=>{
+  const filter={players:{filterSlotIds:{value:[0,2,4,6]},limit:1000,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:[`00${y}`]},filterStatsForSourceIds:{value:[0]},filterStatsForSplitTypeIds:{value:[1]}}};
+  try{
+   const data=await fetchJson(`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`,filter);
+   for(const e of data.players||[]){const p=e.player||e.playerPoolEntry?.player||e,id=String(p.id||e.id);if(!ids.has(id))continue;const gp=inferGames(p,y);if(gp>0){const sched=y>=2021?17:16;healthMap.get(id)?.push(Math.min(100,Math.round(gp/sched*100)))}}
+  }catch(e){console.warn('Health history failed for',y,e)}
+ }));
+ players.forEach(p=>{const vals=healthMap.get(p.id)||[];p.healthPct=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;p.healthLabel=healthLabel(p.healthPct)});render();
+}
+async function run(){
+ calls=0;players=[];healthMap=new Map();render();$('#run').disabled=true;$('#search').disabled=true;$('#empty').style.display='none';$('#debug').style.display='none';
+ try{
+  const y=num($('#year').value), projected=y===2026;
+  prog(projected?'Loading ESPN 2026 projections…':'Requesting ESPN fantasy player pool…',20);
+  const filter={players:{
+    filterSlotIds:{value:[0,2,4,6]},limit:1000,sortPercOwned:{sortPriority:1,sortAsc:false},
+    filterStatsForTopScoringPeriodIds:{value:18,additionalValue:projected?[`10${y}`,`00${y}`]:[`00${y}`]},
+    filterStatsForSourceIds:{value:[projected?1:0]},filterStatsForSplitTypeIds:{value:[0]}
+  }};
+  const url=`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`;
+  const data=await fetchJson(url,filter);prog(projected?'Parsing projected season totals…':'Parsing actual season totals…',72);
+  const entries=data.players||[];
+  players=entries.map(e=>parse(e,y,projected)).filter(Boolean).filter(p=>p.passYds||p.rushYds||p.recYds||p.passTD||p.rushTD||p.recTD||p.rushAtt||p.rec);
+  if(!players.length)throw Error(projected?`ESPN returned ${entries.length} player entries, but no 2026 projected season-total records were available.`:`ESPN returned ${entries.length} filtered player entries, but none contained an actual ${y} season-total stat record.`);
+  for(const pos of ['QB','RB','WR','TE']){const asc=players.filter(p=>p.pos===pos).sort((a,b)=>a.fantasy-b.fantasy);asc.forEach((p,i)=>p.pct=Math.max(1,Math.round((i+1)/asc.length*100)));[...asc].sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.posRank=i+1)}
+  const teamGroups={};players.forEach(p=>(teamGroups[p.team]??=[]).push(p));Object.values(teamGroups).forEach(g=>g.sort((a,b)=>b.totalYds-a.totalYds).forEach((p,i)=>p.teamRank=i+1));
+  const teamPosGroups={};players.forEach(p=>(teamPosGroups[p.team+'|'+p.pos]??=[]).push(p));Object.values(teamPosGroups).forEach(g=>g.sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.teamPosRank=i+1));
+  renderTeamMenu();
+  $('#search').disabled=false;$('#tablewrap').style.display='block';render();prog(`Complete — ${players.length} players`,100);
+  $('#stamp').textContent=projected?`${y} PROJECTIONS • treated as the season view • health history loading`:`${y} ACTUALS • health history loading`;
+  Promise.all([enrichAges(y),enrichHealth(y)]).then(()=>{$('#stamp').textContent=projected?`${y} PROJECTIONS • ESPN projected season totals • prior-season health loaded`:`${y} ACTUALS • prior-season health loaded`});
+ }catch(e){console.error(e);$('#empty').style.display='block';$('#empty').innerHTML='<b>Load failed</b>See diagnostic below.';$('#debug').style.display='block';$('#debug').textContent=e.message;prog('Load failed',100)}
+ finally{$('#run').disabled=false}
+}
+function filtered(){let q=$('#search').value.toLowerCase(),tf=state.team,mp=num($('#minPct').value);return players.filter(p=>(state.pos==='ALL'||p.pos===state.pos)&&(tf==='ALL'||p.team===tf)&&p.pct>=mp&&(!q||`${p.name} ${p.team}`.toLowerCase().includes(q))).sort((a,b)=>{let A=a[state.sort],B=b[state.sort];return(typeof A==='string'?A.localeCompare(B):(A||0)-(B||0))*state.dir})}
+function img(src,cls){return src?`<img class="${cls}" src="${src}" loading="lazy" onerror="this.style.display='none'">`:''}
+function toggleDraft(id){id=String(id);if(draftedIds.has(id))draftedIds.delete(id);else draftedIds.add(id);localStorage.setItem('fantasyLensDrafted',JSON.stringify([...draftedIds]));render()}
+function teamLogo(abbr){return abbr&&abbr!=='ALL'&&abbr!=='FA'?`https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`:''}
+function renderTeamMenu(){const teams=[...new Set(players.map(p=>p.team).filter(t=>t&&t!=='—'))].sort();$('#teamMenu').innerHTML=`<button class="teamOption ${state.team==='ALL'?'on':''}" data-team="ALL">All Teams</button>`+teams.map(t=>`<button class="teamOption ${state.team===t?'on':''}" data-team="${t}"><img src="${teamLogo(t)}">${t}</button>`).join('');const logo=teamLogo(state.team);$('#teamFilterIcon').innerHTML=logo?`<img src="${logo}" style="width:18px;height:18px;object-fit:contain">`:'';$('#teamFilterText').textContent=state.team==='ALL'?'All Teams':state.team}
+function renderApiLog(){const el=$('#rawApiLog');if(!el)return;el.textContent=apiLog.length?apiLog.map((x,i)=>`#${i+1} ${x.time}\n${x.status}${x.ok===false?' ERROR':''}  ${x.url}\nFILTER: ${JSON.stringify(x.filter)}\nPREVIEW: ${x.preview}`).join('\n\n────────────────────────\n\n'):'No API calls yet.'}
+function render(){let d=filtered();$('#count').textContent=d.length;
+ $('#tbody').innerHTML=d.map(p=>`<tr class="${draftedIds.has(p.id)?'draftedRow':''}"><td><div class="playerline"><button class="draftBtn ${draftedIds.has(p.id)?'on':''}" onclick="event.stopPropagation();toggleDraft('${p.id}')">${draftedIds.ha
