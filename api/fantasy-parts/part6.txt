@@ -1,70 +1,47 @@
-ach(b=>b.onclick=()=>{document.querySelectorAll('.labTab').forEach(x=>x.classList.toggle('on',x===b));$('#depthLab').style.display=b.dataset.lab==='depth'?'block':'none';$('#projLab').style.display=b.dataset.lab==='proj'?'block':'none'})
-async function loadDepth(){
- let id=$('#depthTeam').value, abbr=DEPTH_TEAMS.find(x=>String(x[1])===String(id))?.[0]||'', st=$('#depthStatus');st.textContent='Loading 2026 depth chart…';$('#depthResults').innerHTML='';
- function renderSleeper(map){
-   let vals=Object.entries(map).map(([sid,p])=>({...p,sid})).filter(p=>p.active!==false&&p.team===abbr&&['QB','RB','WR','TE'].includes(p.position)&&p.depth_chart_order!=null);
-   vals.sort((a,b)=>(a.position||'').localeCompare(b.position||'')||num(a.depth_chart_order)-num(b.depth_chart_order));
-   let groups=['QB','RB','WR','TE'].map(pos=>{let ps=vals.filter(p=>p.position===pos);if(!ps.length)return'';return `<section class="depthGroup"><h3>${pos} · Sleeper 2026 depth order</h3><div class="depthRows">${ps.map(p=>`<div class="depthPlayer"><span class="rankDot">${p.depth_chart_order||'—'}</span><img src="${p.espn_id?`https://a.espncdn.com/i/headshots/nfl/players/full/${p.espn_id}.png`:`https://sleepercdn.com/content/nfl/players/${p.sid}.jpg`}" onerror="this.src='https://sleepercdn.com/content/nfl/players/${p.sid}.jpg'"><div><b>${p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')}</b><small>${pos} · ${abbr} · Depth #${p.depth_chart_order||'—'}</small></div></div>`).join('')}</div></section>`}).join('');
-   if(!vals.length)return false;
-   $('#depthResults').innerHTML=`<div class="depthTeamHead"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png"><div><b>${abbr} 2026 Skill-Position Depth</b><small style="display:block;color:var(--muted)">Sleeper depth metadata · ESPN/Sleeper player images</small></div></div>${groups}`;st.textContent=`${vals.length} active QB/RB/WR/TE depth-chart players loaded for ${abbr}.`;return true;
+fantasy):p.fantasy.toFixed(1)}</b><small>${p.projected?'PROJECTED ':''}HALF-PPR PTS</small></span><span class="rankStack"><strong>#${p.posRank} ${p.pos}</strong><em style="${percentileStyle(p.pct)}">${p.pct}th</em></span></button>
+ <div class="statRail">
+   <div><b>${fmt(p.totalYds)}</b><small>YARDS</small></div><div><b>${p.totalTD}</b><small>TD</small></div><div><b>${p.turnovers}</b><small>TO</small></div><div><b>#${p.teamRank}</b><small>${p.team} RANK</small></div>
+ </div>
+ <div class="pctTrack"><i style="width:${p.pct}%;${percentileStyle(p.pct)}"></i></div>
+ <button class="openProfile" onclick="career('${p.id}')">Career, trends & game logs <span>›</span></button>
+ </article>`).join('')
+}
+async function career(id){
+ const base=players.find(p=>p.id===id);if(!base)return;
+ $('#careerModal').classList.add('open');$('#careerTitle').textContent=base.name+' — Career';
+ $('#careerHero').innerHTML=`<div class="careerhero">${img(base.head,'head')}<div><div class="name" style="font-size:20px">${base.name}</div><div class="sub">${img(base.logo,'logo')}${base.pos} • ${base.team} • Age ${base.age||'—'} • #${base.posRank} ${base.pos} • #${base.teamRank} ${base.team} offense • #${base.teamPosRank||'—'} ${base.team} ${base.pos}</div></div></div>`;
+ $('#careerStatus').textContent='Loading career seasons in parallel…';$('#careerGrid').innerHTML='';
+ const now=new Date().getFullYear(), years=Array.from({length:Math.min(18,now-2010+1)},(_,i)=>now-i);
+ let cc=0;
+ async function one(y){
+  const filter={players:{filterIds:{value:[Number(id)]},limit:1,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:[`00${y}`]}}};
+  const url=`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`;
+  try{cc++;let data=await fetchJson(url,filter),e=(data.players||[]).find(x=>String(x.player?.id||x.id)===String(id))||(data.players||[])[0];if(!e)return null;let p=parse(e,y);if(!p)return null;p.totalYds=p.passYds+p.rushYds+p.recYds;p.turnovers=p.ints+p.lostFum;p.fantasy=fantasy(p);return {...p,year:y}}catch{return null}
  }
- try{
-   calls++;let r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${id}/depthcharts`);
-   if(r.ok){let j=await r.json(),charts=j.depthCharts||[];let count=charts.reduce((n,c)=>n+Object.values(c.positions||{}).reduce((m,pos)=>m+(pos.athletes||[]).length,0),0);
-    if(count){let groups=charts.map(c=>{let ps=Object.values(c.positions||{});return `<section class="depthGroup"><h3>${c.name||'Depth Chart'} · ESPN</h3><div class="depthRows">${ps.flatMap(pos=>(pos.athletes||[]).map(a=>{let x=a.athlete||{},hid=x.id?`https://a.espncdn.com/i/headshots/nfl/players/full/${x.id}.png`:'';return `<div class="depthPlayer"><span class="rankDot">${a.rank||'—'}</span><img src="${hid}" onerror="this.style.visibility='hidden'"><div><b>${x.displayName||x.fullName||'Unknown'}</b><small>${pos.position?.abbreviation||pos.position?.name||''} · ${abbr} · Depth #${a.rank||'—'}</small></div></div>`})).join('')}</div></section>`}).join('');
-      $('#depthResults').innerHTML=`<div class="depthTeamHead"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png"><div><b>${abbr} 2026 Depth Chart</b><small style="display:block;color:var(--muted)">ESPN live depth-chart endpoint</small></div></div>${groups}`;st.textContent=`Loaded ${count} ESPN depth-chart entries.`;return;
-    }
-   }
-   st.textContent='ESPN depth chart is empty; checking Sleeper 2026 depth metadata…';
-   calls++;let sr=await fetch('https://api.sleeper.app/v1/players/nfl');if(!sr.ok)throw Error(`Sleeper HTTP ${sr.status}`);let sm=await sr.json();
-   if(!renderSleeper(sm))throw Error('No active depth-chart records returned by ESPN or Sleeper');
- }catch(e){st.textContent='Depth chart failed: '+e.message}
+ const rs=(await Promise.all(years.map(one))).filter(Boolean).filter(p=>p.totalYds||p.totalTD||p.rushAtt||p.rec);
+ let last=rs[0],avg=rs.length?rs.reduce((s,p)=>s+p.fantasy,0)/rs.length:0,peak=rs.length?[...rs].sort((a,b)=>b.fantasy-a.fantasy)[0]:null;
+ let chronological=[...rs].sort((a,b)=>a.year-b.year), trend=chronological.length>1?(chronological.at(-1).fantasy-chronological.at(-2).fantasy):0;
+ let vals=chronological.map(p=>p.fantasy),mx=Math.max(...vals,1),mn=Math.min(...vals,0),pts=vals.map((v,i)=>`${5+i*(140/Math.max(1,vals.length-1))},${38-(v-mn)/(mx-mn||1)*32}`).join(' ');
+ let spark=`<svg class="spark" viewBox="0 0 150 42" aria-label="Career fantasy point trend"><polyline points="${pts}"/></svg>`;
+ $('#careerStatus').innerHTML=`${rs.length} seasons found • ${cc} parallel season requests • Trend: <b style="color:${trend>=0?'var(--yellow)':'var(--red)'}">${trend>=0?'▲':'▼'} ${Math.abs(trend).toFixed(1)} pts</b>`;
+ $('#careerHero').insertAdjacentHTML('afterend',`<div class="careerSummary"><div class="metric"><b>${peak?peak.fantasy.toFixed(1):'—'}</b><small>PEAK • ${peak?.year||''}</small></div><div class="metric"><b>${avg.toFixed(1)}</b><small>CAREER AVG</small></div><div class="metric"><b>${last?last.fantasy.toFixed(1):'—'}</b><small>LAST SEASON</small></div><div class="metric">${spark}<small>CAREER TREND</small></div></div>`);
+ $('#careerGrid').innerHTML=rs.length?`<table><thead><tr><th>YEAR</th><th>AGE</th><th>GAMES</th><th>ACTIVE GAME %</th><th>TOTAL YDS</th><th>TD</th><th>TURNOVERS</th><th>FANTASY PTS</th></tr></thead><tbody>${rs.map(p=>{let sched=p.year>=2021?17:16, pct=p.gp?Math.min(100,Math.round(p.gp/sched*100)):null, seasonAge=base.age?base.age-(new Date().getFullYear()-p.year):0;return `<tr class="weekrow" onclick="seasonLog('${id}',${p.year},'${base.name.replace(/'/g,"\\'")}')"><td><b>${p.year}</b><small style="display:block;color:var(--muted)">tap for game log</small></td><td>${seasonAge||'—'}</td><td>${p.gp||'—'}${p.gp?' / '+sched:''}</td><td>${pct!==null?`<span class="percentile">${pct}%</span>`:'—'}</td><td><b>${fmt(p.totalYds)}</b></td><td class="td">${p.totalTD}</td><td class="to">${p.turnovers}</td><td><b>${p.projected?Math.round(p.fantasy):p.fantasy.toFixed(1)}</b></td></tr>`}).join('')}</tbody></table>`:'No career season stats returned.';
 }
-async function loadProjections(){
- let y=2026,want=$('#projPos').value,st=$('#projStatus');st.textContent=`Loading ${y} ESPN projected stats…`;$('#projResults').innerHTML='';
- const filter={players:{filterSlotIds:{value:[0,2,4,6]},limit:1000,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:["002026","102026"]},filterRanksForScoringPeriodIds:{value:[1]}}};
- try{let data=await fetchJson(`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`,filter),raw=data.players||[];
- let out=[];for(let e of raw){let p=e.player||e.playerPoolEntry?.player||e,pos=POS[num(p.defaultPositionId)];if(!pos||(want!=='ALL'&&pos!==want))continue;let arr=[...(p.stats||[]),...(e.playerPoolEntry?.stats||[])],pr=arr.find(x=>num(x.seasonId)===2026&&(num(x.statSourceId)===1||num(x.statTypeId)===1)&&num(x.statSplitTypeId)===0)||arr.find(x=>num(x.seasonId)===2026&&(num(x.statSourceId)===1||num(x.statTypeId)===1));if(!pr)continue;let x=pr.stats||{},r={id:String(p.id||e.id),name:p.fullName||p.displayName||'Unknown',pos,team:TEAM[num(pr.proTeamId||p.proTeamId)]||'—',passYds:num(x['3']),passTD:num(x['4']),ints:num(x['20']),rushYds:num(x['24']),rushTD:num(x['25']),rec:num(x['41']??x['53']),recYds:num(x['42']),recTD:num(x['43']),fum:num(x['72'])};r.yds=r.passYds+r.rushYds+r.recYds;r.td=r.passTD+r.rushTD+r.recTD;r.fp=fantasy({...r,lostFum:r.fum});out.push(r)}
- out.sort((a,b)=>b.fp-a.fp);$('#projResults').innerHTML=out.length?`<div class="projGrid">${out.map(p=>`<article class="projCard"><div class="projHead"><img src="https://a.espncdn.com/i/headshots/nfl/players/full/${p.id}.png" onerror="this.style.visibility='hidden'"><div><b>${p.name}</b><small style="display:block;color:var(--muted)">${p.pos} · ${p.team} · ESPN projection</small></div></div><div class="projStats"><div><b>${p.fp.toFixed(1)}</b><small>PROJ FP</small></div><div><b>${fmt(p.yds)}</b><small>PROJ YDS</small></div><div><b>${p.td}</b><small>PROJ TD</small></div><div><b>${p.rec}</b><small>PROJ REC</small></div></div></article>`).join('')}</div>`:`<div class="empty"><b>No ESPN projection records returned</b>ESPN did not return statSourceId=1 records for this season/filter.</div>`;
- st.textContent=out.length?`${out.length} players with ESPN projected stat records (statSourceId = 1).`:`No projected records found for ${y}.`;
- }catch(e){st.textContent='Projection request failed: '+e.message}
+function toggleCompare(id){compareIds.has(id)?compareIds.delete(id):compareIds.size<4&&compareIds.add(id);let ps=players.filter(p=>compareIds.has(p.id));$('#compareChips').innerHTML=ps.map(p=>`<span class="comparechip">${p.name}</span>`).join('');$('#compareBar').classList.toggle('show',ps.length>0);render()}
+function showCompare(){let ps=players.filter(p=>compareIds.has(p.id));$('#compareModal').classList.add('open');$('#compareBody').innerHTML=ps.length?`<div class="careergrid"><table><thead><tr><th>METRIC</th>${ps.map(p=>`<th>${p.name}</th>`).join('')}</tr></thead><tbody>${[['Age','age'],['Position Rank','posRank'],['Percentile','pct'],['Total Yards','totalYds'],['TD','totalTD'],['Turnovers','turnovers'],['Half-PPR / Custom FP','fantasy']].map(([l,k])=>`<tr><td><b>${l}</b></td>${ps.map(p=>`<td>${k==='fantasy'?p[k].toFixed(1):p[k]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'Select players to compare.'}
+async function seasonLog(id,year,name){
+ $('#careerTitle').textContent=`${name} — ${year} Game Log`;$('#careerStatus').textContent='Loading weekly game log…';$('#careerGrid').innerHTML='';
+ const filter={players:{filterIds:{value:[Number(id)]},limit:1,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:[`00${year}`]}}};
+ try{let data=await fetchJson(`${API}/seasons/${year}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_playercard`,filter),e=(data.players||[])[0],p=e?.player||e,weekly=(p?.stats||[]).filter(s=>num(s.seasonId)===year&&num(s.statSourceId)===0&&num(s.statSplitTypeId)===1).sort((a,b)=>a.scoringPeriodId-b.scoringPeriodId);
+ let rows=weekly.map(s=>{let x=s.stats||{},r={passYds:num(x['3']),passTD:num(x['4']),ints:num(x['20']),rushYds:num(x['24']),rushTD:num(x['25']),rec:num(x['41']??x['53']),recYds:num(x['42']),recTD:num(x['43']),lostFum:num(x['72'])};r.totalYds=r.passYds+r.rushYds+r.recYds;r.totalTD=r.passTD+r.rushTD+r.recTD;r.turnovers=r.ints+r.lostFum;r.fantasy=fantasy(r);return{...r,week:s.scoringPeriodId}}).filter(r=>r.totalYds||r.totalTD||r.turnovers||r.rec);
+ $('#careerStatus').textContent=`${rows.length} games with logged offensive activity`;
+ $('#careerGrid').innerHTML=`<table><thead><tr><th>WEEK</th><th>YDS</th><th>TD</th><th>TO</th><th>FP</th><th>REC</th><th>PASS YDS</th><th>RUSH YDS</th><th>REC YDS</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.week}</b></td><td>${fmt(r.totalYds)}</td><td>${r.totalTD}</td><td>${r.turnovers}</td><td><b>${r.fantasy.toFixed(1)}</b></td><td>${r.rec}</td><td>${r.passYds}</td><td>${r.rushYds}</td><td>${r.recYds}</td></tr>`).join('')}</tbody></table><button class="btn" style="margin-top:10px" onclick="career('${id}')">← Back to Career</button>`;
+ }catch(e){$('#careerStatus').textContent='Game log failed: '+e.message}
 }
 
-function openDataLab(){ $('#dataLabModal').classList.add('open'); }
-function apiTestUrl(){
- const p=$('#apiPreset').value,arg=($('#apiArg').value||'').trim(),year=($('#apiYear').value||'2026').trim();
- if(p==='players')return 'https://api.sleeper.app/v1/players/nfl?active=true';
- if(p==='stats')return `https://api.sleeper.com/stats/nfl/${year}?season_type=regular`;
- if(p==='proj')return `https://api.sleeper.com/projections/nfl/${year}?season_type=regular`;
- if(p==='weekproj')return `https://api.sleeper.com/projections/nfl/${year}/${arg||1}?season_type=regular`;
- if(p==='depth')return `https://api.sleeper.com/players/nfl/${(arg||'PHI').toUpperCase()}/depth_chart`;
- if(p==='trending')return 'https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=25';
-}
-async function runApiTest(){
- const url=apiTestUrl();$('#apiTestStatus').textContent='Loading '+url;$('#apiOutput').textContent='Loading…';
- try{
-  const r=await fetch(url,{headers:{accept:'application/json'}}),t=await r.text();
-  if(!r.ok)throw Error(`${r.status} ${r.statusText}\n${t.slice(0,1000)}`);
-  let parsed;try{parsed=JSON.parse(t)}catch{parsed=t}
-  let preview=JSON.stringify(parsed,null,2);
-  $('#apiOutput').textContent=preview.length>18000?preview.slice(0,18000)+'\n\n… truncated …':preview;
-  const count=Array.isArray(parsed)?parsed.length:(parsed&&typeof parsed==='object'?Object.keys(parsed).length:'');
-  $('#apiTestStatus').textContent=`Success${count!==''?' • '+count+' top-level records':''} • ${url}`;
- }catch(e){$('#apiTestStatus').textContent='Request failed';$('#apiOutput').textContent=String(e)}
-}
-document.addEventListener('click',e=>{
- if(e.target.classList.contains('copyApi')){
-  const code=e.target.closest('.apiLine')?.querySelector('code')?.textContent||'';
-  navigator.clipboard?.writeText(code);e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy',900);
- }
-});
-$('#dataLabBtn').onclick=openDataLab;
-$('#closeDataLab').onclick=()=>$('#dataLabModal').classList.remove('open');
-$('#dataLabModal').onclick=e=>{if(e.target.id==='dataLabModal')$('#dataLabModal').classList.remove('open')};
-$('#runApiTest').onclick=runApiTest;
 
-$('#exploreBtn').onclick=openLab;$('#closeExplore').onclick=()=>$('#exploreModal').classList.remove('open');$('#runDepth').onclick=loadDepth;$('#runProj').onclick=loadProjections;
-
-$('#run').onclick=run;
-$('#settingsBtn').onclick=()=>$('#settingsModal').classList.add('open');$('#closeSettings').onclick=()=>$('#settingsModal').classList.remove('open');document.querySelectorAll('.score').forEach(x=>x.oninput=recalc);
-$('#compareBtn').onclick=showCompare;$('#closeCompare').onclick=()=>$('#compareModal').classList.remove('open');$('#search').oninput=render;$('#minPct').onchange=render;$('#teamFilterBtn').onclick=()=>$('#teamMenu').classList.toggle('open');$('#teamMenu').onclick=e=>{const b=e.target.closest('[data-team]');if(!b)return;state.team=b.dataset.team;$('#teamMenu').classList.remove('open');renderTeamMenu();render()};document.addEventListener('click',e=>{if(!e.target.closest('#teamSelect'))$('#teamMenu')?.classList.remove('open')});$('#rawApiBtn').onclick=()=>{renderApiLog();$('#rawApiModal').classList.add('open')};$('#closeRawApi').onclick=()=>$('#rawApiModal').classList.remove('open');$('#rawApiModal').onclick=e=>{if(e.target.id==='rawApiModal')$('#rawApiModal').classList.remove('open')};$('#positions').onclick=e=>{if(!e.target.dataset.p)return;state.pos=e.target.dataset.p;document.querySelectorAll('#positions button').forEach(b=>b.classList.toggle('on',b.dataset.p===state.pos));render()};document.querySelectorAll('th').forEach(h=>h.onclick=()=>{let k=h.dataset.k;if(state.sort===k)state.dir*=-1;else{state.sort=k;state.dir=-1}render()});$('#tableBtn').onclick=()=>{document.body.classList.remove('cardmode');$('#tablewrap').style.display='block'};$('#cardBtn').onclick=()=>docu
+const DEPTH_TEAMS=[['ARI',22,'Arizona Cardinals'],['ATL',1,'Atlanta Falcons'],['BAL',33,'Baltimore Ravens'],['BUF',2,'Buffalo Bills'],['CAR',29,'Carolina Panthers'],['CHI',3,'Chicago Bears'],['CIN',4,'Cincinnati Bengals'],['CLE',5,'Cleveland Browns'],['DAL',6,'Dallas Cowboys'],['DEN',7,'Denver Broncos'],['DET',8,'Detroit Lions'],['GB',9,'Green Bay Packers'],['HOU',34,'Houston Texans'],['IND',11,'Indianapolis Colts'],['JAX',30,'Jacksonville Jaguars'],['KC',12,'Kansas City Chiefs'],['LV',13,'Las Vegas Raiders'],['LAC',24,'Los Angeles Chargers'],['LAR',14,'Los Angeles Rams'],['MIA',15,'Miami Dolphins'],['MIN',16,'Minnesota Vikings'],['NE',17,'New England Patriots'],['NO',18,'New Orleans Saints'],['NYG',19,'New York Giants'],['NYJ',20,'New York Jets'],['PHI',21,'Philadelphia Eagles'],['PIT',23,'Pittsburgh Steelers'],['SEA',26,'Seattle Seahawks'],['SF',25,'San Francisco 49ers'],['TB',27,'Tampa Bay Buccaneers'],['TEN',10,'Tennessee Titans'],['WSH',28,'Washington Commanders']];
+function initLab(){}
+async function openLab(){initLab();$('#exploreModal').classList.add('open');await loadDepth(false)}
+document.querySelectorAll('.labTab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.labTab').forEach(x=>x.classList.toggle('on',x===b));$('#depthLab').style.display=b.dataset.lab==='depth'?'block':'none';$('#projLab').style.display=b.dataset.lab==='proj'?'block':'none'})
+function renderDepthMatrix(map){const positions=['QB','RB','WR','TE'];const rows=DEPTH_TEAMS.map(([abbr,id,name])=>{const vals=Object.entries(map).map(([sid,p])=>({...p,sid})).filter(p=>p.active!==false&&p.team===abbr&&positions.includes(p.position)&&p.depth_chart_order!=null);const cells=positions.map(pos=>{const ps=vals.filter(p=>p.position===pos).sort((a,b)=>num(a.depth_chart_order)-num(b.depth_chart_order)).slice(0,4);return `<td class="depth
