@@ -1,0 +1,32 @@
+async function career(id){
+ const base=players.find(p=>p.id===id);if(!base)return;
+ $('#careerModal').classList.add('open');$('#careerTitle').textContent=base.name+' — Career';
+ $('#careerHero').innerHTML=`<div class="careerhero">${img(base.head,'head')}<div><div class="name" style="font-size:20px">${base.name}</div><div class="sub">${img(base.logo,'logo')}${base.pos} • ${base.team} • Age ${base.age||'—'} • #${base.posRank} ${base.pos} • #${base.teamRank} ${base.team} offense • #${base.teamPosRank||'—'} ${base.team} ${base.pos}</div></div></div>`;
+ $('#careerStatus').textContent='Loading career seasons in parallel…';$('#careerGrid').innerHTML='';
+ const now=new Date().getFullYear(), years=Array.from({length:Math.min(18,now-2010+1)},(_,i)=>now-i);
+ let cc=0;
+ async function one(y){
+  const filter={players:{filterIds:{value:[Number(id)]},limit:1,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:[`00${y}`]}}};
+  const url=`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`;
+  try{cc++;let data=await fetchJson(url,filter),e=(data.players||[]).find(x=>String(x.player?.id||x.id)===String(id))||(data.players||[])[0];if(!e)return null;let p=parse(e,y);if(!p)return null;p.totalYds=p.passYds+p.rushYds+p.recYds;p.turnovers=p.ints+p.lostFum;p.fantasy=fantasy(p);return {...p,year:y}}catch{return null}
+ }
+ const rs=(await Promise.all(years.map(one))).filter(Boolean).filter(p=>p.totalYds||p.totalTD||p.rushAtt||p.rec);
+ let last=rs[0],avg=rs.length?rs.reduce((s,p)=>s+p.fantasy,0)/rs.length:0,peak=rs.length?[...rs].sort((a,b)=>b.fantasy-a.fantasy)[0]:null;
+ let chronological=[...rs].sort((a,b)=>a.year-b.year), trend=chronological.length>1?(chronological.at(-1).fantasy-chronological.at(-2).fantasy):0;
+ let vals=chronological.map(p=>p.fantasy),mx=Math.max(...vals,1),mn=Math.min(...vals,0),pts=vals.map((v,i)=>`${5+i*(140/Math.max(1,vals.length-1))},${38-(v-mn)/(mx-mn||1)*32}`).join(' ');
+ let spark=`<svg class="spark" viewBox="0 0 150 42" aria-label="Career fantasy point trend"><polyline points="${pts}"/></svg>`;
+ $('#careerStatus').innerHTML=`${rs.length} seasons found • ${cc} parallel season requests • Trend: <b style="color:${trend>=0?'var(--yellow)':'var(--red)'}">${trend>=0?'▲':'▼'} ${Math.abs(trend).toFixed(0)} pts</b>`;
+ $('#careerHero').insertAdjacentHTML('afterend',`<div class="careerSummary"><div class="metric"><b>${peak?peak.fantasy.toFixed(0):'—'}</b><small>PEAK • ${peak?.year||''}</small></div><div class="metric"><b>${avg.toFixed(0)}</b><small>CAREER AVG</small></div><div class="metric"><b>${last?last.fantasy.toFixed(0):'—'}</b><small>LAST SEASON</small></div><div class="metric">${spark}<small>CAREER TREND</small></div></div>`);
+ $('#careerGrid').innerHTML=rs.length?`<table><thead><tr><th>YEAR</th><th>AGE</th><th>GAMES</th><th>ACTIVE GAME %</th><th>TOTAL YDS</th><th>TD</th><th>TURNOVERS</th><th>FANTASY PTS</th></tr></thead><tbody>${rs.map(p=>{let sched=p.year>=2021?17:16, pct=p.gp?Math.min(100,Math.round(p.gp/sched*100)):null, seasonAge=base.age?base.age-(new Date().getFullYear()-p.year):0;return `<tr class="weekrow" onclick="seasonLog('${id}',${p.year},'${base.name.replace(/'/g,"\\'")}')"><td><b>${p.year}</b><small style="display:block;color:var(--muted)">tap for game log</small></td><td>${seasonAge||'—'}</td><td>${p.gp||'—'}${p.gp?' / '+sched:''}</td><td>${pct!==null?`<span class="percentile">${pct}%</span>`:'—'}</td><td><b>${fmt(p.totalYds)}</b></td><td class="td">${p.totalTD}</td><td class="to">${p.turnovers}</td><td><b>${p.projected?Math.round(p.fantasy):p.fantasy.toFixed(0)}</b></td></tr>`}).join('')}</tbody></table>`:'No career season stats returned.';
+}
+function toggleCompare(id){compareIds.has(id)?compareIds.delete(id):compareIds.size<4&&compareIds.add(id);let ps=players.filter(p=>compareIds.has(p.id));$('#compareChips').innerHTML=ps.map(p=>`<span class="comparechip">${p.name}</span>`).join('');$('#compareBar').classList.toggle('show',ps.length>0);render()}
+function showCompare(){let ps=players.filter(p=>compareIds.has(p.id));$('#compareModal').classList.add('open');$('#compareBody').innerHTML=ps.length?`<div class="careergrid"><table><thead><tr><th>METRIC</th>${ps.map(p=>`<th>${p.name}</th>`).join('')}</tr></thead><tbody>${[['Age','age'],['Position Rank','posRank'],['Percentile','pct'],['Total Yards','totalYds'],['TD','totalTD'],['Turnovers','turnovers'],['Half-PPR / Custom FP','fantasy']].map(([l,k])=>`<tr><td><b>${l}</b></td>${ps.map(p=>`<td>${k==='fantasy'?p[k].toFixed(0):p[k]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'Select players to compare.'}
+async function seasonLog(id,year,name){
+ $('#careerTitle').textContent=`${name} — ${year} Game Log`;$('#careerStatus').textContent='Loading weekly game log…';$('#careerGrid').innerHTML='';
+ const filter={players:{filterIds:{value:[Number(id)]},limit:1,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:[`00${year}`]}}};
+ try{let data=await fetchJson(`${API}/seasons/${year}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_playercard`,filter),e=(data.players||[])[0],p=e?.player||e,weekly=(p?.stats||[]).filter(s=>num(s.seasonId)===year&&num(s.statSourceId)===0&&num(s.statSplitTypeId)===1).sort((a,b)=>a.scoringPeriodId-b.scoringPeriodId);
+ let rows=weekly.map(s=>{let x=s.stats||{},r={passYds:num(x['3']),passTD:num(x['4']),ints:num(x['20']),rushYds:num(x['24']),rushTD:num(x['25']),rec:num(x['41']??x['53']),recYds:num(x['42']),recTD:num(x['43']),lostFum:num(x['72'])};r.totalYds=r.passYds+r.rushYds+r.recYds;r.totalTD=r.passTD+r.rushTD+r.recTD;r.turnovers=r.ints+r.lostFum;r.fantasy=fantasy(r);return{...r,week:s.scoringPeriodId}}).filter(r=>r.totalYds||r.totalTD||r.turnovers||r.rec);
+ $('#careerStatus').textContent=`${rows.length} games with logged offensive activity`;
+ $('#careerGrid').innerHTML=`<table><thead><tr><th>WEEK</th><th>YDS</th><th>TD</th><th>TO</th><th>FP</th><th>REC</th><th>PASS YDS</th><th>RUSH YDS</th><th>REC YDS</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.week}</b></td><td>${fmt(r.totalYds)}</td><td>${r.totalTD}</td><td>${r.turnovers}</td><td><b>${r.fantasy.toFixed(0)}</b></td><td>${r.rec}</td><td>${r.passYds}</td><td>${r.rushYds}</td><td>${r.recYds}</td></tr>`).join('')}</tbody></table><button class="btn" style="margin-top:10px" onclick="career('${id}')">← Back to Career</button>`;
+ }catch(e){$('#careerStatus').textContent='Game log failed: '+e.message}
+}
