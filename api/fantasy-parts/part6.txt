@@ -1,0 +1,70 @@
+ach(b=>b.onclick=()=>{document.querySelectorAll('.labTab').forEach(x=>x.classList.toggle('on',x===b));$('#depthLab').style.display=b.dataset.lab==='depth'?'block':'none';$('#projLab').style.display=b.dataset.lab==='proj'?'block':'none'})
+async function loadDepth(){
+ let id=$('#depthTeam').value, abbr=DEPTH_TEAMS.find(x=>String(x[1])===String(id))?.[0]||'', st=$('#depthStatus');st.textContent='Loading 2026 depth chart…';$('#depthResults').innerHTML='';
+ function renderSleeper(map){
+   let vals=Object.entries(map).map(([sid,p])=>({...p,sid})).filter(p=>p.active!==false&&p.team===abbr&&['QB','RB','WR','TE'].includes(p.position)&&p.depth_chart_order!=null);
+   vals.sort((a,b)=>(a.position||'').localeCompare(b.position||'')||num(a.depth_chart_order)-num(b.depth_chart_order));
+   let groups=['QB','RB','WR','TE'].map(pos=>{let ps=vals.filter(p=>p.position===pos);if(!ps.length)return'';return `<section class="depthGroup"><h3>${pos} · Sleeper 2026 depth order</h3><div class="depthRows">${ps.map(p=>`<div class="depthPlayer"><span class="rankDot">${p.depth_chart_order||'—'}</span><img src="${p.espn_id?`https://a.espncdn.com/i/headshots/nfl/players/full/${p.espn_id}.png`:`https://sleepercdn.com/content/nfl/players/${p.sid}.jpg`}" onerror="this.src='https://sleepercdn.com/content/nfl/players/${p.sid}.jpg'"><div><b>${p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')}</b><small>${pos} · ${abbr} · Depth #${p.depth_chart_order||'—'}</small></div></div>`).join('')}</div></section>`}).join('');
+   if(!vals.length)return false;
+   $('#depthResults').innerHTML=`<div class="depthTeamHead"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png"><div><b>${abbr} 2026 Skill-Position Depth</b><small style="display:block;color:var(--muted)">Sleeper depth metadata · ESPN/Sleeper player images</small></div></div>${groups}`;st.textContent=`${vals.length} active QB/RB/WR/TE depth-chart players loaded for ${abbr}.`;return true;
+ }
+ try{
+   calls++;let r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${id}/depthcharts`);
+   if(r.ok){let j=await r.json(),charts=j.depthCharts||[];let count=charts.reduce((n,c)=>n+Object.values(c.positions||{}).reduce((m,pos)=>m+(pos.athletes||[]).length,0),0);
+    if(count){let groups=charts.map(c=>{let ps=Object.values(c.positions||{});return `<section class="depthGroup"><h3>${c.name||'Depth Chart'} · ESPN</h3><div class="depthRows">${ps.flatMap(pos=>(pos.athletes||[]).map(a=>{let x=a.athlete||{},hid=x.id?`https://a.espncdn.com/i/headshots/nfl/players/full/${x.id}.png`:'';return `<div class="depthPlayer"><span class="rankDot">${a.rank||'—'}</span><img src="${hid}" onerror="this.style.visibility='hidden'"><div><b>${x.displayName||x.fullName||'Unknown'}</b><small>${pos.position?.abbreviation||pos.position?.name||''} · ${abbr} · Depth #${a.rank||'—'}</small></div></div>`})).join('')}</div></section>`}).join('');
+      $('#depthResults').innerHTML=`<div class="depthTeamHead"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png"><div><b>${abbr} 2026 Depth Chart</b><small style="display:block;color:var(--muted)">ESPN live depth-chart endpoint</small></div></div>${groups}`;st.textContent=`Loaded ${count} ESPN depth-chart entries.`;return;
+    }
+   }
+   st.textContent='ESPN depth chart is empty; checking Sleeper 2026 depth metadata…';
+   calls++;let sr=await fetch('https://api.sleeper.app/v1/players/nfl');if(!sr.ok)throw Error(`Sleeper HTTP ${sr.status}`);let sm=await sr.json();
+   if(!renderSleeper(sm))throw Error('No active depth-chart records returned by ESPN or Sleeper');
+ }catch(e){st.textContent='Depth chart failed: '+e.message}
+}
+async function loadProjections(){
+ let y=2026,want=$('#projPos').value,st=$('#projStatus');st.textContent=`Loading ${y} ESPN projected stats…`;$('#projResults').innerHTML='';
+ const filter={players:{filterSlotIds:{value:[0,2,4,6]},limit:1000,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:["002026","102026"]},filterRanksForScoringPeriodIds:{value:[1]}}};
+ try{let data=await fetchJson(`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`,filter),raw=data.players||[];
+ let out=[];for(let e of raw){let p=e.player||e.playerPoolEntry?.player||e,pos=POS[num(p.defaultPositionId)];if(!pos||(want!=='ALL'&&pos!==want))continue;let arr=[...(p.stats||[]),...(e.playerPoolEntry?.stats||[])],pr=arr.find(x=>num(x.seasonId)===2026&&(num(x.statSourceId)===1||num(x.statTypeId)===1)&&num(x.statSplitTypeId)===0)||arr.find(x=>num(x.seasonId)===2026&&(num(x.statSourceId)===1||num(x.statTypeId)===1));if(!pr)continue;let x=pr.stats||{},r={id:String(p.id||e.id),name:p.fullName||p.displayName||'Unknown',pos,team:TEAM[num(pr.proTeamId||p.proTeamId)]||'—',passYds:num(x['3']),passTD:num(x['4']),ints:num(x['20']),rushYds:num(x['24']),rushTD:num(x['25']),rec:num(x['41']??x['53']),recYds:num(x['42']),recTD:num(x['43']),fum:num(x['72'])};r.yds=r.passYds+r.rushYds+r.recYds;r.td=r.passTD+r.rushTD+r.recTD;r.fp=fantasy({...r,lostFum:r.fum});out.push(r)}
+ out.sort((a,b)=>b.fp-a.fp);$('#projResults').innerHTML=out.length?`<div class="projGrid">${out.map(p=>`<article class="projCard"><div class="projHead"><img src="https://a.espncdn.com/i/headshots/nfl/players/full/${p.id}.png" onerror="this.style.visibility='hidden'"><div><b>${p.name}</b><small style="display:block;color:var(--muted)">${p.pos} · ${p.team} · ESPN projection</small></div></div><div class="projStats"><div><b>${p.fp.toFixed(1)}</b><small>PROJ FP</small></div><div><b>${fmt(p.yds)}</b><small>PROJ YDS</small></div><div><b>${p.td}</b><small>PROJ TD</small></div><div><b>${p.rec}</b><small>PROJ REC</small></div></div></article>`).join('')}</div>`:`<div class="empty"><b>No ESPN projection records returned</b>ESPN did not return statSourceId=1 records for this season/filter.</div>`;
+ st.textContent=out.length?`${out.length} players with ESPN projected stat records (statSourceId = 1).`:`No projected records found for ${y}.`;
+ }catch(e){st.textContent='Projection request failed: '+e.message}
+}
+
+function openDataLab(){ $('#dataLabModal').classList.add('open'); }
+function apiTestUrl(){
+ const p=$('#apiPreset').value,arg=($('#apiArg').value||'').trim(),year=($('#apiYear').value||'2026').trim();
+ if(p==='players')return 'https://api.sleeper.app/v1/players/nfl?active=true';
+ if(p==='stats')return `https://api.sleeper.com/stats/nfl/${year}?season_type=regular`;
+ if(p==='proj')return `https://api.sleeper.com/projections/nfl/${year}?season_type=regular`;
+ if(p==='weekproj')return `https://api.sleeper.com/projections/nfl/${year}/${arg||1}?season_type=regular`;
+ if(p==='depth')return `https://api.sleeper.com/players/nfl/${(arg||'PHI').toUpperCase()}/depth_chart`;
+ if(p==='trending')return 'https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=25';
+}
+async function runApiTest(){
+ const url=apiTestUrl();$('#apiTestStatus').textContent='Loading '+url;$('#apiOutput').textContent='Loading…';
+ try{
+  const r=await fetch(url,{headers:{accept:'application/json'}}),t=await r.text();
+  if(!r.ok)throw Error(`${r.status} ${r.statusText}\n${t.slice(0,1000)}`);
+  let parsed;try{parsed=JSON.parse(t)}catch{parsed=t}
+  let preview=JSON.stringify(parsed,null,2);
+  $('#apiOutput').textContent=preview.length>18000?preview.slice(0,18000)+'\n\n… truncated …':preview;
+  const count=Array.isArray(parsed)?parsed.length:(parsed&&typeof parsed==='object'?Object.keys(parsed).length:'');
+  $('#apiTestStatus').textContent=`Success${count!==''?' • '+count+' top-level records':''} • ${url}`;
+ }catch(e){$('#apiTestStatus').textContent='Request failed';$('#apiOutput').textContent=String(e)}
+}
+document.addEventListener('click',e=>{
+ if(e.target.classList.contains('copyApi')){
+  const code=e.target.closest('.apiLine')?.querySelector('code')?.textContent||'';
+  navigator.clipboard?.writeText(code);e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy',900);
+ }
+});
+$('#dataLabBtn').onclick=openDataLab;
+$('#closeDataLab').onclick=()=>$('#dataLabModal').classList.remove('open');
+$('#dataLabModal').onclick=e=>{if(e.target.id==='dataLabModal')$('#dataLabModal').classList.remove('open')};
+$('#runApiTest').onclick=runApiTest;
+
+$('#exploreBtn').onclick=openLab;$('#closeExplore').onclick=()=>$('#exploreModal').classList.remove('open');$('#runDepth').onclick=loadDepth;$('#runProj').onclick=loadProjections;
+
+$('#run').onclick=run;
+$('#settingsBtn').onclick=()=>$('#settingsModal').classList.add('open');$('#closeSettings').onclick=()=>$('#settingsModal').classList.remove('open');document.querySelectorAll('.score').forEach(x=>x.oninput=recalc);
+$('#compareBtn').onclick=showCompare;$('#closeCompare').onclick=()=>$('#compareModal').classList.remove('open');$('#search').oninput=render;$('#minPct').onchange=render;$('#teamFilterBtn').onclick=()=>$('#teamMenu').classList.toggle('open');$('#teamMenu').onclick=e=>{const b=e.target.closest('[data-team]');if(!b)return;state.team=b.dataset.team;$('#teamMenu').classList.remove('open');renderTeamMenu();render()};document.addEventListener('click',e=>{if(!e.target.closest('#teamSelect'))$('#teamMenu')?.classList.remove('open')});$('#rawApiBtn').onclick=()=>{renderApiLog();$('#rawApiModal').classList.add('open')};$('#closeRawApi').onclick=()=>$('#rawApiModal').classList.remove('open');$('#rawApiModal').onclick=e=>{if(e.target.id==='rawApiModal')$('#rawApiModal').classList.remove('open')};$('#positions').onclick=e=>{if(!e.target.dataset.p)return;state.pos=e.target.dataset.p;document.querySelectorAll('#positions button').forEach(b=>b.classList.toggle('on',b.dataset.p===state.pos));render()};document.querySelectorAll('th').forEach(h=>h.onclick=()=>{let k=h.dataset.k;if(state.sort===k)state.dir*=-1;else{state.sort=k;state.dir=-1}render()});$('#tableBtn').onclick=()=>{document.body.classList.remove('cardmode');$('#tablewrap').style.display='block'};$('#cardBtn').onclick=()=>docu
