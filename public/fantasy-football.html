@@ -1,1 +1,352 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fantasy Lens</title><meta http-equiv="refresh" content="0;url=/api/fantasy-football"><style>body{margin:0;background:#f4f1e9;color:#17212b;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:grid;place-items:center;min-height:100vh}.box{padding:24px;text-align:center}a{color:#0b655c;font-weight:700}</style></head><body><div class="box"><strong>Loading Fantasy Lens…</strong><p><a href="/api/fantasy-football">Open Fantasy Lens</a></p></div><script>location.replace('/api/fantasy-football');</script></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fantasy Lens — 2026 Draft Intelligence</title>
+<style>
+:root{--ink:#17212b;--muted:#687684;--paper:#f4f1e9;--card:#fff;--navy:#14273b;--cyan:#15b8a6;--gold:#e6a817;--line:#dce1df;--red:#c44842;--yellow:#e6a817;--orange:#e77722;--bg:#f4f1e9;--panel:#fff;--p2:#f7f8f6;--txt:#17212b}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",Inter,system-ui,-apple-system,Segoe UI,sans-serif}.app{max-width:1320px;margin:auto;padding:0 22px 50px}
+.mast{margin:0 -22px;background:var(--navy);color:#fff;padding:15px 22px 33px}.mastInner{max-width:1320px;margin:auto}.brandline{display:flex;justify-content:space-between;align-items:end;gap:15px}.ey{font-size:10px;letter-spacing:.18em;color:#80ded3;font-weight:900}.mast h1{font-size:29px;line-height:1;margin:3px 0 4px;letter-spacing:-.045em}.mast h1 span{font-weight:300;color:#a8b8c5}.mast p{margin:0;color:#aebdca;font-size:10px}.apiDot{display:flex;gap:6px;align-items:center;font-size:10px;color:#9fb0bd}.apiDot i{width:7px;height:7px;border-radius:50%;background:#38d39f}
+.command{margin:-20px 0 10px;background:#fff;border-radius:14px;padding:7px;box-shadow:0 7px 24px #17212b18;display:grid;grid-template-columns:82px minmax(120px,1fr) auto auto auto auto auto;gap:5px;position:sticky;top:6px;z-index:80}.field,.btn{font:inherit;border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 9px;color:var(--ink)}.btn{font-weight:900;font-size:9px;cursor:pointer}.btn:hover{border-color:#bdc5c0}.run{background:var(--cyan);border-color:var(--cyan);color:#06231f}.mini{font-size:8px;padding:7px 8px}.cacheState{font-size:8px;color:var(--muted);align-self:center;white-space:nowrap}
+.mobileNav{display:none}.filterDeck{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin:14px 0}.positions{display:flex;background:#e5e8e4;padding:4px;border-radius:12px}.positions .btn{border:0;background:transparent;padding:8px 14px}.positions .on{background:#fff;box-shadow:0 1px 4px #0001}.summarybar{display:flex;justify-content:flex-end;gap:6px;align-items:center}.summarybar .on{background:var(--navy);color:#fff}.summarybar>span{display:none}
+.scoreboard{display:grid;grid-template-columns:1.35fr repeat(4,1fr);gap:7px;margin:12px 0}.metric{background:#fff;border-radius:13px;padding:11px 13px;border:1px solid #e2e4df}.metric:first-child{background:var(--navy);color:#fff}.metric b{display:block;font-size:22px;letter-spacing:-.04em}.metric small{font-size:8px;color:#7d8992;font-weight:900;letter-spacing:.08em}.metric:first-child small{color:#9fb0bd}
+.status{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin:14px 2px 7px}.progress{display:none;background:#fff;border-radius:12px;padding:9px;margin:8px 0}.pr{display:flex;justify-content:space-between;font-size:10px}.bar{height:4px;background:#e8e9e5;border-radius:9px;margin-top:6px}.bar div{height:100%;background:var(--cyan)}.debug{display:none;color:var(--red);font:10px monospace;white-space:pre-wrap}
+.tablewrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px;max-height:70vh}table{border-collapse:collapse;width:100%;min-width:950px}th{position:sticky;top:0;background:#edf0ed;padding:10px 8px;font-size:9px;color:#65727c;text-align:right;cursor:pointer}td{padding:9px 8px;border-top:1px solid #edf0ed;text-align:right;font-variant-numeric:tabular-nums}th:first-child,td:first-child{text-align:left}.playerline,.player{display:flex;align-items:center;gap:8px}.head{width:38px;height:38px;border-radius:11px;object-fit:cover;background:#edf0ed}.logo{width:17px;height:17px;object-fit:contain}.name{font-weight:900}.sub{font-size:9px;color:var(--muted);display:flex;gap:4px;align-items:center}.pill{background:#e7ece9;padding:2px 5px;border-radius:5px}.td{font-weight:900}.to{color:var(--red)}.detailCol{}.summaryOnly .detailCol{display:none}.summaryOnly table{min-width:760px}
+.cards{display:none}.playerCard{background:#fff;border-radius:17px;border:1px solid #e0e3df;overflow:hidden}.cardTop{display:flex;justify-content:space-between;align-items:center;padding:12px 12px 7px}.identity{display:flex;gap:9px;align-items:center;border:0;background:none;text-align:left;padding:0;color:inherit}.who{display:flex;flex-direction:column}.compareLabel{font-size:8px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}.comparecheck{width:18px;height:18px;accent-color:var(--cyan)}.heroStat{width:100%;border:0;background:#f5f7f4;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;text-align:left;color:inherit}.heroStat b{display:block;font-size:25px;letter-spacing:-.05em}.heroStat small{font-size:7px;color:var(--muted);font-weight:900}.rankStack{display:flex;gap:5px;align-items:center}.rankStack strong{font-size:10px}.rankStack em{font-size:9px;font-style:normal;font-weight:900;padding:4px 6px;border-radius:8px}.statRail{display:grid;grid-template-columns:repeat(4,1fr);padding:10px 7px}.statRail div{text-align:center;border-right:1px solid #edf0ed}.statRail div:last-child{border:0}.statRail b{display:block;font-size:14px}.statRail small{font-size:6.5px;color:var(--muted);font-weight:900}.pctTrack{height:4px;background:#edf0ed;margin:0 12px 9px;border-radius:9px;overflow:hidden}.pctTrack i{display:block;height:100%}.openProfile{width:100%;border:0;border-top:1px solid #edf0ed;background:#fff;padding:10px 12px;text-align:left;font-weight:800;font-size:10px;color:#4c5c67}.openProfile span{float:right;font-size:16px}
+.empty{text-align:center;padding:45px;color:var(--muted)}.empty b{display:block;color:var(--ink);font-size:17px}.note{text-align:center;color:#89939a;font-size:8px;padding:14px}
+.comparebar{display:none;position:sticky;bottom:8px;background:var(--navy);color:#fff;border-radius:13px;padding:8px;z-index:50;justify-content:space-between;align-items:center}.comparebar.show{display:flex}.comparechips{display:flex;gap:4px}.comparechip{font-size:8px;background:#ffffff18;padding:5px;border-radius:6px}
+.modal{display:none;position:fixed;inset:0;background:#0b1721cc;z-index:100;padding:18px;overflow:auto}.modal.open{display:block}.modalbox{max-width:1050px;margin:3vh auto;background:var(--paper);border-radius:20px;overflow:hidden}.modalhead{position:sticky;top:0;background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:13px 16px;z-index:3}.modalhead h2{margin:0;font-size:18px}.close{background:#ffffff15;color:#fff;border:0}.careerbody{padding:14px}.careerhero{display:flex;align-items:center;gap:10px}.careerhero .head{width:60px;height:60px}.careerSummary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}.careerSummary .metric:first-child{background:#fff;color:var(--ink)}.careerSummary .metric:first-child small{color:var(--muted)}.careergrid{overflow:auto;background:#fff;border-radius:12px;border:1px solid var(--line)}.careergrid table{min-width:760px}.careerstatus{font-size:10px;color:var(--muted);margin:7px 0}.spark{width:145px;height:40px}.spark polyline{fill:none;stroke:var(--cyan);stroke-width:2}.settingsgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.settingsgrid label{font-size:9px;color:var(--muted)}.settingsgrid input{width:100%;margin-top:3px}
+.healthGood{font-weight:900}.view{display:flex;gap:4px}.pctbar{height:5px}.percentile{border-radius:8px;padding:3px 5px;font-weight:900}.clickable{cursor:pointer}.draftedRow{opacity:.38;filter:grayscale(1)}.draftBtn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 7px;font-size:8px;font-weight:900;cursor:pointer;white-space:nowrap}.draftBtn.on{background:#687684;color:#fff}.teamSelect{position:relative}.teamSelectBtn{display:flex;align-items:center;gap:7px;min-width:128px;justify-content:flex-start}.teamSelectBtn img,.teamMenu img{width:18px;height:18px;object-fit:contain}.teamMenu{display:none;position:absolute;right:0;top:calc(100% + 5px);z-index:60;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px #17212b22;max-height:320px;overflow:auto;min-width:180px;padding:5px}.teamMenu.open{display:block}.teamOption{width:100%;border:0;background:#fff;padding:7px 9px;border-radius:8px;display:flex;align-items:center;gap:8px;text-align:left;cursor:pointer;font:inherit;font-size:10px}.teamOption:hover,.teamOption.on{background:#edf0ed}.rawApiLog{white-space:pre-wrap;word-break:break-word;background:#101c28;color:#d8ece9;padding:12px;border-radius:11px;font:10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:55vh;overflow:auto}
+@media(max-width:720px){
+ body{background:#eef0ec}.app{padding:0 9px 82px}.mast{margin:0 -9px;padding:17px 14px 42px}.mast h1{font-size:31px}.mast p{display:none}.apiDot{display:none}
+ .command{margin-top:-20px;top:4px;grid-template-columns:74px 1fr auto auto;padding:5px;border-radius:11px}.command #search{grid-column:1/5;grid-row:2}.command #run{grid-column:3/5;grid-row:1}.command .mini{font-size:8px;padding:6px}.command .cacheState{display:none}.command #settingsBtn,.command #exploreBtn,.command #dataLabBtn,.command #rawApiBtn{grid-row:3}.run{font-size:9px;padding:7px 5px}
+ .filterDeck{display:block;margin:8px 0}.positions{display:grid;grid-template-columns:repeat(5,1fr);width:100%;padding:3px}.positions .btn{padding:8px 2px;font-size:10px}.summarybar{display:grid;grid-template-columns:1fr 1fr;margin-top:6px}.summarybar .btn,.summarybar .field{font-size:9px;padding:8px 5px}.view{display:none}
+ .scoreboard{grid-template-columns:1.3fr repeat(3,1fr);gap:4px;margin:7px 0}.scoreboard .metric{padding:7px 6px}.scoreboard .metric:nth-child(5){display:none}.metric b{font-size:18px}.metric small{font-size:6px}.status{font-size:8px;margin:7px 2px 5px}
+ .tablewrap{display:none!important}.cards{display:grid!important;grid-template-columns:1fr;gap:7px}.cardmode .cards{display:grid}.playerCard .head{width:46px;height:46px}.name{font-size:13px}.sub{font-size:8px}.note{padding-bottom:3px}.comparebar{bottom:70px}
+ .modal{padding:7px}.modalbox{margin:1vh auto;border-radius:14px}.careerSummary{grid-template-columns:1fr 1fr}.settingsgrid{grid-template-columns:1fr}.careerbody{padding:9px}
+ .mobileNav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;bottom:0;left:0;right:0;z-index:90;background:#fff;border-top:1px solid #dfe3df;padding:5px max(5px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom))}.mobileNav button{border:0;background:none;font-size:7px;font-weight:900;color:#5d6a74;padding:5px}.mobileNav button b{display:block;font-size:15px;margin-bottom:1px}
+}
+.cardmode .tablewrap{display:none!important}.cardmode .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:9px}.projGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}.projCard{background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px}.projHead{display:flex;gap:8px;align-items:center}.projHead img{width:42px;height:42px;border-radius:10px;object-fit:cover}.projStats{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:8px}.projStats div{background:#f2f4f1;border-radius:8px;padding:6px;text-align:center}.projStats b{display:block}.projStats small{font-size:6px;color:var(--muted);font-weight:900}.labTabs{display:flex;gap:5px;margin-bottom:8px}.labTabs .on{background:var(--navy);color:#fff}.labControls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.dataGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:8px}.dataCard{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px}.dataCard h3{margin:0 0 5px;font-size:13px}.dataCard p{font-size:9px;color:var(--muted);line-height:1.4}.badge{display:inline-block;background:#e5f4ee;color:#187058;border-radius:6px;padding:2px 5px;font-size:6px;font-weight:900;margin-right:3px}.experimental{background:#fff1d7;color:#9b6410}.apiLine{display:flex;gap:4px;align-items:center;margin-top:5px}.apiLine code{display:block;background:#f0f2ef;border-radius:7px;padding:6px;font-size:7px;word-break:break-all;flex:1}.labNote{background:#eef2f0;border-radius:8px;padding:7px;font-size:8px;color:var(--muted)}.apiTest{margin-top:10px;background:#14273b;color:#fff;border-radius:13px;padding:11px}.apiTest .field{font-size:9px}.apiTest pre{background:#0c1822;color:#cae7e2;border-radius:8px;padding:8px;max-height:260px;overflow:auto;font:8px/1.4 monospace;white-space:pre-wrap}.draftedRow,.playerCard.drafted{opacity:.38;filter:grayscale(1)}.teamPicker{position:relative}.teamMenu{z-index:30}.health.good{color:#16705e}.health.mid{color:#a16b08}.health.low{color:#b33c38}.apiLogItem{font:9px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;background:#f1f3f0;padding:8px;border-radius:8px;margin:6px 0}.depthMatrix{min-width:980px}.depthTeamCell{position:sticky;left:0;background:#fff;z-index:2}.depthTeamName{display:flex;align-items:center;gap:7px;font-weight:900;font-size:10px}.depthTeamName img{width:25px;height:25px;object-fit:contain}.depthCell{min-width:190px}.depthMini{display:flex;align-items:center;gap:6px;padding:4px 2px}.depthMini img{width:30px;height:30px;border-radius:8px;object-fit:cover;background:#edf0ed}.depthMini b{display:block;font-size:9px;line-height:1.1}.depthMini small{display:block;color:var(--muted);font-size:7px}.depthRank{min-width:18px;height:18px;border-radius:6px;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:7px;font-weight:900}.depthScroll{overflow:auto;max-height:70vh}.loadMeta{font-size:8px;color:var(--muted);margin-left:auto;align-self:center}
+
+/* v19 draft-night web app */
+.app{max-width:1500px;padding:0 18px 44px}.mast{display:none}.appbar{position:sticky;top:0;z-index:85;margin:0 -18px;background:#14273bf5;color:#fff;backdrop-filter:blur(12px);border-bottom:1px solid #ffffff18;box-shadow:0 6px 22px #07131d22}.appbarInner{max-width:1500px;margin:auto;padding:8px 18px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}.appTitle{display:flex;align-items:center;gap:8px;margin-right:auto;min-width:max-content}.appTitle b{font-size:17px;letter-spacing:-.04em}.appTitle small{font-size:7px;letter-spacing:.12em;color:#82ddd2;font-weight:900}.appbar .btn{background:#ffffff10;color:#fff;border-color:#ffffff22;padding:7px 9px;font-size:8px}.appbar .run{background:var(--cyan);color:#061a18;border-color:transparent}.appbar .cacheState{color:#a8bbc6}.draftShell{padding-top:10px}.viewNav{display:flex;gap:5px;align-items:center;overflow:auto;padding:4px 0 8px}.viewNav .btn{white-space:nowrap}.viewNav .on{background:var(--navy);color:#fff}.draftFilters{display:grid;grid-template-columns:minmax(180px,1fr) auto auto auto auto;gap:6px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:13px;padding:6px;box-shadow:0 3px 15px #17212b0d}.toggleControl{display:flex;align-items:center;gap:5px;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:#f8f9f7;font-size:8px;font-weight:900;white-space:nowrap;cursor:pointer}.toggleControl input{accent-color:var(--cyan)}.draftMeta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:9px;margin:7px 2px}.bestStrip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:7px 0}.bestPos{background:#fff;border:1px solid var(--line);border-radius:12px;padding:7px}.bestPos>strong{font-size:8px;color:var(--muted);letter-spacing:.1em}.bestPlayer{display:flex;align-items:center;gap:6px;margin-top:5px}.bestPlayer img{width:28px;height:28px;border-radius:8px;object-fit:cover;background:#edf0ed}.bestPlayer b{font-size:9px;display:block}.bestPlayer small{font-size:7px;color:var(--muted)}.viewTools{display:flex;gap:4px;align-items:center;margin-left:auto}.matrixTools{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0}.matrixTools .on{background:var(--navy);color:#fff}.matrixTable th:first-child,.matrixTable td:first-child{position:sticky;left:0;z-index:2;background:#fff}.matrixTable th:first-child{z-index:4;background:#edf0ed}.healthPctBar{height:5px;background:#e6e9e5;border-radius:9px;overflow:hidden;min-width:70px}.healthPctBar i{display:block;height:100%;background:var(--cyan)}.healthRisk{color:var(--red);font-weight:900}.healthGood2{color:#19745e;font-weight:900}.trendUp{color:#13775e;font-weight:900}.trendDown{color:var(--red);font-weight:900}.trendFlat{color:var(--muted);font-weight:900}.draftRank{font-size:16px;font-weight:950;color:var(--navy);min-width:30px}.availabilityTag{font-size:7px;font-weight:900;padding:3px 5px;border-radius:7px;background:#edf0ed}.availabilityTag.inactive{background:#f4dddd;color:#9b312e}.yearBadge{font-size:7px;font-weight:900;background:#e8f6f3;color:#0b655c;border-radius:6px;padding:2px 5px}.webHint{font-size:8px;color:var(--muted)}
+#year,#summaryBtn,#detailBtn,#tableBtn,#cardBtn{display:none!important}.filterDeck{display:none!important}.cards{display:none!important}.tablewrap{max-height:72vh}.tablewrap table{min-width:980px}.tablewrap td,.tablewrap th{font-size:9px}.tablewrap td{padding:7px 7px}.status{margin-top:8px}.empty{padding:28px}.command{display:none!important}
+@media(max-width:900px){.draftFilters{grid-template-columns:1fr 1fr}.draftFilters #search{grid-column:1/3}.bestStrip{grid-template-columns:1fr 1fr}.appbarInner{gap:5px}.appTitle{width:100%}.appbar .cacheState{margin-left:auto}.tablewrap{max-height:68vh}}
+@media(max-width:600px){.app{padding:0 7px 72px}.appbar{margin:0 -7px}.appbarInner{padding:7px}.appbar .btn{padding:6px 7px}.appTitle small{display:none}.draftFilters{grid-template-columns:1fr 1fr}.bestStrip{grid-template-columns:1fr}.viewNav{padding-bottom:5px}.tablewrap{border-radius:10px}.draftMeta{font-size:8px}}
+</style></head><body><div class="app">
+<header class="appbar"><div class="appbarInner">
+ <div class="appTitle"><div><small>2026 DRAFT INTELLIGENCE</small><b>Fantasy Lens</b></div></div>
+ <button class="btn run" id="run">LOAD DATA</button>
+ <button class="btn" id="settingsBtn">Scoring</button>
+ <button class="btn" id="exploreBtn">Depth</button>
+ <button class="btn" id="dataLabBtn">API Sources</button>
+ <button class="btn" id="rawApiBtn">API Results</button>
+ <span class="cacheState" id="cacheState">Cache: checking…</span>
+</div></header>
+<div class="draftShell">
+ <select class="field" id="year" style="display:none"></select>
+ <div class="viewNav" id="viewNav">
+  <button class="btn on" data-view="draft">Draft Board</button>
+  <button class="btn" data-view="overview">Overview</button>
+  <button class="btn" data-view="matrix">Year Matrix</button>
+  <button class="btn" data-view="health">Health</button>
+ </div>
+ <div class="draftFilters">
+  <input class="field" id="search" placeholder="Search player or team">
+  <div class="positions" id="positions"></div>
+  <div class="teamSelect" id="teamSelect"><button class="field teamSelectBtn" id="teamFilterBtn" type="button"><span id="teamFilterIcon"></span><span id="teamFilterText">All Teams</span> ▾</button><div class="teamMenu" id="teamMenu"></div></div>
+  <select class="field" id="minPct"><option value="0">All ranks</option><option value="50">50th+ %ile</option><option value="75">75th+ %ile</option><option value="90">90th+ %ile</option><option value="95">95th+ %ile</option></select>
+  <label class="toggleControl"><input type="checkbox" id="hideInactive" checked> Hide inactive</label>
+  <label class="toggleControl"><input type="checkbox" id="hideDrafted"> Hide drafted</label>
+ </div>
+ <div class="draftMeta"><span>Current-year drafting first • historical production + availability underneath</span><span id="viewMeta">2026 projections</span></div>
+</div>
+<div class="progress" id="progress"><div class="pr"><strong id="phase">Loading</strong><span id="pct">0%</span></div><div class="bar"><div id="bar"></div></div><div class="debug" id="debug"></div></div>
+<div class="status"><span><b id="count">0</b> current draft candidates</span><span id="stamp">2026 draft board</span></div>
+<div class="empty" id="empty"><b>Load data once before the draft</b>Loads 2018–2025 actuals, 2026 projections, health/game history and the full NFL depth directory. IndexedDB restores it next session.</div>
+<div id="bestStrip"></div>
+<div class="matrixTools" id="matrixTools" style="display:none"></div>
+<div class="tablewrap" id="tablewrap"></div>
+<div class="cards" id="cards"></div>
+<div class="comparebar" id="compareBar"><div class="comparechips" id="compareChips"></div><button class="btn" id="compareBtn">Compare</button></div>
+<div class="modal" id="settingsModal"><div class="modalbox"><div class="modalhead"><h2>Scoring Model</h2><button class="btn close" id="closeSettings">×</button></div><div class="careerbody"><p style="color:var(--muted);font-size:11px">Half-PPR by default. Rankings recalculate locally.</p><div class="settingsgrid"><label>Reception<input class="field score" id="sRec" type="number" step=".1" value=".5"></label><label>Passing TD<input class="field score" id="sPassTD" type="number" step=".5" value="4"></label><label>Passing yards / point<input class="field score" id="sPassYds" type="number" value="25"></label><label>Interception<input class="field score" id="sInt" type="number" step=".5" value="-2"></label><label>Rush/Rec TD<input class="field score" id="sTD" type="number" step=".5" value="6"></label><label>Rush/Rec yards / point<input class="field score" id="sYds" type="number" value="10"></label><label>Fumble lost<input class="field score" id="sFum" type="number" step=".5" value="-2"></label></div></div></div></div>
+<div class="modal" id="compareModal"><div class="modalbox"><div class="modalhead"><h2>Player Comparison</h2><button class="btn close" id="closeCompare">×</button></div><div class="careerbody" id="compareBody"></div></div></div>
+<div class="modal" id="exploreModal"><div class="modalbox"><div class="modalhead"><h2>Depth Charts</h2><button class="btn close" id="closeExplore">×</button></div><div class="careerbody">
+<div class="labTabs"><button class="btn labTab on" data-lab="depth">Depth Charts</button></div>
+<div id="depthLab" class="labPane">
+ <div class="labControls"><button class="btn run" id="runDepth">Refresh All Depth Charts</button><span class="loadMeta">All 32 teams · QB / RB / WR / TE</span></div>
+ <div class="careerstatus" id="depthStatus">Loads the league-wide Sleeper depth directory and caches it locally.</div>
+ <div id="depthResults" class="depthScroll"></div>
+</div>
+<div id="projLab" class="labPane" style="display:none!important">
+ <div class="labControls"><select class="field" id="projPos"><option>ALL</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option></select><button class="btn run" id="runProj">Load 2026 ESPN Projections</button></div>
+ <div class="careerstatus" id="projStatus">Reads projected records from ESPN Fantasy where statSourceId = 1. This lab is locked to the upcoming 2026 season.</div>
+ <div id="projResults"></div>
+</div>
+</div></div></div>
+<div class="modal" id="dataLabModal"><div class="modalbox"><div class="modalhead"><div><h2>API Sources + Test Bench</h2><small style="color:var(--muted)">Where useful fantasy data comes from, how to test it, and what to investigate next.</small></div><button class="btn close" id="closeDataLab">×</button></div>
+<div class="careerbody">
+ <div class="dataGrid">
+  <section class="dataCard"><h3>Sleeper Player Directory</h3><span class="badge">OFFICIAL</span><span class="badge">NO AUTH</span>
+   <p>Complete NFL player directory with player_id, team, position, age, fantasy_positions, injury_status and search_rank. Sleeper says this should be called about once per day and cached.</p>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/players/nfl</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Stats</h3><span class="badge experimental">UNOFFICIAL / WORKING</span>
+   <p>Season or weekly player stat objects. Use season type = regular. Great candidate for cross-checking our ESPN-derived actuals.</p>
+   <div class="apiLine"><code>https://api.sleeper.com/stats/nfl/2025?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.com/stats/nfl/2025/1?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Projections</h3><span class="badge experimental">UNOFFICIAL / WORKING</span>
+   <p>Projected player stats with fantasy points. Both season and week patterns are currently useful for research, but these are not documented in Sleeper's official public API docs.</p>
+   <div class="apiLine"><code>https://api.sleeper.com/projections/nfl/2026?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.com/projections/nfl/2026/1?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Depth Chart</h3><span class="badge experimental">THIRD-PARTY DOCUMENTED</span>
+   <p>Team depth chart by abbreviation. The player directory also exposes depth_chart_position and depth_chart_order, so either source can be useful.</p>
+   <div class="apiLine"><code>https://api.sleeper.com/players/nfl/PHI/depth_chart</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Trending</h3><span class="badge">OFFICIAL</span><span class="badge">NO AUTH</span>
+   <p>Live add/drop momentum. Great for a waiver-wire or draft-buzz signal. Change add → drop and tune lookback_hours/limit.</p>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&amp;limit=25</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper League / Draft</h3><span class="badge">OFFICIAL</span>
+   <p>If a league ID is supplied: scoring settings, roster positions, rosters, users, weekly matchups and league drafts. Draft IDs then expose every actual pick.</p>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/league/LEAGUE_ID</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/league/LEAGUE_ID/rosters</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/draft/DRAFT_ID/picks</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>ESPN</h3><span class="badge">CURRENT APP SOURCE</span>
+   <p>Keep ESPN historical actuals and 2026 projections as a second data source. Cross-provider comparison is valuable when ESPN and Sleeper disagree on usage or projected production.</p>
+   <div class="labNote">Potential derived signal: ESPN projection vs Sleeper projection delta for REC, YDS, TD and fantasy points.</div>
+  </section>
+  <section class="dataCard"><h3>Yahoo Fantasy Sports</h3><span class="badge experimental">RESEARCH</span>
+   <p>Official fantasy API exists and can expose leagues, teams, rosters, players, draft results and transactions, but requires OAuth and Yahoo app credentials.</p>
+   <div class="apiLine"><code>https://fantasysports.yahooapis.com/fantasy/v2/</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Draft Sharks</h3><span class="badge experimental">RESEARCH / POSSIBLE PAID</span>
+   <p>Commercial fantasy data and tools include projections, rankings, ADP and draft context. Treat this as a potential licensed/provider integration rather than a free public endpoint.</p>
+   <div class="apiLine"><code>https://www.draftsharks.com/</code><button class="btn copyApi">Copy</button></div>
+  </section>
+ </div>
+ <section class="apiTest"><h3 style="margin:0 0 7px">API Test Bench</h3>
+  <div class="labControls"><select class="field" id="apiPreset"><option value="players">Sleeper · Players</option><option value="stats">Sleeper · Season Stats</option><option value="proj">Sleeper · Season Projections</option><option value="weekproj">Sleeper · Week Projections</option><option value="depth">Sleeper · Team Depth</option><option value="trending">Sleeper · Trending Adds</option></select><input class="field" id="apiArg" placeholder="Team / week (optional)"><input class="field" id="apiYear" value="2026" style="width:75px"><button class="btn run" id="runApiTest">Run Test</button></div>
+  <div class="careerstatus" id="apiTestStatus" style="color:#adc0cb">Pick a preset and inspect the raw response.</div><pre id="apiOutput">No request yet.</pre>
+ </section>
+</div></div></div>
+<div class="modal" id="rawApiModal"><div class="modalbox"><div class="modalhead"><div><h2>Raw API Calls</h2><small style="color:#9fb0bd">Most recent ESPN requests made by Fantasy Lens. Response previews are truncated.</small></div><button class="btn close" id="closeRawApi">×</button></div><div class="careerbody"><div class="rawApiLog" id="rawApiLog">No API calls yet.</div></div></div></div>
+<div class="modal" id="careerModal"><div class="modalbox"><div class="modalhead"><h2 id="careerTitle">Career</h2><button class="btn close" id="closeCareer">×</button></div><div class="careerbody"><div id="careerHero"></div><div class="careerstatus" id="careerStatus"></div><div class="careergrid" id="careerGrid"></div></div></div></div>
+<div class="note">2026 draft intelligence • ESPN + Sleeper • Historical actuals + current projections</div>
+</div><script>
+const API='https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl';
+const POS={1:'QB',2:'RB',3:'WR',4:'TE'}, TEAM={0:'FA',1:'ATL',2:'BUF',3:'CHI',4:'CIN',5:'CLE',6:'DAL',7:'DEN',8:'DET',9:'GB',10:'TEN',11:'IND',12:'KC',13:'LV',14:'LAR',15:'MIA',16:'MIN',17:'NE',18:'NO',19:'NYG',20:'NYJ',21:'PHI',22:'ARI',23:'PIT',24:'LAC',25:'SF',26:'SEA',27:'TB',28:'WSH',29:'CAR',30:'JAX',33:'BAL',34:'HOU'};
+let players=[],calls=0,compareIds=new Set(),healthMap=new Map(),apiLog=[],seasonData={},depthData=null,draftedIds=new Set(JSON.parse(localStorage.getItem('fantasyLensDrafted')||'[]')),currentView=localStorage.getItem('fantasyLensView')||'draft',matrixMetric=localStorage.getItem('fantasyLensMatrixMetric')||'fantasy',matrixRange=localStorage.getItem('fantasyLensMatrixRange')||'5',state={pos:'ALL',team:'ALL',sort:'fantasy',dir:-1};
+const CACHE_DB='FantasyLensCache',CACHE_VER=1,CACHE_STORE='data';
+function openCache(){return new Promise((resolve,reject)=>{const r=indexedDB.open(CACHE_DB,CACHE_VER);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(CACHE_STORE))r.result.createObjectStore(CACHE_STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function cachePut(key,value){try{const db=await openCache();await new Promise((res,rej)=>{const tx=db.transaction(CACHE_STORE,'readwrite');tx.objectStore(CACHE_STORE).put({value,ts:Date.now()},key);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch(e){console.warn('cache put failed',e)}}
+async function cacheGet(key){try{const db=await openCache(),v=await new Promise((res,rej)=>{const r=db.transaction(CACHE_STORE).objectStore(CACHE_STORE).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});db.close();return v||null}catch(e){return null}}
+function finalizePlayers(list){for(const pos of ['QB','RB','WR','TE']){const asc=list.filter(p=>p.pos===pos).sort((a,b)=>a.fantasy-b.fantasy);asc.forEach((p,i)=>p.pct=Math.max(1,Math.round((i+1)/Math.max(1,asc.length)*100)));[...asc].sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.posRank=i+1)}const tg={};list.forEach(p=>(tg[p.team]??=[]).push(p));Object.values(tg).forEach(g=>g.sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.teamRank=i+1));const tpg={};list.forEach(p=>(tpg[p.team+'|'+p.pos]??=[]).push(p));Object.values(tpg).forEach(g=>g.sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.teamPosRank=i+1));return list}
+async function fetchSeason(y){
+ const projected=y===2026,filter={players:{filterSlotIds:{value:[0,2,4,6]},limit:1000,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:projected?[`10${y}`,`00${y}`]:[`00${y}`]},filterStatsForSourceIds:{value:[projected?1:0]},filterStatsForSplitTypeIds:{value:[0]}}};
+ const url=`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`,data=await fetchJson(url,filter),entries=data.players||[];
+ let list=entries.map(e=>parse(e,y,projected)).filter(Boolean).filter(p=>p.passYds||p.rushYds||p.recYds||p.passTD||p.rushTD||p.recTD||p.rushAtt||p.rec);
+ if(!list.length)throw Error(`No ${projected?'projection':'actual'} records for ${y}`);
+ const statKeys=['passYds','rushYds','recYds','passTD','rushTD','recTD','ints','rec','rushAtt','lostFum','totalYds','totalTD','turnovers'];
+ list.forEach(p=>{statKeys.forEach(k=>p[k]=whole(p[k]));p.fantasy=whole(p.fantasy);p.season=y});
+ seasonData[y]=finalizePlayers(list);return seasonData[y]
+}
+async function showSeason(y,preferCache=true){
+ let hit=preferCache?await cacheGet('season:'+y):null;
+ if(hit?.value){seasonData[y]=hit.value;players=y===2026?seasonData[y]:players;if(y===2026){players.forEach(p=>p.fantasy=whole(fantasy(p)));finalizePlayers(players);if(depthData)applySleeperMeta(depthData,players);renderTeamMenu();$('#search').disabled=false;$('#tablewrap').style.display='block';$('#empty').style.display='none';render()}$('#stamp').textContent=`2026 DRAFT • ${y===2026?'projections':'history'} restored from cache`;return true}return false
+}
+
+function scoring(){return{rec:num($('#sRec')?.value??.5),passTD:num($('#sPassTD')?.value??4),passYds:Math.max(1,num($('#sPassYds')?.value??25)),int:num($('#sInt')?.value??-2),td:num($('#sTD')?.value??6),yds:Math.max(1,num($('#sYds')?.value??10)),fum:num($('#sFum')?.value??-2)}}
+function fantasy(p){let s=scoring();return p.passYds/s.passYds+p.passTD*s.passTD+p.ints*s.int+(p.rushYds+p.recYds)/s.yds+(p.rushTD+p.recTD)*s.td+p.rec*s.rec+p.lostFum*s.fum}
+function percentileStyle(p){let hue=Math.round(Math.max(0,Math.min(100,p))*1.15);return `background:hsl(${hue} 78% 46%);color:${p>55?'#071006':'#fff'}`}
+function recalc(){players.forEach(p=>p.fantasy=fantasy(p));for(const pos of ['QB','RB','WR','TE']){let g=players.filter(p=>p.pos===pos).sort((a,b)=>a.fantasy-b.fantasy);g.forEach((p,i)=>p.pct=Math.max(1,Math.round((i+1)/g.length*100)));[...g].sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.posRank=i+1)}render()}const $=s=>document.querySelector(s),num=x=>Number(x||0),fmt=x=>Math.round(num(x)).toLocaleString(),whole=x=>Math.round(num(x));
+for(let y=new Date().getFullYear();y>=2018;y--)$('#year').insertAdjacentHTML('beforeend',`<option ${y===new Date().getFullYear()?'selected':''}>${y}</option>`);
+['ALL','QB','RB','WR','TE'].forEach(p=>$('#positions').insertAdjacentHTML('beforeend',`<button class="btn ${p==='ALL'?'on':''}" data-p="${p}">${p}</button>`));
+function prog(t,n){$('#progress').style.display='block';$('#phase').textContent=t;$('#pct').textContent=n+'%';$('#bar').style.width=n+'%'}
+async function fetchJson(url,filter){calls++;let started=new Date().toISOString(),r,text;try{r=await fetch(url,{headers:{'x-fantasy-filter':JSON.stringify(filter),'accept':'application/json'}});text=await r.text();apiLog.unshift({time:started,url,filter,status:r.status,ok:r.ok,preview:text.slice(0,1800)});apiLog=apiLog.slice(0,30);renderApiLog();if(!r.ok)throw Error(`${r.status} ${r.statusText}\n${text.slice(0,700)}`);try{return JSON.parse(text)}catch{throw Error('ESPN returned non-JSON data')}}catch(e){if(!r){apiLog.unshift({time:started,url,filter,status:'FETCH ERROR',ok:false,preview:String(e)});apiLog=apiLog.slice(0,30);renderApiLog()}throw e}}
+function seasonStat(p,year,projected=false){
+ const arr=[...(p.stats||[]),...(p.playerPoolEntry?.stats||[])];
+ const source=projected?1:0;
+ let exact=arr.find(s=>num(s.seasonId)===num(year)&&num(s.statSourceId)===source&&num(s.statSplitTypeId)===0);
+ if(exact)return exact;
+ return arr.find(s=>num(s.seasonId)===num(year)&&num(s.statSourceId)===source)||null;
+}
+function inferGames(p,year){
+ const weekly=(p.stats||[]).filter(s=>num(s.seasonId)===num(year)&&num(s.statSourceId)===0&&num(s.statSplitTypeId)===1&&num(s.scoringPeriodId)>0&&num(s.scoringPeriodId)<=18);
+ let played=0;
+ for(const s of weekly){
+   const x=s.stats||{};
+   // Any logged offensive event = played. Include pass attempts/completions, rush attempts,
+   // targets/receptions, yards, TDs, INTs and fumbles so zero-yard appearances still count.
+   const ids=['0','1','3','4','20','23','24','25','40','41','42','43','53','68','69','70','71','72','73'];
+   if(ids.some(k=>Math.abs(num(x[k]))>0)) played++;
+ }
+ return played;
+}
+function parse(entry,year,projected=false){
+ const p=entry.player||entry.playerPoolEntry?.player||entry, pos=POS[num(p.defaultPositionId)];if(!pos)return null;
+ const st=seasonStat(p,year,projected);if(!st||!st.stats)return null;const x=st.stats;
+ let age=num(p.age);if(!age&&p.dateOfBirth){let bd=new Date(p.dateOfBirth), now=new Date();age=now.getFullYear()-bd.getFullYear()-((now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))?1:0)}
+ const row={id:String(p.id||entry.id),name:p.fullName||p.displayName||'Unknown',age:age||0,pos,team:TEAM[num(st.proTeamId||p.proTeamId)]||'—',teamId:num(st.proTeamId||p.proTeamId),
+  gp:inferGames(p,year),passYds:num(x['3']??x['22']),passTD:num(x['4']),ints:num(x['20']),rushAtt:num(x['23']),rushYds:num(x['24']??x['40']),rushTD:num(x['25']),
+  rec:num(x['41']??x['53']),recYds:num(x['42']),recTD:num(x['43']),lostFum:num(x['72']),projected,healthPct:null,healthLabel:'Loading…'};
+ row.totalTD=row.passTD+row.rushTD+row.recTD;
+ row.totalYds=row.passYds+row.rushYds+row.recYds;
+ row.turnovers=row.ints+row.lostFum;
+ // ESPN standard/non-PPR offense: 1/25 pass yds, 4/pass TD, -2 INT, 1/10 rush+rec yds, 6 rush+rec TD, -2 fumble lost.
+ row.fantasy=row.passYds/25+row.passTD*4-row.ints*2+row.rushYds/10+row.rushTD*6+row.recYds/10+row.recTD*6+row.rec*.5-row.lostFum*2;
+ row.head=`https://a.espncdn.com/i/headshots/nfl/players/full/${row.id}.png`;row.logo=row.team!=='—'&&row.team!=='FA'?`https://a.espncdn.com/i/teamlogos/nfl/500/${row.team.toLowerCase()}.png`:'';
+ return row
+}
+
+function ageFromDOB(v){if(!v)return 0;const bd=new Date(v);if(Number.isNaN(bd.getTime()))return 0;const now=new Date();let a=now.getFullYear()-bd.getFullYear();if(now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))a--;return a}
+function applySleeperMeta(map,list=players){if(!map)return;const byEspn=new Map(),byName=new Map();for(const [sid,p] of Object.entries(map)){if(p.espn_id)byEspn.set(String(p.espn_id),{...p,sid});if(p.full_name)byName.set(String(p.full_name).toLowerCase(),{...p,sid})}for(const row of list){const m=byEspn.get(String(row.id))||byName.get(String(row.name).toLowerCase());if(!m)continue;row.active=m.active!==false;row.depthOrder=m.depth_chart_order==null?null:num(m.depth_chart_order);row.depthPosition=m.depth_chart_position||m.position||row.pos;row.sleeperId=m.sid;const calc=ageFromDOB(m.birth_date||m.birthDate);if(calc)row.age=calc;else if(m.age)row.age=whole(m.age)}render()}
+function seasonRow(id,y){return (seasonData[y]||[]).find(p=>String(p.id)===String(id))||null}
+function primaryYards(p){if(!p)return 0;if(p.pos==='QB')return p.passYds;return p.rushYds+p.recYds}
+function threeYear(p,metric='fantasy'){const vals=[2023,2024,2025].map(y=>seasonRow(p.id,y)).filter(Boolean).map(r=>metric==='yards'?primaryYards(r):num(r[metric]));return vals.length?whole(vals.reduce((a,b)=>a+b,0)/vals.length):0}
+function trend3(p){const a=seasonRow(p.id,2024),b=seasonRow(p.id,2025);if(!a||!b)return null;return whole(b.fantasy-a.fantasy)}
+function isVisiblePlayer(p,ignorePos=false){let q=$('#search').value.toLowerCase(),tf=state.team,mp=num($('#minPct').value),hideInactive=$('#hideInactive')?.checked,hideDrafted=$('#hideDrafted')?.checked;return (ignorePos||state.pos==='ALL'||p.pos===state.pos)&&(tf==='ALL'||p.team===tf)&&p.pct>=mp&&(!hideInactive||p.active!==false)&&(!hideDrafted||!draftedIds.has(p.id))&&(!q||`${p.name} ${p.team} ${p.pos}`.toLowerCase().includes(q))}
+async function enrichAges(year){
+ // Fantasy player-pool payload does not reliably include age. ESPN Core athlete profiles do.
+ // Do this after the fast stats render so age lookups never block the main table.
+ const queue=players.filter(p=>!p.age);
+ let i=0, workers=Math.min(16,queue.length);
+ async function worker(){
+   while(i<queue.length){
+     const p=queue[i++];
+     try{
+       const u=`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/${year}/athletes/${p.id}?lang=en&region=us`;
+       calls++; const r=await fetch(u); if(!r.ok) continue; const a=await r.json();
+       if(a.age) p.age=num(a.age);
+       else if(a.dateOfBirth){let bd=new Date(a.dateOfBirth),d=new Date();p.age=d.getFullYear()-bd.getFullYear()-((d.getMonth()<bd.getMonth()||(d.getMonth()===bd.getMonth()&&d.getDate()<bd.getDate()))?1:0)}
+     }catch{}
+   }
+ }
+ await Promise.all(Array.from({length:workers},worker)); render();
+}
+function healthLabel(pct){if(pct==null)return '—';if(pct>=90)return 'Excellent';if(pct>=80)return 'Good';if(pct>=65)return 'Fair';return 'Risk'}
+async function enrichHealth(baseYear=2026){
+ const years=[2023,2024,2025], ids=new Set(players.map(p=>p.id));
+ const detail=new Map(players.map(p=>[p.id,[]]));
+ await Promise.all(years.map(async y=>{
+  const filter={players:{filterSlotIds:{value:[0,2,4,6]},limit:1000,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:[`00${y}`]},filterStatsForSourceIds:{value:[0]},filterStatsForSplitTypeIds:{value:[1]}}};
+  try{const data=await fetchJson(`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`,filter);for(const e of data.players||[]){const p=e.player||e.playerPoolEntry?.player||e,id=String(p.id||e.id);if(!ids.has(id))continue;const gp=inferGames(p,y),sched=17;detail.get(id)?.push({year:y,gp:whole(gp),sched,pct:Math.min(100,whole(gp/sched*100))})}}catch(e){console.warn('Health history failed for',y,e)}}));
+ players.forEach(p=>{const vals=(detail.get(p.id)||[]).sort((a,b)=>a.year-b.year);p.healthYears=vals;const gp=vals.reduce((a,b)=>a+b.gp,0),sched=vals.reduce((a,b)=>a+b.sched,0);p.healthPct=sched?whole(gp/sched*100):null;p.healthLabel=healthLabel(p.healthPct)});render();
+}
+async function run(){
+ $('#run').disabled=true;$('#empty').style.display='none';$('#debug').style.display='none';calls=0;
+ try{
+  const years=[2018,2019,2020,2021,2022,2023,2024,2025,2026];
+  for(let i=0;i<years.length;i++){const y=years[i];prog(`Loading ${y} ${y===2026?'projections':'actuals'}…`,Math.round((i/11)*100));const list=await fetchSeason(y);await cachePut('season:'+y,list)}
+  players=seasonData[2026]||[];finalizePlayers(players);
+  prog('Loading active players + all NFL depth charts…',84);await loadDepth(true);if(depthData)applySleeperMeta(depthData,players);
+  prog('Building 3-year availability history…',92);await enrichHealth(2026);await cachePut('season:2026',players);
+  await cachePut('lastFullLoad',{at:Date.now(),years});$('#cacheState').textContent='Cache: saved';prog('Draft data ready',100);renderTeamMenu();render();
+ }catch(e){console.error(e);$('#empty').style.display='block';$('#empty').innerHTML='<b>Refresh failed</b>Existing cached draft data remains available.';$('#debug').style.display='block';$('#debug').textContent=e.message;prog('Load failed',100)}
+ finally{$('#run').disabled=false}
+}
+
+function filtered(){return players.filter(p=>isVisiblePlayer(p)).sort((a,b)=>{let A=a[state.sort],B=b[state.sort];return(typeof A==='string'?A.localeCompare(B):(A||0)-(B||0))*state.dir})}
+function img(src,cls){return src?`<img class="${cls}" src="${src}" loading="lazy" onerror="this.style.display='none'">`:''}
+function toggleDraft(id){id=String(id);if(draftedIds.has(id))draftedIds.delete(id);else draftedIds.add(id);localStorage.setItem('fantasyLensDrafted',JSON.stringify([...draftedIds]));render()}
+function teamLogo(abbr){return abbr&&abbr!=='ALL'&&abbr!=='FA'?`https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`:''}
+function renderTeamMenu(){const teams=[...new Set(players.map(p=>p.team).filter(t=>t&&t!=='—'))].sort();$('#teamMenu').innerHTML=`<button class="teamOption ${state.team==='ALL'?'on':''}" data-team="ALL">All Teams</button>`+teams.map(t=>`<button class="teamOption ${state.team===t?'on':''}" data-team="${t}"><img src="${teamLogo(t)}">${t}</button>`).join('');const logo=teamLogo(state.team);$('#teamFilterIcon').innerHTML=logo?`<img src="${logo}" style="width:18px;height:18px;object-fit:contain">`:'';$('#teamFilterText').textContent=state.team==='ALL'?'All Teams':state.team}
+function renderApiLog(){const el=$('#rawApiLog');if(!el)return;el.textContent=apiLog.length?apiLog.map((x,i)=>`#${i+1} ${x.time}\n${x.status}${x.ok===false?' ERROR':''}  ${x.url}\nFILTER: ${JSON.stringify(x.filter)}\nPREVIEW: ${x.preview}`).join('\n\n────────────────────────\n\n'):'No API calls yet.'}
+function playerCell(p,withRank=false){return `<div class="playerline">${withRank?`<span class="draftRank">#${p.posRank}</span>`:''}<button class="draftBtn ${draftedIds.has(p.id)?'on':''}" onclick="event.stopPropagation();toggleDraft('${p.id}')">${draftedIds.has(p.id)?'Drafted':'Draft'}</button><input class="comparecheck" type="checkbox" ${compareIds.has(p.id)?'checked':''} onclick="event.stopPropagation();toggleCompare('${p.id}')"><div class="player clickable" onclick="career('${p.id}')">${img(p.head,'head')}<div><div class="name">${p.name}</div><div class="sub">${img(p.logo,'logo')}<span class="pill">${p.pos}</span>${p.team}${p.active===false?'<span class="availabilityTag inactive">INACTIVE</span>':''}</div></div></div></div>`}
+function histMetric(p,y,metric){const r=seasonRow(p.id,y);if(!r)return '—';if(metric==='yards')return fmt(primaryYards(r));if(metric==='totalTD')return fmt(r.totalTD);if(metric==='turnovers')return fmt(r.turnovers);return fmt(r.fantasy)}
+function renderBestStrip(){if(currentView!=='draft'){ $('#bestStrip').innerHTML='';return }const base=players.filter(p=>isVisiblePlayer(p,true)&&!draftedIds.has(p.id));$('#bestStrip').innerHTML=`<div class="bestStrip">${['QB','RB','WR','TE'].map(pos=>{const p=base.filter(x=>x.pos===pos).sort((a,b)=>b.fantasy-a.fantasy)[0];return `<div class="bestPos"><strong>BEST ${pos}</strong>${p?`<div class="bestPlayer clickable" onclick="career('${p.id}')">${img(p.head,'')}<div><b>${p.name}</b><small>${p.team} · ${fmt(p.fantasy)} proj FP · #${p.posRank} ${pos}</small></div></div>`:'<small>—</small>'}</div>`}).join('')}</div>`}
+function tableWrap(headers,rows,cls=''){return `<table class="${cls}"><thead><tr>${headers.map(h=>`<th ${h.k?`data-k="${h.k}"`:''}>${h.t}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`}
+function renderDraft(d){$('#viewMeta').textContent='2026 projections + 2023–25 intelligence';const headers=[{t:'PLAYER',k:'name'},{t:'AGE',k:'age'},{t:'2026 PROJ FP',k:'fantasy'},{t:'POS RANK',k:'posRank'},{t:'2025 FP'},{t:'3YR AVG FP'},{t:'3YR HEALTH',k:'healthPct'},{t:'DEPTH'},{t:'2025 YDS'},{t:'2025 TD'}];const rows=d.map(p=>{const r25=seasonRow(p.id,2025);return `<tr class="${draftedIds.has(p.id)?'draftedRow':''}"><td>${playerCell(p,true)}</td><td>${p.age||'—'}</td><td><b>${fmt(p.fantasy)}</b></td><td><b>#${p.posRank}</b> ${p.pos}</td><td>${r25?fmt(r25.fantasy):'—'}</td><td><b>${fmt(threeYear(p,'fantasy'))}</b></td><td><b>${p.healthPct==null?'—':p.healthPct+'%'}</b><small style="display:block;color:var(--muted)">${p.healthLabel||'—'}</small></td><td>${p.depthOrder?`#${p.depthOrder} ${p.depthPosition||p.pos}`:'—'}</td><td>${r25?fmt(primaryYards(r25)):'—'}</td><td>${r25?fmt(r25.totalTD):'—'}</td></tr>`}).join('');$('#tablewrap').innerHTML=tableWrap(headers,rows)}
+function renderOverview(d){$('#viewMeta').textContent='Current value with recent trajectory';const headers=[{t:'PLAYER',k:'name'},{t:'AGE',k:'age'},{t:'PROJ FP',k:'fantasy'},{t:'2025 FP'},{t:'3YR AVG FP'},{t:'FP TREND'},{t:'3YR AVG YDS'},{t:'3YR AVG TD'},{t:'HEALTH',k:'healthPct'},{t:'TEAM POS',k:'teamPosRank'}];const rows=d.map(p=>{const r25=seasonRow(p.id,2025),tr=trend3(p),tc=tr==null?'trendFlat':tr>0?'trendUp':tr<0?'trendDown':'trendFlat';return `<tr class="${draftedIds.has(p.id)?'draftedRow':''}"><td>${playerCell(p)}</td><td>${p.age||'—'}</td><td><b>${fmt(p.fantasy)}</b></td><td>${r25?fmt(r25.fantasy):'—'}</td><td><b>${fmt(threeYear(p,'fantasy'))}</b></td><td class="${tc}">${tr==null?'—':`${tr>0?'+':''}${tr}`}</td><td>${fmt(threeYear(p,'yards'))}</td><td>${fmt(threeYear(p,'totalTD'))}</td><td>${p.healthPct==null?'—':p.healthPct+'%'}</td><td><b>#${p.teamPosRank||'—'}</b> ${p.team} ${p.pos}</td></tr>`}).join('');$('#tablewrap').innerHTML=tableWrap(headers,rows)}
+function renderMatrix(d){$('#viewMeta').textContent='Historical matrix • primary-position production';const labels={fantasy:'Fantasy Points',yards:'Primary Yards',totalTD:'Touchdowns',turnovers:'Turnovers'};const years=matrixRange==='3'?[2024,2025,2026]:matrixRange==='all'?[2018,2019,2020,2021,2022,2023,2024,2025,2026]:[2022,2023,2024,2025,2026];$('#matrixTools').style.display='flex';$('#matrixTools').innerHTML=`<span class="webHint">Metric:</span>${[['fantasy','FP'],['yards','Yards'],['totalTD','TD'],['turnovers','TO']].map(([k,t])=>`<button class="btn matrixMetric ${matrixMetric===k?'on':''}" data-metric="${k}">${t}</button>`).join('')}<span class="webHint" style="margin-left:8px">Years:</span>${[['3','3YR'],['5','5YR'],['all','All']].map(([k,t])=>`<button class="btn matrixRange ${matrixRange===k?'on':''}" data-range="${k}">${t}</button>`).join('')}`;const headers=[{t:'PLAYER'},...years.map(y=>({t:y===2026?'2026 PROJ':String(y)})),{t:'3YR AVG'}];const rows=d.map(p=>`<tr class="${draftedIds.has(p.id)?'draftedRow':''}"><td>${playerCell(p)}</td>${years.map(y=>`<td>${histMetric(p,y,matrixMetric)}</td>`).join('')}<td><b>${fmt(threeYear(p,matrixMetric==='yards'?'yards':matrixMetric))}</b></td></tr>`).join('');$('#tablewrap').innerHTML=`<div style="padding:7px 9px;font-size:9px;color:var(--muted)">${labels[matrixMetric]} • 2026 is projection; prior years are actuals.</div>`+tableWrap(headers,rows,'matrixTable')}
+function renderHealth(d){$('#viewMeta').textContent='Games played / 17 by season';const years=[2023,2024,2025],headers=[{t:'PLAYER'},{t:'AGE',k:'age'},...years.map(y=>({t:`${y} GP`})),{t:'3YR GP'},{t:'AVAILABILITY',k:'healthPct'},{t:'ASSESSMENT'}];const rows=d.map(p=>{const map=Object.fromEntries((p.healthYears||[]).map(x=>[x.year,x])),gp=years.reduce((a,y)=>a+(map[y]?.gp||0),0),pct=p.healthPct,cl=pct>=80?'healthGood2':pct!=null&&pct<65?'healthRisk':'';return `<tr class="${draftedIds.has(p.id)?'draftedRow':''}"><td>${playerCell(p)}</td><td>${p.age||'—'}</td>${years.map(y=>`<td>${map[y]?`${map[y].gp}/17`:'—'}</td>`).join('')}<td><b>${gp}/51</b></td><td class="${cl}">${pct==null?'—':pct+'%'}${pct!=null?`<div class="healthPctBar"><i style="width:${pct}%"></i></div>`:''}</td><td>${p.healthLabel||'—'}</td></tr>`}).join('');$('#tablewrap').innerHTML=tableWrap(headers,rows)}
+function render(){const d=filtered();$('#count').textContent=d.length;$('#matrixTools').style.display=currentView==='matrix'?'flex':'none';renderBestStrip();document.querySelectorAll('#viewNav [data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===currentView));if(currentView==='draft')renderDraft(d);else if(currentView==='overview')renderOverview(d);else if(currentView==='matrix')renderMatrix(d);else renderHealth(d);document.querySelectorAll('#tablewrap th[data-k]').forEach(h=>h.onclick=()=>{const k=h.dataset.k;if(state.sort===k)state.dir*=-1;else{state.sort=k;state.dir=-1}render()})}
+async function career(id){
+ const base=players.find(p=>p.id===id);if(!base)return;
+ $('#careerModal').classList.add('open');$('#careerTitle').textContent=base.name+' — Career';
+ $('#careerHero').innerHTML=`<div class="careerhero">${img(base.head,'head')}<div><div class="name" style="font-size:20px">${base.name}</div><div class="sub">${img(base.logo,'logo')}${base.pos} • ${base.team} • Age ${base.age||'—'} • #${base.posRank} ${base.pos} • #${base.teamRank} ${base.team} offense • #${base.teamPosRank||'—'} ${base.team} ${base.pos}</div></div></div>`;
+ $('#careerStatus').textContent='Loading career seasons in parallel…';$('#careerGrid').innerHTML='';
+ const now=new Date().getFullYear(), years=Array.from({length:Math.min(18,now-2010+1)},(_,i)=>now-i);
+ let cc=0;
+ async function one(y){
+  const filter={players:{filterIds:{value:[Number(id)]},limit:1,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:[`00${y}`]}}};
+  const url=`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`;
+  try{cc++;let data=await fetchJson(url,filter),e=(data.players||[]).find(x=>String(x.player?.id||x.id)===String(id))||(data.players||[])[0];if(!e)return null;let p=parse(e,y);if(!p)return null;p.totalYds=p.passYds+p.rushYds+p.recYds;p.turnovers=p.ints+p.lostFum;p.fantasy=fantasy(p);return {...p,year:y}}catch{return null}
+ }
+ const rs=(await Promise.all(years.map(one))).filter(Boolean).filter(p=>p.totalYds||p.totalTD||p.rushAtt||p.rec);
+ let last=rs[0],avg=rs.length?rs.reduce((s,p)=>s+p.fantasy,0)/rs.length:0,peak=rs.length?[...rs].sort((a,b)=>b.fantasy-a.fantasy)[0]:null;
+ let chronological=[...rs].sort((a,b)=>a.year-b.year), trend=chronological.length>1?(chronological.at(-1).fantasy-chronological.at(-2).fantasy):0;
+ let vals=chronological.map(p=>p.fantasy),mx=Math.max(...vals,1),mn=Math.min(...vals,0),pts=vals.map((v,i)=>`${5+i*(140/Math.max(1,vals.length-1))},${38-(v-mn)/(mx-mn||1)*32}`).join(' ');
+ let spark=vals.length>1?`<svg class="spark" viewBox="0 0 150 42"><polyline points="${pts}"/></svg>`:'';
+ $('#careerStatus').textContent=`Loaded ${rs.length} seasons • ${cc} API calls for this profile`;
+ $('#careerGrid').innerHTML=`<div class="careerSummary"><div class="metric"><b>${last?last.fantasy.toFixed(0):'—'}</b><small>LATEST FP</small></div><div class="metric"><b>${avg.toFixed(0)}</b><small>CAREER AVG FP</small></div><div class="metric"><b>${peak?peak.year:'—'}</b><small>PEAK SEASON</small></div><div class="metric"><b>${trend>=0?'+':''}${trend.toFixed(0)}</b><small>YOY FP</small>${spark}</div></div><table><thead><tr><th>YEAR</th><th>FP</th><th>YDS</th><th>TD</th><th>TO</th><th>PASS YDS</th><th>RUSH YDS</th><th>REC YDS</th><th>REC</th></tr></thead><tbody>${rs.map(p=>`<tr><td><b>${p.year}</b></td><td><b>${p.fantasy.toFixed(0)}</b></td><td>${fmt(p.totalYds)}</td><td>${p.totalTD}</td><td>${p.turnovers}</td><td>${fmt(p.passYds)}</td><td>${fmt(p.rushYds)}</td><td>${fmt(p.recYds)}</td><td>${fmt(p.rec)}</td></tr>`).join('')}</tbody></table>`;
+}
+function toggleCompare(id){if(compareIds.has(id))compareIds.delete(id);else if(compareIds.size<4)compareIds.add(id);renderCompareBar();render()}
+function renderCompareBar(){let a=[...compareIds].map(id=>players.find(p=>p.id===id)).filter(Boolean);$('#compareBar').classList.toggle('show',a.length>0);$('#compareChips').innerHTML=a.map(p=>`<span class="comparechip">${p.name}</span>`).join('');$('#compareBtn').disabled=a.length<2}
+function showCompare(){let a=[...compareIds].map(id=>players.find(p=>p.id===id)).filter(Boolean);if(a.length<2)return;$('#compareModal').classList.add('open');let rows=[['FP','fantasy'],['YDS','totalYds'],['TD','totalTD'],['TO','turnovers'],['%ILE','pct'],['POS RANK','posRank'],['TEAM RANK','teamRank'],['TEAM POS','teamPosRank'],['HEALTH','healthPct'],['PASS YDS','passYds'],['RUSH YDS','rushYds'],['REC YDS','recYds'],['REC','rec']];$('#compareBody').innerHTML=`<table><thead><tr><th>METRIC</th>${a.map(p=>`<th>${p.name}<br><small>${p.pos} • ${p.team}</small></th>`).join('')}</tr></thead><tbody>${rows.map(([n,k])=>`<tr><td><b>${n}</b></td>${a.map(p=>`<td>${k==='fantasy'?p[k].toFixed(0):k==='healthPct'?(p[k]==null?'—':p[k]+'%'):fmt(p[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+
+const DEPTH_TEAMS=[['ARI',22,'Arizona Cardinals'],['ATL',1,'Atlanta Falcons'],['BAL',33,'Baltimore Ravens'],['BUF',2,'Buffalo Bills'],['CAR',29,'Carolina Panthers'],['CHI',3,'Chicago Bears'],['CIN',4,'Cincinnati Bengals'],['CLE',5,'Cleveland Browns'],['DAL',6,'Dallas Cowboys'],['DEN',7,'Denver Broncos'],['DET',8,'Detroit Lions'],['GB',9,'Green Bay Packers'],['HOU',34,'Houston Texans'],['IND',11,'Indianapolis Colts'],['JAX',30,'Jacksonville Jaguars'],['KC',12,'Kansas City Chiefs'],['LV',13,'Las Vegas Raiders'],['LAC',24,'Los Angeles Chargers'],['LAR',14,'Los Angeles Rams'],['MIA',15,'Miami Dolphins'],['MIN',16,'Minnesota Vikings'],['NE',17,'New England Patriots'],['NO',18,'New Orleans Saints'],['NYG',19,'New York Giants'],['NYJ',20,'New York Jets'],['PHI',21,'Philadelphia Eagles'],['PIT',23,'Pittsburgh Steelers'],['SEA',26,'Seattle Seahawks'],['SF',25,'San Francisco 49ers'],['TB',27,'Tampa Bay Buccaneers'],['TEN',10,'Tennessee Titans'],['WSH',28,'Washington Commanders']];
+function initLab(){}
+async function openLab(){initLab();$('#exploreModal').classList.add('open');await loadDepth(false)}
+document.querySelectorAll('.labTab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.labTab').forEach(x=>x.classList.toggle('on',x===b));$('#depthLab').style.display=b.dataset.lab==='depth'?'block':'none';$('#projLab').style.display=b.dataset.lab==='proj'?'block':'none'})
+function renderDepthMatrix(map){const positions=['QB','RB','WR','TE'];const rows=DEPTH_TEAMS.map(([abbr,id,name])=>{const vals=Object.entries(map).map(([sid,p])=>({...p,sid})).filter(p=>p.active!==false&&p.team===abbr&&positions.includes(p.position)&&p.depth_chart_order!=null);const cells=positions.map(pos=>{const ps=vals.filter(p=>p.position===pos).sort((a,b)=>num(a.depth_chart_order)-num(b.depth_chart_order)).slice(0,4);return `<td class="depthCell">${ps.length?ps.map(p=>`<div class="depthMini"><span class="depthRank">${p.depth_chart_order||'—'}</span><img src="${p.espn_id?`https://a.espncdn.com/i/headshots/nfl/players/full/${p.espn_id}.png`:`https://sleepercdn.com/content/nfl/players/${p.sid}.jpg`}" onerror="this.src='https://sleepercdn.com/content/nfl/players/${p.sid}.jpg'"><div><b>${p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')}</b><small>${pos} · #${p.depth_chart_order||'—'}</small></div></div>`).join(''):'<small style="color:var(--muted)">No depth data</small>'}</td>`}).join('');return `<tr><td class="depthTeamCell"><div class="depthTeamName"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png"><span>${name}<small style="display:block;color:var(--muted)">${abbr}</small></span></div></td>${cells}</tr>`}).join('');$('#depthResults').innerHTML=`<table class="depthMatrix"><thead><tr><th>TEAM</th>${positions.map(p=>`<th>${p}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`}
+async function loadDepth(force=false){const st=$('#depthStatus');st.textContent=force?'Refreshing all 32 team depth charts…':'Loading cached depth chart…';let hit=!force?await cacheGet('depth:2026'):null,map=hit?.value;if(!map){st.textContent='Downloading league-wide Sleeper player/depth directory…';calls++;const r=await fetch('https://api.sleeper.app/v1/players/nfl');if(!r.ok){st.textContent='Depth chart failed: Sleeper HTTP '+r.status;return false}map=await r.json();await cachePut('depth:2026',map)}depthData=map;renderDepthMatrix(map);if(players.length)applySleeperMeta(map,players);const age=hit?.ts?` • cached ${new Date(hit.ts).toLocaleString()}`:'';st.textContent=`All 32 teams • active status + top QB/RB/WR/TE depth slots${age}`;return true}
+
+
+async function loadProjections(){
+ let y=2026,want=$('#projPos').value,st=$('#projStatus');st.textContent=`Loading ${y} ESPN projected stats…`;$('#projResults').innerHTML='';
+ const filter={players:{filterSlotIds:{value:[0,2,4,6]},limit:1000,sortPercOwned:{sortPriority:1,sortAsc:false},filterStatsForTopScoringPeriodIds:{value:18,additionalValue:["002026","102026"]},filterRanksForScoringPeriodIds:{value:[1]}}};
+ try{let data=await fetchJson(`${API}/seasons/${y}/segments/0/leaguedefaults/3?scoringPeriodId=0&view=kona_player_info`,filter),raw=data.players||[];
+ let out=[];for(let e of raw){let p=e.player||e.playerPoolEntry?.player||e,pos=POS[num(p.defaultPositionId)];if(!pos||(want!=='ALL'&&pos!==want))continue;let arr=[...(p.stats||[]),...(e.playerPoolEntry?.stats||[])],pr=arr.find(x=>num(x.seasonId)===2026&&(num(x.statSourceId)===1||num(x.statTypeId)===1)&&num(x.statSplitTypeId)===0)||arr.find(x=>num(x.seasonId)===2026&&(num(x.statSourceId)===1||num(x.statTypeId)===1));if(!pr)continue;let x=pr.stats||{},r={id:String(p.id||e.id),name:p.fullName||p.displayName||'Unknown',pos,team:TEAM[num(pr.proTeamId||p.proTeamId)]||'—',passYds:num(x['3']),passTD:num(x['4']),ints:num(x['20']),rushYds:num(x['24']),rushTD:num(x['25']),rec:num(x['41']??x['53']),recYds:num(x['42']),recTD:num(x['43']),fum:num(x['72'])};r.yds=whole(r.passYds+r.rushYds+r.recYds);r.td=whole(r.passTD+r.rushTD+r.recTD);r.rec=whole(r.rec);r.fp=whole(fantasy({...r,lostFum:r.fum}));out.push(r)}
+ out.sort((a,b)=>b.fp-a.fp);$('#projResults').innerHTML=out.length?`<div class="projGrid">${out.map(p=>`<article class="projCard"><div class="projHead"><img src="https://a.espncdn.com/i/headshots/nfl/players/full/${p.id}.png" onerror="this.style.visibility='hidden'"><div><b>${p.name}</b><small style="display:block;color:var(--muted)">${p.pos} · ${p.team} · ESPN projection · rounded</small></div></div><div class="projStats"><div><b>${Math.round(p.fp)}</b><small>PROJ FP</small></div><div><b>${fmt(p.yds)}</b><small>PROJ YDS</small></div><div><b>${fmt(p.td)}</b><small>PROJ TD</small></div><div><b>${fmt(p.rec)}</b><small>PROJ REC</small></div></div></article>`).join('')}</div>`:`<div class="empty"><b>No ESPN projection records returned</b>ESPN did not return statSourceId=1 records for this season/filter.</div>`;
+ st.textContent=out.length?`${out.length} players with ESPN projected stat records (statSourceId = 1).`:`No projected records found for ${y}.`;
+ }catch(e){st.textContent='Projection request failed: '+e.message}
+}
+
+function openDataLab(){ $('#dataLabModal').classList.add('open'); }
+function apiTestUrl(){
+ const p=$('#apiPreset').value,arg=($('#apiArg').value||'').trim(),year=($('#apiYear').value||'2026').trim();
+ if(p==='players')return 'https://api.sleeper.app/v1/players/nfl?active=true';
+ if(p==='stats')return `https://api.sleeper.com/stats/nfl/${year}?season_type=regular`;
+ if(p==='proj')return `https://api.sleeper.com/projections/nfl/${year}?season_type=regular`;
+ if(p==='weekproj')return `https://api.sleeper.com/projections/nfl/${year}/${arg||1}?season_type=regular`;
+ if(p==='depth')return `https://api.sleeper.com/players/nfl/${(arg||'PHI').toUpperCase()}/depth_chart`;
+ if(p==='trending')return 'https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=25';
+}
+async function runApiTest(){
+ const url=apiTestUrl();$('#apiTestStatus').textContent='Loading '+url;$('#apiOutput').textContent='Loading…';
+ try{
+  const r=await fetch(url,{headers:{accept:'application/json'}}),t=await r.text();
+  if(!r.ok)throw Error(`${r.status} ${r.statusText}\n${t.slice(0,1000)}`);
+  let parsed;try{parsed=JSON.parse(t)}catch{parsed=t}
+  let preview=JSON.stringify(parsed,null,2);
+  $('#apiOutput').textContent=preview.length>18000?preview.slice(0,18000)+'\n\n… truncated …':preview;
+  const count=Array.isArray(parsed)?parsed.length:(parsed&&typeof parsed==='object'?Object.keys(parsed).length:'');
+  $('#apiTestStatus').textContent=`Success${count!==''?' • '+count+' top-level records':''} • ${url}`;
+ }catch(e){$('#apiTestStatus').textContent='Request failed';$('#apiOutput').textContent=String(e)}
+}
+document.addEventListener('click',e=>{
+ if(e.target.classList.contains('copyApi')){
+  const code=e.target.closest('.apiLine')?.querySelector('code')?.textContent||'';
+  navigator.clipboard?.writeText(code);e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy',900);
+ }
+});
+$('#dataLabBtn').onclick=openDataLab;
+$('#closeDataLab').onclick=()=>$('#dataLabModal').classList.remove('open');
+$('#dataLabModal').onclick=e=>{if(e.target.id==='dataLabModal')$('#dataLabModal').classList.remove('open')};
+$('#runApiTest').onclick=runApiTest;
+
+$('#exploreBtn').onclick=openLab;$('#closeExplore').onclick=()=>$('#exploreModal').classList.remove('open');$('#runDepth').onclick=loadDepth;$('#runProj').onclick=loadProjections;
+
+$('#run').onclick=run;
+$('#settingsBtn').onclick=()=>$('#settingsModal').classList.add('open');$('#closeSettings').onclick=()=>$('#settingsModal').classList.remove('open');document.querySelectorAll('.score').forEach(x=>x.oninput=()=>{players.forEach(p=>p.fantasy=whole(fantasy(p)));finalizePlayers(players);render()});
+$('#compareBtn').onclick=showCompare;$('#closeCompare').onclick=()=>$('#compareModal').classList.remove('open');$('#search').oninput=render;$('#minPct').onchange=render;
+$('#hideInactive').checked=localStorage.getItem('fantasyLensHideInactive')!=='false';$('#hideDrafted').checked=localStorage.getItem('fantasyLensHideDrafted')==='true';$('#hideInactive').onchange=()=>{localStorage.setItem('fantasyLensHideInactive',$('#hideInactive').checked);render()};$('#hideDrafted').onchange=()=>{localStorage.setItem('fantasyLensHideDrafted',$('#hideDrafted').checked);render()};
+$('#viewNav').onclick=e=>{const b=e.target.closest('[data-view]');if(!b)return;currentView=b.dataset.view;localStorage.setItem('fantasyLensView',currentView);state.sort=currentView==='health'?'healthPct':'fantasy';state.dir=-1;render()};
+$('#matrixTools').onclick=e=>{const m=e.target.closest('[data-metric]'),r=e.target.closest('[data-range]');if(m){matrixMetric=m.dataset.metric;localStorage.setItem('fantasyLensMatrixMetric',matrixMetric);render()}if(r){matrixRange=r.dataset.range;localStorage.setItem('fantasyLensMatrixRange',matrixRange);render()}};
+$('#teamFilterBtn').onclick=()=>$('#teamMenu').classList.toggle('open');$('#teamMenu').onclick=e=>{const b=e.target.closest('[data-team]');if(!b)return;state.team=b.dataset.team;$('#teamMenu').classList.remove('open');renderTeamMenu();render()};document.addEventListener('click',e=>{if(!e.target.closest('#teamSelect'))$('#teamMenu')?.classList.remove('open')});
+$('#rawApiBtn').onclick=()=>{renderApiLog();$('#rawApiModal').classList.add('open')};$('#closeRawApi').onclick=()=>$('#rawApiModal').classList.remove('open');$('#rawApiModal').onclick=e=>{if(e.target.id==='rawApiModal')$('#rawApiModal').classList.remove('open')};
+$('#positions').onclick=e=>{if(!e.target.dataset.p)return;state.pos=e.target.dataset.p;document.querySelectorAll('#positions button').forEach(b=>b.classList.toggle('on',b.dataset.p===state.pos));render()};
+$('#closeCareer').onclick=()=>$('#careerModal').classList.remove('open');$('#careerModal').onclick=e=>{if(e.target.id==='careerModal')$('#careerModal').classList.remove('open')};
+renderTeamMenu();
+(async()=>{for(const y of [2018,2019,2020,2021,2022,2023,2024,2025,2026]){const hit=await cacheGet('season:'+y);if(hit?.value)seasonData[y]=hit.value}const dh=await cacheGet('depth:2026');if(dh?.value)depthData=dh.value;players=seasonData[2026]||[];if(players.length){players.forEach(p=>p.fantasy=whole(fantasy(p)));finalizePlayers(players);if(depthData)applySleeperMeta(depthData,players);renderTeamMenu();$('#empty').style.display='none';render()}const meta=await cacheGet('lastFullLoad');$('#cacheState').textContent=meta?.value?'Cache: '+new Date(meta.value.at).toLocaleString():'Cache: empty';$('#stamp').textContent=players.length?'2026 projections • historical cache ready':'Load Data before draft';})();
+</script></body></html>
