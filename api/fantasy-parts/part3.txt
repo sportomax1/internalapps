@@ -1,4 +1,22 @@
-ta Lab + Source Notes</h2><small style="color:var(--muted)">Where useful fantasy data comes from, how to test it, and what to investigate next.</small></div><button class="btn close" id="closeDataLab">×</button></div>
+ata-k="fantasy">FANTASY</th><th data-k="pct">%ILE</th><th data-k="posRank">POS RANK</th><th data-k="teamRank">TEAM RANK</th><th class="detailCol" data-k="teamPosRank">TEAM POS</th><th class="detailCol" data-k="healthPct">3YR HEALTH</th><th class="detailCol" data-k="passYds">PASS YDS</th><th class="detailCol" data-k="passTD">PASS TD</th><th class="detailCol" data-k="ints">INT</th><th class="detailCol" data-k="rushAtt">CAR</th><th class="detailCol" data-k="rushYds">RUSH YDS</th><th class="detailCol" data-k="rushTD">RUSH TD</th><th class="detailCol" data-k="rec">REC</th><th class="detailCol" data-k="recYds">REC YDS</th><th class="detailCol" data-k="recTD">REC TD</th><th class="detailCol" data-k="lostFum">FUM LOST</th></tr></thead><tbody id="tbody"></tbody></table></div>
+<div class="cards" id="cards"></div>
+<div class="comparebar" id="compareBar"><div class="comparechips" id="compareChips"></div><button class="btn" id="compareBtn">Compare</button></div>
+<div class="modal" id="settingsModal"><div class="modalbox"><div class="modalhead"><h2>Scoring Model</h2><button class="btn close" id="closeSettings">×</button></div><div class="careerbody"><p style="color:var(--muted);font-size:11px">Half-PPR by default. Rankings recalculate locally.</p><div class="settingsgrid"><label>Reception<input class="field score" id="sRec" type="number" step=".1" value=".5"></label><label>Passing TD<input class="field score" id="sPassTD" type="number" step=".5" value="4"></label><label>Passing yards / point<input class="field score" id="sPassYds" type="number" value="25"></label><label>Interception<input class="field score" id="sInt" type="number" step=".5" value="-2"></label><label>Rush/Rec TD<input class="field score" id="sTD" type="number" step=".5" value="6"></label><label>Rush/Rec yards / point<input class="field score" id="sYds" type="number" value="10"></label><label>Fumble lost<input class="field score" id="sFum" type="number" step=".5" value="-2"></label></div></div></div></div>
+<div class="modal" id="compareModal"><div class="modalbox"><div class="modalhead"><h2>Player Comparison</h2><button class="btn close" id="closeCompare">×</button></div><div class="careerbody" id="compareBody"></div></div></div>
+<div class="modal" id="exploreModal"><div class="modalbox"><div class="modalhead"><h2>Depth Charts</h2><button class="btn close" id="closeExplore">×</button></div><div class="careerbody">
+<div class="labTabs"><button class="btn labTab on" data-lab="depth">Depth Charts</button></div>
+<div id="depthLab" class="labPane">
+ <div class="labControls"><button class="btn run" id="runDepth">Refresh All Depth Charts</button><span class="loadMeta">All 32 teams · QB / RB / WR / TE</span></div>
+ <div class="careerstatus" id="depthStatus">Loads the league-wide Sleeper depth directory and caches it locally.</div>
+ <div id="depthResults" class="depthScroll"></div>
+</div>
+<div id="projLab" class="labPane" style="display:none!important">
+ <div class="labControls"><select class="field" id="projPos"><option>ALL</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option></select><button class="btn run" id="runProj">Load 2026 ESPN Projections</button></div>
+ <div class="careerstatus" id="projStatus">Reads projected records from ESPN Fantasy where statSourceId = 1. This lab is locked to the upcoming 2026 season.</div>
+ <div id="projResults"></div>
+</div>
+</div></div></div>
+<div class="modal" id="dataLabModal"><div class="modalbox"><div class="modalhead"><div><h2>API Sources + Test Bench</h2><small style="color:var(--muted)">Where useful fantasy data comes from, how to test it, and what to investigate next.</small></div><button class="btn close" id="closeDataLab">×</button></div>
 <div class="careerbody">
  <div class="dataGrid">
   <section class="dataCard"><h3>Sleeper Player Directory</h3><span class="badge">OFFICIAL</span><span class="badge">NO AUTH</span>
@@ -45,37 +63,4 @@ ta Lab + Source Notes</h2><small style="color:var(--muted)">Where useful fantasy
    <div><b>ADP + ADP movement</b> — compare market draft cost against ESPN/Sleeper projected value.</div>
    <div><b>Vegas player props</b> — passing/receiving/rushing yard and TD expectations can become an independent projection signal.</div>
    <div><b>Usage</b> — snaps, routes, targets, target share, carries, red-zone work and goal-line opportunities.</div>
-   <div><b>Availability</b> — injury designation, practice participation, depth movement and recent transactions.</div>
-   <div><b>Context</b> — opponent strength, weather, implied team total, offensive line and pace.</div>
-   <div><b>Projection consensus</b> — ESPN vs Sleeper vs any legitimately accessible third source; show range and disagreement.</div>
-  </div>
- </section>
- <section class="dataCard testBench"><h3>Quick API Test Bench</h3>
-  <p>Runs common Sleeper GET requests directly from this page. Replace placeholders as needed. This is intentionally a diagnostic tool, not part of the historical ESPN loader.</p>
-  <div class="testControls">
-   <select class="field" id="apiPreset">
-    <option value="players">Sleeper Players</option><option value="stats">2025 Season Stats</option><option value="proj">2026 Season Projections</option><option value="weekproj">2026 Week Projection</option><option value="depth">Team Depth Chart</option><option value="trending">Trending Adds</option>
-   </select>
-   <input class="field" id="apiArg" placeholder="Team / week" value="PHI">
-   <input class="field" id="apiYear" value="2026" inputmode="numeric">
-   <button class="btn run" id="runApiTest">RUN TEST</button>
-  </div>
-  <div class="careerstatus" id="apiTestStatus">Choose a preset. Results are truncated for readability.</div>
-  <pre id="apiOutput">No request run yet.</pre>
- </section>
-</div></div></div>
-<div class="modal" id="rawApiModal"><div class="modalbox"><div class="modalhead"><h2>Raw API Calls</h2><button class="btn close" id="closeRawApi">×</button></div><div class="careerbody"><div class="careerstatus">Recent Fantasy Lens requests from this session. Includes URL, filter, status and a response preview.</div><pre class="rawApiLog" id="rawApiLog">No API calls yet.</pre></div></div></div>
-<div class="modal" id="careerModal"><div class="modalbox"><div class="modalhead"><h2 id="careerTitle">Career</h2><button class="btn close" id="closeCareer">×</button></div><div class="careerbody"><div id="careerHero"></div><div class="careerstatus" id="careerStatus"></div><div class="careergrid" id="careerGrid"></div></div></div></div>
-<div class="note">ESPN Fantasy API • Actual season totals • Half-PPR default</div>
-</div><script>
-const API='https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl';
-const POS={1:'QB',2:'RB',3:'WR',4:'TE'}, TEAM={0:'FA',1:'ATL',2:'BUF',3:'CHI',4:'CIN',5:'CLE',6:'DAL',7:'DEN',8:'DET',9:'GB',10:'TEN',11:'IND',12:'KC',13:'LV',14:'LAR',15:'MIA',16:'MIN',17:'NE',18:'NO',19:'NYG',20:'NYJ',21:'PHI',22:'ARI',23:'PIT',24:'LAC',25:'SF',26:'SEA',27:'TB',28:'WSH',29:'CAR',30:'JAX',33:'BAL',34:'HOU'};
-let players=[],calls=0,compareIds=new Set(),healthMap=new Map(),apiLog=[],draftedIds=new Set(JSON.parse(localStorage.getItem('fantasyLensDrafted')||'[]')),state={pos:'ALL',team:'ALL',sort:'totalTD',dir:-1};
-function scoring(){return{rec:num($('#sRec')?.value??.5),passTD:num($('#sPassTD')?.value??4),passYds:Math.max(1,num($('#sPassYds')?.value??25)),int:num($('#sInt')?.value??-2),td:num($('#sTD')?.value??6),yds:Math.max(1,num($('#sYds')?.value??10)),fum:num($('#sFum')?.value??-2)}}
-function fantasy(p){let s=scoring();return p.passYds/s.passYds+p.passTD*s.passTD+p.ints*s.int+(p.rushYds+p.recYds)/s.yds+(p.rushTD+p.recTD)*s.td+p.rec*s.rec+p.lostFum*s.fum}
-function percentileStyle(p){let hue=Math.round(Math.max(0,Math.min(100,p))*1.15);return `background:hsl(${hue} 78% 46%);color:${p>55?'#071006':'#fff'}`}
-function recalc(){players.forEach(p=>p.fantasy=fantasy(p));for(const pos of ['QB','RB','WR','TE']){let g=players.filter(p=>p.pos===pos).sort((a,b)=>a.fantasy-b.fantasy);g.forEach((p,i)=>p.pct=Math.max(1,Math.round((i+1)/g.length*100)));[...g].sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.posRank=i+1)}render()}const $=s=>document.querySelector(s),num=x=>Number(x||0),fmt=x=>num(x).toLocaleString();
-for(let y=new Date().getFullYear();y>=2018;y--)$('#year').insertAdjacentHTML('beforeend',`<option ${y===new Date().getFullYear()?'selected':''}>${y}</option>`);
-['ALL','QB','RB','WR','TE'].forEach(p=>$('#positions').insertAdjacentHTML('beforeend',`<button class="btn ${p==='ALL'?'on':''}" data-p="${p}">${p}</button>`));
-function prog(t,n){$('#progress').style.display='block';$('#phase').textContent=t;$('#pct').textContent=n+'%';$('#bar').style.width=n+'%'}
-async function fetchJson(url,filter){calls++;let started=new Date().toISOString(),r,text;try{r=await fetch(url,{headers:{'x-fantasy-filter':JSON.stringify(filter),'accept':'application/json'}});text=await r.text();ap
+   <div><b>Availability</b> — injury designation, practice participation, depth m
