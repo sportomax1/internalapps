@@ -1,0 +1,81 @@
+ta Lab + Source Notes</h2><small style="color:var(--muted)">Where useful fantasy data comes from, how to test it, and what to investigate next.</small></div><button class="btn close" id="closeDataLab">×</button></div>
+<div class="careerbody">
+ <div class="dataGrid">
+  <section class="dataCard"><h3>Sleeper Player Directory</h3><span class="badge">OFFICIAL</span><span class="badge">NO AUTH</span>
+   <p>Master identity map. Use it to translate names into Sleeper IDs and join ESPN/Yahoo IDs, team, position, age, injury/practice and depth-chart metadata. Sleeper recommends refreshing the full map no more than about once per day.</p>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/players/nfl</code><button class="btn copyApi">Copy</button></div>
+   <div class="labNote">Best use: cache once, then filter locally to QB/RB/WR/TE instead of repeatedly downloading the large player map.</div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Actual Stats</h3><span class="badge experimental">THIRD-PARTY DOCUMENTED</span>
+   <p>Season or weekly actual stats. Useful fields include passing, rushing, receiving, targets, turnovers and fantasy scoring fields. Week is optional.</p>
+   <div class="apiLine"><code>https://api.sleeper.com/stats/nfl/2025?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.com/stats/nfl/2025/1?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Projections</h3><span class="badge experimental">THIRD-PARTY DOCUMENTED</span><span class="badge">SEASON + WEEK</span>
+   <p>Projected raw football stats and fantasy points. No week = season projection; /1 = Week 1, /2 = Week 2, etc. Can also request a single player by Sleeper ID.</p>
+   <div class="apiLine"><code>https://api.sleeper.com/projections/nfl/2026?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.com/projections/nfl/2026/1?season_type=regular</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.com/projections/nfl/player/PLAYER_ID?season=2026&amp;season_type=regular&amp;grouping=season</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Depth Chart</h3><span class="badge experimental">THIRD-PARTY DOCUMENTED</span>
+   <p>Team depth chart by abbreviation. The player directory also exposes depth_chart_position and depth_chart_order, so either source can be useful.</p>
+   <div class="apiLine"><code>https://api.sleeper.com/players/nfl/PHI/depth_chart</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper Trending</h3><span class="badge">OFFICIAL</span><span class="badge">NO AUTH</span>
+   <p>Live add/drop momentum. Great for a waiver-wire or draft-buzz signal. Change add → drop and tune lookback_hours/limit.</p>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&amp;limit=25</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>Sleeper League / Draft</h3><span class="badge">OFFICIAL</span>
+   <p>If a league ID is supplied: scoring settings, roster positions, rosters, users, weekly matchups and league drafts. Draft IDs then expose every actual pick.</p>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/league/LEAGUE_ID</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/league/LEAGUE_ID/rosters</code><button class="btn copyApi">Copy</button></div>
+   <div class="apiLine"><code>https://api.sleeper.app/v1/draft/DRAFT_ID/picks</code><button class="btn copyApi">Copy</button></div>
+  </section>
+  <section class="dataCard"><h3>ESPN</h3><span class="badge">CURRENT APP SOURCE</span>
+   <p>Keep ESPN historical actuals and 2026 projections as a second data source. Cross-provider comparison is valuable when ESPN and Sleeper disagree on usage or projected production.</p>
+   <div class="labNote">Potential derived signal: ESPN projection vs Sleeper projection delta for REC, YDS, TD and custom fantasy points.</div>
+  </section>
+  <section class="dataCard"><h3>Yahoo + Draft Sharks</h3><span class="badge research">RESEARCH</span>
+   <p>Yahoo: ADP/draft-analysis is useful, but a clean public raw projection endpoint remains unresolved. Draft Sharks: floor/ceiling, SOS, injury risk and proprietary projection data are attractive, but do not treat them as an established free API.</p>
+   <div class="labNote"><b>How to investigate:</b> desktop Chrome/Safari → DevTools → Network → Fetch/XHR → reload rankings/player page → inspect JSON responses for api, rank, proj, player or graphql. On iPhone, use Safari Web Inspector from a connected Mac. Do not bypass authentication or subscription controls.</div>
+  </section>
+ </div>
+ <section class="dataCard" style="margin-top:10px"><h3>High-value data still worth adding</h3>
+  <div class="todo">
+   <div><b>ADP + ADP movement</b> — compare market draft cost against ESPN/Sleeper projected value.</div>
+   <div><b>Vegas player props</b> — passing/receiving/rushing yard and TD expectations can become an independent projection signal.</div>
+   <div><b>Usage</b> — snaps, routes, targets, target share, carries, red-zone work and goal-line opportunities.</div>
+   <div><b>Availability</b> — injury designation, practice participation, depth movement and recent transactions.</div>
+   <div><b>Context</b> — opponent strength, weather, implied team total, offensive line and pace.</div>
+   <div><b>Projection consensus</b> — ESPN vs Sleeper vs any legitimately accessible third source; show range and disagreement.</div>
+  </div>
+ </section>
+ <section class="dataCard testBench"><h3>Quick API Test Bench</h3>
+  <p>Runs common Sleeper GET requests directly from this page. Replace placeholders as needed. This is intentionally a diagnostic tool, not part of the historical ESPN loader.</p>
+  <div class="testControls">
+   <select class="field" id="apiPreset">
+    <option value="players">Sleeper Players</option><option value="stats">2025 Season Stats</option><option value="proj">2026 Season Projections</option><option value="weekproj">2026 Week Projection</option><option value="depth">Team Depth Chart</option><option value="trending">Trending Adds</option>
+   </select>
+   <input class="field" id="apiArg" placeholder="Team / week" value="PHI">
+   <input class="field" id="apiYear" value="2026" inputmode="numeric">
+   <button class="btn run" id="runApiTest">RUN TEST</button>
+  </div>
+  <div class="careerstatus" id="apiTestStatus">Choose a preset. Results are truncated for readability.</div>
+  <pre id="apiOutput">No request run yet.</pre>
+ </section>
+</div></div></div>
+<div class="modal" id="rawApiModal"><div class="modalbox"><div class="modalhead"><h2>Raw API Calls</h2><button class="btn close" id="closeRawApi">×</button></div><div class="careerbody"><div class="careerstatus">Recent Fantasy Lens requests from this session. Includes URL, filter, status and a response preview.</div><pre class="rawApiLog" id="rawApiLog">No API calls yet.</pre></div></div></div>
+<div class="modal" id="careerModal"><div class="modalbox"><div class="modalhead"><h2 id="careerTitle">Career</h2><button class="btn close" id="closeCareer">×</button></div><div class="careerbody"><div id="careerHero"></div><div class="careerstatus" id="careerStatus"></div><div class="careergrid" id="careerGrid"></div></div></div></div>
+<div class="note">ESPN Fantasy API • Actual season totals • Half-PPR default</div>
+</div><script>
+const API='https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl';
+const POS={1:'QB',2:'RB',3:'WR',4:'TE'}, TEAM={0:'FA',1:'ATL',2:'BUF',3:'CHI',4:'CIN',5:'CLE',6:'DAL',7:'DEN',8:'DET',9:'GB',10:'TEN',11:'IND',12:'KC',13:'LV',14:'LAR',15:'MIA',16:'MIN',17:'NE',18:'NO',19:'NYG',20:'NYJ',21:'PHI',22:'ARI',23:'PIT',24:'LAC',25:'SF',26:'SEA',27:'TB',28:'WSH',29:'CAR',30:'JAX',33:'BAL',34:'HOU'};
+let players=[],calls=0,compareIds=new Set(),healthMap=new Map(),apiLog=[],draftedIds=new Set(JSON.parse(localStorage.getItem('fantasyLensDrafted')||'[]')),state={pos:'ALL',team:'ALL',sort:'totalTD',dir:-1};
+function scoring(){return{rec:num($('#sRec')?.value??.5),passTD:num($('#sPassTD')?.value??4),passYds:Math.max(1,num($('#sPassYds')?.value??25)),int:num($('#sInt')?.value??-2),td:num($('#sTD')?.value??6),yds:Math.max(1,num($('#sYds')?.value??10)),fum:num($('#sFum')?.value??-2)}}
+function fantasy(p){let s=scoring();return p.passYds/s.passYds+p.passTD*s.passTD+p.ints*s.int+(p.rushYds+p.recYds)/s.yds+(p.rushTD+p.recTD)*s.td+p.rec*s.rec+p.lostFum*s.fum}
+function percentileStyle(p){let hue=Math.round(Math.max(0,Math.min(100,p))*1.15);return `background:hsl(${hue} 78% 46%);color:${p>55?'#071006':'#fff'}`}
+function recalc(){players.forEach(p=>p.fantasy=fantasy(p));for(const pos of ['QB','RB','WR','TE']){let g=players.filter(p=>p.pos===pos).sort((a,b)=>a.fantasy-b.fantasy);g.forEach((p,i)=>p.pct=Math.max(1,Math.round((i+1)/g.length*100)));[...g].sort((a,b)=>b.fantasy-a.fantasy).forEach((p,i)=>p.posRank=i+1)}render()}const $=s=>document.querySelector(s),num=x=>Number(x||0),fmt=x=>num(x).toLocaleString();
+for(let y=new Date().getFullYear();y>=2018;y--)$('#year').insertAdjacentHTML('beforeend',`<option ${y===new Date().getFullYear()?'selected':''}>${y}</option>`);
+['ALL','QB','RB','WR','TE'].forEach(p=>$('#positions').insertAdjacentHTML('beforeend',`<button class="btn ${p==='ALL'?'on':''}" data-p="${p}">${p}</button>`));
+function prog(t,n){$('#progress').style.display='block';$('#phase').textContent=t;$('#pct').textContent=n+'%';$('#bar').style.width=n+'%'}
+async function fetchJson(url,filter){calls++;let started=new Date().toISOString(),r,text;try{r=await fetch(url,{headers:{'x-fantasy-filter':JSON.stringify(filter),'accept':'application/json'}});text=await r.text();ap
