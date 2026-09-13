@@ -18,7 +18,7 @@
   <div class="layout">
     <aside class="panel sidebar">
       <div class="panelHead"><h2>API Library</h2><span id="apiCount" class="small"></span></div>
-      <div class="focus"><span>✈️ Flights</span><span>🌦️ Weather</span><span>🏀 Sports</span><span>🛠️ Custom</span></div>
+      <div class="focus"><span>⚡ Quick Tests</span><span>✈️ Flights</span><span>🌦️ Weather</span><span>🏀 Sports</span><span>🛠️ Custom</span></div>
       <input id="presetSearch" class="search" placeholder="Search saved API examples…">
       <div id="presetList" class="presetList"></div>
     </aside>
@@ -78,6 +78,16 @@
 <div id="toast" class="toast">Copied</div>
 <script>
 const presets=[
+{group:'⚡ Quick Tests',id:'quick-espn-nfl',icon:'🏈',title:'ESPN NFL Scoreboard',sub:'No key · nested events JSON',method:'GET',url:'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',params:[],about:'Fast ESPN demo. Good for testing nested events, teams, scores, status, logos and smart-table detection.'},
+{group:'⚡ Quick Tests',id:'quick-espn-nba',icon:'🏀',title:'ESPN NBA Scoreboard',sub:'No key · nested events JSON',method:'GET',url:'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',params:[],about:'Fast ESPN NBA demo. Useful for nested JSON and event-table testing.'},
+{group:'⚡ Quick Tests',id:'quick-espn-mlb',icon:'⚾',title:'ESPN MLB Scoreboard',sub:'No key · nested events JSON',method:'GET',url:'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard',params:[],about:'Fast ESPN MLB demo for schedule, score and event JSON.'},
+{group:'⚡ Quick Tests',id:'quick-espn-nhl',icon:'🏒',title:'ESPN NHL Scoreboard',sub:'No key · nested events JSON',method:'GET',url:'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',params:[],about:'Fast ESPN NHL demo for testing nested sports JSON.'},
+{group:'⚡ Quick Tests',id:'quick-espn-cfb',icon:'🏈',title:'ESPN College Football',sub:'No key · nested events JSON',method:'GET',url:'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard',params:[],about:'College football scoreboard demo from ESPN.'},
+{group:'⚡ Quick Tests',id:'quick-weather-current',icon:'🌤️',title:'Open-Meteo Denver Now',sub:'No key · simple object JSON',method:'GET',url:'https://api.open-meteo.com/v1/forecast',params:[['latitude','39.7392'],['longitude','-104.9903'],['current','temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m'],['temperature_unit','fahrenheit'],['wind_speed_unit','mph']],about:'Simple current-weather object. Good demo for key/value rendering.'},
+{group:'⚡ Quick Tests',id:'quick-weather-hourly',icon:'🕐',title:'Open-Meteo Denver Hourly',sub:'No key · parallel arrays',method:'GET',url:'https://api.open-meteo.com/v1/forecast',params:[['latitude','39.7392'],['longitude','-104.9903'],['hourly','temperature_2m,precipitation_probability,wind_speed_10m'],['temperature_unit','fahrenheit'],['wind_speed_unit','mph'],['forecast_days','2']],about:'Excellent smart-table demo: Open-Meteo returns matching hourly arrays that the app dynamically zips into table rows.'},
+{group:'⚡ Quick Tests',id:'quick-weather-daily',icon:'📅',title:'Open-Meteo Denver 7-Day',sub:'No key · daily parallel arrays',method:'GET',url:'https://api.open-meteo.com/v1/forecast',params:[['latitude','39.7392'],['longitude','-104.9903'],['daily','temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset'],['temperature_unit','fahrenheit'],['timezone','America/Denver']],about:'Seven-day Denver forecast. Another strong parallel-array/table test.'},
+{group:'⚡ Quick Tests',id:'quick-weather-snow',icon:'❄️',title:'Open-Meteo Snow',sub:'No key · snow variables',method:'GET',url:'https://api.open-meteo.com/v1/forecast',params:[['latitude','39.7392'],['longitude','-104.9903'],['hourly','temperature_2m,snowfall,snow_depth,precipitation_probability'],['temperature_unit','fahrenheit'],['forecast_days','7']],about:'Snow-focused hourly weather demo.'},
+{group:'⚡ Quick Tests',id:'quick-air-quality',icon:'💨',title:'Open-Meteo Air Quality',sub:'No key · AQI and pollutants',method:'GET',url:'https://air-quality-api.open-meteo.com/v1/air-quality',params:[['latitude','39.7392'],['longitude','-104.9903'],['current','us_aqi,pm2_5,pm10,ozone']],about:'Simple Open-Meteo air-quality demo using US AQI and pollutant values.'},
 {group:'✈️ Flights & Aviation',id:'metar-den',icon:'🛫',title:'KDEN METAR',sub:'Current airport weather',method:'GET',url:'https://aviationweather.gov/api/data/metar',params:[['ids','KDEN'],['format','json']],about:'AviationWeather.gov METAR for Denver International Airport. No key required.'},
 {group:'✈️ Flights & Aviation',id:'taf-den',icon:'🛬',title:'KDEN TAF',sub:'Airport forecast',method:'GET',url:'https://aviationweather.gov/api/data/taf',params:[['ids','KDEN'],['format','json']],about:'Terminal Aerodrome Forecast for Denver International Airport.'},
 {group:'✈️ Flights & Aviation',id:'metar-dfw',icon:'🌬️',title:'KDFW METAR',sub:'Dallas airport weather',method:'GET',url:'https://aviationweather.gov/api/data/metar',params:[['ids','KDFW'],['format','json']],about:'Current METAR conditions for Dallas/Fort Worth.'},
@@ -113,7 +123,7 @@ const presets=[
 {group:'Custom',id:'custom',icon:'🛠️',title:'Custom Request',sub:'Any browser-accessible API',method:'GET',url:'https://jsonplaceholder.typicode.com/todos/1',params:[],about:'Build your own request. Browser CORS rules apply. Never expose secret production keys in a public client-side app.'}
 ];
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-let lastRaw='',lastPretty='',lastParsed=null,lastHeaders={},currentPreset='custom',tableModel={rows:[],columns:[],mode:'none',source:''},sortState={col:null,dir:1};
+let lastRaw='',lastPretty='',lastParsed=null,lastHeaders={},currentPreset='quick-espn-nfl',tableModel={rows:[],columns:[],mode:'none',source:''},sortState={col:null,dir:1};
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function renderPresets(filter=''){const list=$('#presetList');list.innerHTML='';let last='';const f=filter.toLowerCase();const shown=presets.filter(p=>(p.title+' '+p.sub+' '+p.group+' '+p.about).toLowerCase().includes(f));$('#apiCount').textContent=`${shown.length}/${presets.length}`;shown.forEach(p=>{if(p.group!==last){const g=document.createElement('div');g.className='groupLabel';g.textContent=p.group;list.appendChild(g);last=p.group}const el=document.createElement('div');el.className='preset'+(p.id===currentPreset?' active':'');el.innerHTML=`<div class="ico">${p.icon}</div><div><div class="presetTitle">${esc(p.title)}</div><div class="presetSub">${esc(p.sub)}</div></div><span class="badge">${p.method}</span>`;el.onclick=()=>loadPreset(p.id);list.appendChild(el)})}
 function addKV(container,key='',value=''){const row=document.createElement('div');row.className='kvrow';row.innerHTML=`<input class="input key" placeholder="Key" value="${esc(key)}"><input class="input value" placeholder="Value" value="${esc(value)}"><button class="miniBtn" title="Remove">×</button>`;row.querySelector('button').onclick=()=>row.remove();$(container).appendChild(row)}
@@ -141,7 +151,7 @@ $$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('a
 $$('[data-add]').forEach(b=>b.onclick=()=>addKV('#'+b.dataset.add+'Rows'));
 $('#authType').onchange=renderAuth;$('#run').onclick=send;$('#url').onkeydown=e=>{if(e.key==='Enter')send()};$('#presetSearch').oninput=e=>renderPresets(e.target.value);$('#tableSearch').oninput=renderSmart;
 $('#copyPrettyBtn').onclick=async()=>{await navigator.clipboard.writeText(lastPretty||'');toast('Pretty JSON copied')};$('#copyRawBtn').onclick=async()=>{await navigator.clipboard.writeText(lastRaw||'');toast('Raw response copied')};$('#curlBtn').onclick=async()=>{await navigator.clipboard.writeText(curl());toast('cURL copied')};$('#csvBtn').onclick=()=>{const csv=toCsv();if(!csv)return toast('No table to export');download('api-response.csv',csv,'text/csv')};$('#jsonBtn').onclick=()=>{if(!lastRaw)return toast('No response yet');download('api-response.json',lastPretty||lastRaw,'application/json')};$('#historyBtn').onclick=()=>{$('#history').classList.toggle('open');renderHistory()};$('#clearHistory').onclick=()=>{localStorage.removeItem('apiSandboxHistory');renderHistory()};
-renderPresets();loadPreset('custom');renderAuth();renderHistory();
+renderPresets();loadPreset('quick-espn-nfl');renderAuth();renderHistory();
 </script>
 </body>
 </html>
