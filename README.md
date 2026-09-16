@@ -103,6 +103,16 @@ OURA_KEY=your_oura_token_here
 
 The frontend never receives the key.
 
+## Video Snapshot Extractor
+
+`/video-snapshot-extractor/` is a browser-based video frame extraction tool.
+It supports multiple local videos, interval/scene/manual capture modes, dynamic
+interval recommendations, exact-current-frame capture, timeline markers,
+best-frame optimization, near-duplicate filtering, JPG/PNG/WebP output,
+horizontal snapshot browsing, fullscreen keyboard/swipe navigation, editing,
+comparison, timelapse preview, ZIP export, and aspect-ratio-safe contact sheets.
+Video processing stays in the browser; videos are not uploaded to the server.
+
 ## Local Testing
 
 Install and run Vercel locally:
