@@ -14,7 +14,7 @@
 <nav class="mobileTabs"><button class="active" data-tab="controls">Controls</button><button data-tab="videoPane">Video</button><button data-tab="photosPane">Photos</button></nav>
 <div class="layout">
 <aside id="controls" class="panel controls mobilePane active">
-<label class="drop" id="drop"><input id="file" type="file" accept="video/*" multiple hidden><b>＋ Choose video(s)</b><small>or drag & drop MP4, MOV, WebM…</small></label>
+<label class="drop" id="drop" onclick="event.stopImmediatePropagation();event.preventDefault();document.getElementById('file').click()"><input id="file" type="file" accept="video/*" multiple hidden><b>＋ Choose video(s)</b><small>or drag & drop MP4, MOV, WebM…</small></label>
 <div id="queue" class="queue"></div>
 <div class="mode"><button class="active" data-mode="interval">Interval</button><button data-mode="scene">Scene</button><button data-mode="manual">Manual</button></div>
 <section><div class="sectionHead"><b>Snapshot interval</b><strong><span id="intervalLabel">5</span>s</strong></div>
