@@ -1,0 +1,86 @@
+name: Patch Outlook container scrolling and auto refresh
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-outlook-autorefresh.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Outlook Graph Explorer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('public/outlook-graph.html')
+          s = p.read_text()
+
+          css = '''\n/* Container-scoped scrolling: keep the app shell fixed and scroll only the active panes. */\nhtml,body{height:100%;overflow:hidden}body{overscroll-behavior:none}.top{flex:0 0 62px}.layout{min-height:0;overflow:hidden}.side,.list,.reader,.contactPane,.insightsPane{min-height:0;height:100%}.side,.messages,.reader,.contactPane,.insightsPane{overscroll-behavior:contain;scrollbar-gutter:stable}.list{overflow:hidden}.messages{min-height:0;overflow:auto}.reader{overflow:auto}.contactPane,.insightsPane{overflow:auto}.autoStatus{font-size:11px;color:var(--muted);white-space:nowrap}.autoStatus.live{color:var(--green)}\n'''
+          if 'Container-scoped scrolling:' not in s:
+              s = s.replace('</style>', css + '</style>', 1)
+
+          # Refresh the visible mailbox after a successful send instead of waiting for a page reload.
+          s = s.replace("$('composeDlg').close();note('Message sent.')", "$('composeDlg').close();note('Message sent.');await loadSelected(true)")
+
+          auto_js = r'''
+// Automatic mailbox synchronization. This deliberately preserves container scroll positions
+// and avoids full-page reloads or forced navigation while the user is reading.
+let autoMailBusy=false,autoTrailBusy=false,lastAutoMail=0,lastAutoTrail=0;
+function ensureAutoStatus(){
+  if($('autoStatus'))return;
+  const el=document.createElement('span');el.id='autoStatus';el.className='autoStatus live';el.textContent='● Auto sync';
+  const setup=$('setupBtn');setup?.parentNode?.insertBefore(el,setup);
+}
+function setAutoStatus(text,live=true){ensureAutoStatus();const el=$('autoStatus');if(el){el.textContent=text;el.classList.toggle('live',live)}}
+async function autoRefreshMail(force=false){
+  if(!acct||autoMailBusy||document.hidden)return;
+  const now=Date.now();if(!force&&now-lastAutoMail<45000)return;
+  autoMailBusy=true;const msg=$('messages'),read=$('reader'),mTop=msg?.scrollTop||0,rTop=read?.scrollTop||0;
+  try{setAutoStatus('↻ Checking mail…');await loadSelected(true);lastAutoMail=Date.now();if(msg)msg.scrollTop=mTop;if(read)read.scrollTop=rTop;setAutoStatus('● Auto sync')}catch(e){console.warn('Auto mail refresh failed',e);setAutoStatus('Auto sync retrying',false)}finally{autoMailBusy=false}
+}
+async function autoRefreshTrail(force=false){
+  if(!acct||autoTrailBusy||document.hidden)return;
+  const now=Date.now();if(!force&&now-lastAutoTrail<240000)return;
+  autoTrailBusy=true;const cp=$('contactPane'),ip=$('insightsPane'),cTop=cp?.scrollTop||0,iTop=ip?.scrollTop||0;
+  try{
+    const contactOpen=cp?.classList.contains('active'),insightsOpen=ip?.classList.contains('active');
+    if(force||trailMessages.length||contactOpen||insightsOpen){
+      const limit=Math.max(Number($('scanLimit')?.value)||500,Number($('insightScanLimit')?.value)||500);
+      setAutoStatus('↻ Updating trails…');await scanMailbox(limit);lastAutoTrail=Date.now();if(cp)cp.scrollTop=cTop;if(ip)ip.scrollTop=iTop;setAutoStatus('● Auto sync');
+    }
+  }catch(e){console.warn('Auto trail refresh failed',e);setAutoStatus('Auto sync retrying',false)}finally{autoTrailBusy=false}
+}
+function startAutoSync(){
+  ensureAutoStatus();lastAutoMail=Date.now();
+  clearInterval(window.__outlookMailAuto);clearInterval(window.__outlookTrailAuto);
+  window.__outlookMailAuto=setInterval(()=>autoRefreshMail(false),60000);
+  window.__outlookTrailAuto=setInterval(()=>autoRefreshTrail(false),300000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){autoRefreshMail(true);autoRefreshTrail(false)}});
+  window.addEventListener('focus',()=>autoRefreshMail(false));
+  $('contactsTab')?.addEventListener('click',()=>autoRefreshTrail(!trailMessages.length));
+  $('insightsTab')?.addEventListener('click',()=>autoRefreshTrail(!trailMessages.length));
+  // Prime analytics shortly after sign-in/restore so Trail and Insights do not require a manual first refresh.
+  setTimeout(()=>{if(acct)autoRefreshTrail(true)},1800);
+}
+'''
+          if 'function startAutoSync()' not in s:
+              marker = "window.addEventListener('DOMContentLoaded',async()=>{bind();await init()})"
+              if marker not in s:
+                  raise SystemExit('DOMContentLoaded marker not found')
+              s = s.replace(marker, auto_js + "\nwindow.addEventListener('DOMContentLoaded',async()=>{bind();await init();startAutoSync()})")
+
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/outlook-graph.html
+          git commit -m 'Fix Outlook pane scrolling and add automatic sync'
+          git push
