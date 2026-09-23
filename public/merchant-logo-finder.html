@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merchant Logo Finder</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#0b1020;
+  --bg2:#0f1730;
+  --panel:#121c2f;
+  --panel2:#18243b;
+  --line:#293a5b;
+  --line2:#37507b;
+  --text:#f2f6ff;
+  --muted:#9fb1cf;
+  --soft:#dbe7ff;
+  --blue:#4b8dff;
+  --blue2:#78adff;
+  --green:#2bcd7d;
+  --warn:#ffcf66;
+  --shadow:0 10px 34px rgba(0,0,0,.28);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:linear-gradient(180deg,#09111f 0%, #0b1020 38%, #0a1322 100%);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+a{color:inherit}
+button,input,select{font:inherit}
+button{border:1px solid var(--line2);background:#213454;color:var(--text);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.16s ease;min-width:0}
+button:hover{transform:translateY(-1px);background:#29416a}
+button:active{transform:translateY(0)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #9bc1ff;outline-offset:2px}
+button.primary{background:linear-gradient(180deg,#3d87ff,#2a69de);border-color:#6ea6ff;color:#fff;box-shadow:0 10px 24px rgba(75,141,255,.25)}
+button.ghost{background:rgba(255,255,255,.03)}
+button.soft{background:#182844;border-color:#314e7b;color:#d9e6ff}
+button.chip{padding:7px 10px;border-radius:999px;background:#17253d;font-size:12px}
+button.chip.active{background:#244f95;border-color:#7cadff}
+input,select{width:100%;border:1px solid var(--line);background:#0d1628;color:var(--text);border-radius:12px;padding:11px 13px;min-width:0}
+input::placeholder{color:#8296ba}
+main{width:min(1600px,100%);margin:auto;padding:18px}
+.header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:14px}
+.title-wrap h1{font-size:28px;line-height:1.1;margin:0 0 6px}
+.subtitle{color:var(--muted);margin:0;max-width:820px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:min(440px,100%)}
+.kpi{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.kpi .label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.kpi strong{font-size:20px}
+.search-panel,.panel{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.search-panel{padding:14px;margin-bottom:14px}
+.form-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(180px,.9fr) auto auto;gap:10px;align-items:end}
+.field label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin:0 0 6px}
+.helper{font-size:11px;color:#85a3d8}
+.quick-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.layout{display:grid;grid-template-columns:minmax(295px,360px) minmax(0,1fr);gap:14px;align-items:start}
+.sidebar{position:sticky;top:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.section-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.section-head h2,.main-head h2{font-size:16px;margin:0}
+.section-head .meta,.main-head .meta,.tiny{font-size:12px;color:var(--muted)}
+.filter-stack{display:grid;gap:10px}
+.categories{display:flex;flex-wrap:wrap;gap:8px;max-height:168px;overflow:auto;padding-right:2px}
+.directory-wrap{border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(0,0,0,.12);overflow:hidden}
+.directory-toolbar{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025)}
+.directory{max-height:520px;overflow:auto;display:grid;grid-template-columns:1fr;gap:0}
+.merchant{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:10px 12px;background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.05);border-radius:0;text-align:left}
+.merchant:last-child{border-bottom:0}
+.merchant:hover{background:rgba(120,173,255,.09)}
+.merchant.active{background:linear-gradient(90deg,rgba(61,135,255,.22),rgba(61,135,255,.07));box-shadow:inset 3px 0 0 #71abff}
+.logo-tile{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,.08);overflow:hidden;flex:0 0 auto}
+.logo-tile img{max-width:74%;max-height:74%;object-fit:contain}
+.logo-tile.fallback{background:#16253d;color:#dce7fb;border-color:#284263;font-size:12px;font-weight:700}
+.merchant .name{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.merchant .sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.merchant .go{font-size:18px;color:#9bb7e5}
+.empty{padding:24px 16px;color:var(--muted);text-align:center}
+.main-panel{padding:14px}
+.main-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
+.selection-card{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:14px;border:1px solid rgba(255,255,255,.06);border-radius:15px;background:linear-gradient(180deg,rgba(73,112,181,.16),rgba(73,112,181,.06));margin-bottom:12px}
+.selection-left{display:flex;gap:12px;align-items:center;min-width:0}
+.selection-left .big-logo{width:52px;height:52px;border-radius:14px}
+.selection-title{min-width:0}
+.selection-title h3{margin:0 0 3px;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:#173155;border:1px solid #2f5486;border-radius:999px;color:#dbe8ff;font-size:12px}
+.status-box{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:11px 13px;border:1px solid rgba(255,255,255,.06);background:#0e1728;border-radius:13px;margin-bottom:10px}
+.status-box .status{color:#dce8ff}
+.status-box .status.small{font-size:12px;color:var(--muted)}
+.match-area{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.match-area button{padding:7px 10px;font-size:12px;border-radius:999px}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.result-card{border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#101b2e,#0e1728);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.result-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.result-top strong{display:block}
+.source{padding:4px 8px;border-radius:999px;background:#1a3154;border:1px solid #355989;font-size:11px;color:#dce8ff;white-space:nowrap}
+.preview{height:138px;border-radius:14px;background:linear-gradient(180deg,#fff,#eff4ff);display:grid;place-items:center;padding:16px;border:1px solid rgba(0,0,0,.08)}
+.preview img{max-width:100%;max-height:100%;object-fit:contain}
+.preview .preview-fallback{display:none;color:#24364d;font-size:30px;font-weight:800;letter-spacing:.03em}
+.result-meta{font-size:12px;color:var(--muted);min-height:32px;overflow-wrap:anywhere}
+.result-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+.result-actions button{flex:1 1 92px;padding:8px 10px;font-size:12px}
+.options{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+.options details{background:#0d1628;border:1px solid rgba(255,255,255,.06);padding:12px;border-radius:14px}
+.options summary{cursor:pointer;color:#d6e5ff;font-weight:600}
+.options .field{margin-top:10px}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+.toast{position:fixed;right:18px;bottom:18px;max-width:min(92vw,430px);background:#0f1b2d;border:1px solid #31517f;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s ease;z-index:30}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast strong{display:block;margin-bottom:2px}
+.footer-note{font-size:11px;color:var(--muted);margin-top:14px}
+.hidden{display:none !important}
+@media (max-width:1200px){
+  .header{flex-direction:column}
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr));min-width:0;width:100%}
+}
+@media (max-width:920px){
+  main{padding:12px}
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .form-grid button{width:100%}
+}
+@media (max-width:680px){
+  .title-wrap h1{font-size:24px}
+  .kpis{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .selection-card{flex-direction:column;align-items:flex-start}
+  .results-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:460px){
+  .results-grid{grid-template-columns:1fr}
+  .categories{max-height:130px}
+}
+</style>
+</head>
+<body>
+<main>
+  <header class="header">
+    <div class="title-wrap">
+      <h1>Merchant Logo Finder</h1>
+      <p class="subtitle">Fast logo lookup for well-known merchants and custom company names. Pick from the directory, filter by category, or search manually. Press <strong>/</strong> anytime to jump to search.</p>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span class="label">Recognized companies</span><strong id="catalogCountTop">0</strong></div>
+      <div class="kpi"><span class="label">Merchant categories</span><strong id="categoryCountTop">0</strong></div>
+      <div class="kpi"><span class="label">Recent picks</span><strong id="recentCountTop">0</strong></div>
+    </div>
+  </header>
+
+  <section class="search-panel">
+    <form id="form" class="form-grid">
+      <div class="field">
+        <label for="company"><span>Company name</span><span class="helper">Manual search or pick from directory</span></label>
+        <input id="company" aria-label="Company name" placeholder="Chipotle, Costco, OpenAI…" autocomplete="off" required>
+      </div>
+      <div class="field">
+        <label for="domain"><span>Website domain</span><span class="helper">Optional but helpful</span></label>
+        <input id="domain" aria-label="Company domain" placeholder="chipotle.com">
+      </div>
+      <button id="searchBtn" class="primary" type="submit">Find logos</button>
+      <button id="clearBtn" class="ghost" type="button">Clear</button>
+    </form>
+
+    <div class="quick-row">
+      <div>
+        <div class="tiny" style="margin-bottom:6px">Quick picks</div>
+        <div id="quickPicks" class="chips"></div>
+      </div>
+      <div>
+        <div class="tiny" style="margin-bottom:6px">Recent</div>
+        <div id="recentPicks" class="chips"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside class="panel sidebar">
+      <div class="section-head">
+        <h2>Merchant directory</h2>
+        <span id="shownCount" class="meta">0 / 0</span>
+      </div>
+
+      <div class="filter-stack">
+        <input id="filter" aria-label="Filter merchant directory" placeholder="Filter merchants, categories, or domains…">
+        <div id="categories" class="categories" aria-label="Merchant categories"></div>
+      </div>
+
+      <div class="directory-wrap">
+        <div class="directory-toolbar">
+          <strong>Companies</strong>
+          <span class="tiny">Tap any row to auto-load results</span>
+        </div>
+        <div id="directory" class="directory"></div>
+      </div>
+    </aside>
+
+    <section class="panel main-panel">
+      <div class="main-head">
+        <div>
+          <h2>Logo results</h2>
+          <div class="meta">Multiple sources are shown when available. Verify branding and usage rights before reuse.</div>
+        </div>
+        <div class="badges">
+          <span class="badge" id="resultCountBadge">0 sources</span>
+          <span class="badge" id="selectionBadge">No merchant selected</span>
+        </div>
+      </div>
+
+      <div id="selectionCard" class="selection-card hidden">
+        <div class="selection-left">
+          <div id="selectionLogo" class="logo-tile big-logo fallback">?</div>
+          <div class="selection-title">
+            <h3 id="selectedTitle">Logo results</h3>
+            <div class="badges">
+              <span id="selectedCategory" class="badge hidden"></span>
+              <span id="selectedDomain" class="badge hidden"></span>
+            </div>
+          </div>
+        </div>
+        <div class="tiny" id="selectionHint">Directory selection</div>
+      </div>
+
+      <div class="status-box">
+        <div>
+          <div id="status" class="status">Choose a merchant or enter a company name.</div>
+          <div id="substatus" class="status small">Wikidata is used for artwork and website lookup. Domain-based logo sources still work even if search is unavailable.</div>
+        </div>
+      </div>
+
+      <div id="matches" class="match-area"></div>
+      <div id="results" class="results-grid">
+        <div class="empty">Select a merchant to preview its logo sources.</div>
+      </div>
+
+      <div class="options">
+        <details>
+          <summary>Optional Logo.dev token</summary>
+          <div class="field">
+            <label for="token"><span>Publishable token</span><span class="helper">Enables larger logo lookups and name-based Logo.dev search</span></label>
+            <input id="token" placeholder="pk_…" autocomplete="off" type="password">
+          </div>
+          <div class="note">Logo.dev is optional. Without it, the app still uses Google favicon + Wikidata artwork when available.</div>
+        </details>
+      </div>
+
+      <p class="footer-note">Tip: directory domains are curated suggestions, not real-time verification. Google favicon may return a site icon rather than a full wordmark.</p>
+    </section>
+  </div>
+</main>
+
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<script>
+'use strict';
+const CATALOG=`Fast Food & QSR|McDonald's|mcdonalds.com
+Fast Food & QSR|Burger King|bk.com
+Fast Food & QSR|Wendy's|wendys.com
+Fast Food & QSR|Taco Bell|tacobell.com
+Fast Food & QSR|Chipotle|chipotle.com
+Fast Food & QSR|Chick-fil-A|chick-fil-a.com
+Fast Food & QSR|Subway|subway.com
+Fast Food & QSR|KFC|kfc.com
+Fast Food & QSR|Popeyes|popeyes.com
+Fast Food & QSR|Arby's|arbys.com
+Fast Food & QSR|Sonic Drive-In|sonicdrivein.com
+Fast Food & QSR|Dairy Queen|dairyqueen.com
+Fast Food & QSR|Five Guys|fiveguys.com
+Fast Food & QSR|In-N-Out Burger|in-n-out.com
+Fast Food & QSR|Shake Shack|shakeshack.com
+Fast Food & QSR|Whataburger|whataburger.com
+Fast Food & QSR|Raising Cane's|raisingcanes.com
+Fast Food & QSR|Culver's|culvers.com
+Fast Food & QSR|Jersey Mike's|jerseymikes.com
+Fast Food & QSR|Jimmy John's|jimmyjohns.com
+Fast Food & QSR|Panera Bread|panerabread.com
+Fast Food & QSR|Panda Express|pandaexpress.com
+Fast Food & QSR|QDOBA|qdoba.com
+Fast Food & QSR|Jack in the Box|jackinthebox.com
+Fast Food & QSR|Little Caesars|littlecaesars.com
+Pizza|Domino's|dominos.com
+Pizza|Pizza Hut|pizzahut.com
+Pizza|Papa Johns|papajohns.com
+Pizza|Papa Murphy's|papamurphys.com
+Pizza|MOD Pizza|modpizza.com
+Pizza|Marco's Pizza|marcos.com
+Pizza|California Pizza Kitchen|cpk.com
+Pizza|Blaze Pizza|blazepizza.com
+Pizza|Jet's Pizza|jetspizza.com
+Coffee, Tea & Drinks|Starbucks|starbucks.com
+Coffee, Tea & Drinks|Dunkin'|dunkindonuts.com
+Coffee, Tea & Drinks|Dutch Bros|dutchbros.com
+Coffee, Tea & Drinks|Tim Hortons|timhortons.com
+Coffee, Tea & Drinks|Peet's Coffee|peets.com
+Coffee, Tea & Drinks|Caribou Coffee|cariboucoffee.com
+Coffee, Tea & Drinks|The Coffee Bean & Tea Leaf|coffeebean.com
+Coffee, Tea & Drinks|Jamba|jamba.com
+Coffee, Tea & Drinks|Smoothie King|smoothieking.com
+Coffee, Tea & Drinks|Tropical Smoothie Cafe|tropicalsmoothiecafe.com
+Restaurants|Olive Garden|olivegarden.com
+Restaurants|Applebee's|applebees.com
+Restaurants|Chili's|chilis.com
+Restaurants|Texas Roadhouse|texasroadhouse.com
+Restaurants|Outback Steakhouse|outback.com
+Restaurants|Red Lobster|redlobster.com
+Restaurants|The Cheesecake Factory|thecheesecakefactory.com
+Restaurants|Cracker Barrel|crackerbarrel.com
+Restaurants|IHOP|ihop.com
+Restaurants|Denny's|dennys.com
+Restaurants|Buffalo Wild Wings|buffalowildwings.com
+Restaurants|Wingstop|wingstop.com
+Restaurants|LongHorn Steakhouse|longhornsteakhouse.com
+Restaurants|P.F. Chang's|pfchangs.com
+Restaurants|Red Robin|redrobin.com
+Restaurants|Bonefish Grill|bonefishgrill.com
+Restaurants|Yard House|yardhouse.com
+Restaurants|First Watch|firstwatch.com
+Groceries|Walmart|walmart.com
+Groceries|Target|target.com
+Groceries|Kroger|kroger.com
+Groceries|Safeway|safeway.com
+Groceries|Albertsons|albertsons.com
+Groceries|Publix|publix.com
+Groceries|Whole Foods Market|wholefoodsmarket.com
+Groceries|Trader Joe's|traderjoes.com
+Groceries|ALDI|aldi.us
+Groceries|Lidl|lidl.com
+Groceries|Sprouts Farmers Market|sprouts.com
+Groceries|Wegmans|wegmans.com
+Groceries|Food Lion|foodlion.com
+Groceries|H-E-B|heb.com
+Groceries|Meijer|meijer.com
+Groceries|Harris Teeter|harristeeter.com
+Groceries|King Soopers|kingsoopers.com
+Groceries|Fry's Food Stores|frysfood.com
+Groceries|Smith's Food and Drug|smithsfoodanddrug.com
+Groceries|Giant Food|giantfood.com
+Groceries|Stop & Shop|stopandshop.com
+Groceries|Hy-Vee|hy-vee.com
+Groceries|Natural Grocers|naturalgrocers.com
+Warehouse Clubs|Costco|costco.com
+Warehouse Clubs|Sam's Club|samsclub.com
+Warehouse Clubs|BJ's Wholesale Club|bjs.com
+Convenience Stores|7-Eleven|7-eleven.com
+Convenience Stores|Circle K|circlek.com
+Convenience Stores|QuikTrip|quiktrip.com
+Convenience Stores|Wawa|wawa.com
+Convenience Stores|Sheetz|sheetz.com
+Convenience Stores|Casey's|caseys.com
+Convenience Stores|Buc-ee's|buc-ees.com
+Convenience Stores|Maverik|maverik.com
+Gas & EV Charging|Shell|shell.com
+Gas & EV Charging|Chevron|chevron.com
+Gas & EV Charging|Exxon|exxon.com
+Gas & EV Charging|Mobil|mobil.com
+Gas & EV Charging|BP|bp.com
+Gas & EV Charging|Phillips 66|phillips66.com
+Gas & EV Charging|Conoco|conoco.com
+Gas & EV Charging|76|76.com
+Gas & EV Charging|Valero|valero.com
+Gas & EV Charging|Sunoco|sunoco.com
+Gas & EV Charging|Murphy USA|murphyusa.com
+Gas & EV Charging|Love's Travel Stops|loves.com
+Gas & EV Charging|Pilot Flying J|pilotflyingj.com
+Gas & EV Charging|Tesla Supercharger|tesla.com
+Gas & EV Charging|Electrify America|electrifyamerica.com
+Gas & EV Charging|EVgo|evgo.com
+Retail & Department Stores|Amazon|amazon.com
+Retail & Department Stores|eBay|ebay.com
+Retail & Department Stores|Macy's|macys.com
+Retail & Department Stores|Nordstrom|nordstrom.com
+Retail & Department Stores|Kohl's|kohls.com
+Retail & Department Stores|JCPenney|jcpenney.com
+Retail & Department Stores|TJ Maxx|tjmaxx.tjx.com
+Retail & Department Stores|Marshalls|marshalls.com
+Retail & Department Stores|Ross Dress for Less|rossstores.com
+Retail & Department Stores|Burlington|burlington.com
+Retail & Department Stores|Dollar General|dollargeneral.com
+Retail & Department Stores|Dollar Tree|dollartree.com
+Retail & Department Stores|Five Below|fivebelow.com
+Retail & Department Stores|Big Lots|biglots.com
+Retail & Department Stores|Etsy|etsy.com
+Retail & Department Stores|Temu|temu.com
+Retail & Department Stores|SHEIN|shein.com
+Home Improvement & Furniture|The Home Depot|homedepot.com
+Home Improvement & Furniture|Lowe's|lowes.com
+Home Improvement & Furniture|Ace Hardware|acehardware.com
+Home Improvement & Furniture|Menards|menards.com
+Home Improvement & Furniture|Harbor Freight|harborfreight.com
+Home Improvement & Furniture|IKEA|ikea.com
+Home Improvement & Furniture|Wayfair|wayfair.com
+Home Improvement & Furniture|Ashley|ashleyfurniture.com
+Home Improvement & Furniture|HomeGoods|homegoods.com
+Home Improvement & Furniture|At Home|athome.com
+Home Improvement & Furniture|Williams Sonoma|williams-sonoma.com
+Home Improvement & Furniture|Pottery Barn|potterybarn.com
+Home Improvement & Furniture|West Elm|westelm.com
+Home Improvement & Furniture|Crate & Barrel|crateandbarrel.com
+Electronics & Technology|Apple|apple.com
+Electronics & Technology|Best Buy|bestbuy.com
+Electronics & Technology|Samsung|samsung.com
+Electronics & Technology|Microsoft|microsoft.com
+Electronics & Technology|Google|google.com
+Electronics & Technology|Dell|dell.com
+Electronics & Technology|HP|hp.com
+Electronics & Technology|Lenovo|lenovo.com
+Electronics & Technology|Sony|sony.com
+Electronics & Technology|Nintendo|nintendo.com
+Electronics & Technology|GameStop|gamestop.com
+Electronics & Technology|Newegg|newegg.com
+Electronics & Technology|B&H Photo|bhphotovideo.com
+Electronics & Technology|Micro Center|microcenter.com
+Clothing & Shoes|Nike|nike.com
+Clothing & Shoes|Adidas|adidas.com
+Clothing & Shoes|Under Armour|underarmour.com
+Clothing & Shoes|Lululemon|lululemon.com
+Clothing & Shoes|Old Navy|oldnavy.gap.com
+Clothing & Shoes|Gap|gap.com
+Clothing & Shoes|Banana Republic|bananarepublic.gap.com
+Clothing & Shoes|H&M|hm.com
+Clothing & Shoes|Zara|zara.com
+Clothing & Shoes|Uniqlo|uniqlo.com
+Clothing & Shoes|American Eagle|ae.com
+Clothing & Shoes|Abercrombie & Fitch|abercrombie.com
+Clothing & Shoes|Levi's|levi.com
+Clothing & Shoes|Skechers|skechers.com
+Clothing & Shoes|Foot Locker|footlocker.com
+Clothing & Shoes|DSW|dsw.com
+Clothing & Shoes|REI|rei.com
+Clothing & Shoes|Dick's Sporting Goods|dickssportinggoods.com
+Clothing & Shoes|Bass Pro Shops|basspro.com
+Clothing & Shoes|Cabela's|cabelas.com
+Beauty & Personal Care|Sephora|sephora.com
+Beauty & Personal Care|Ulta Beauty|ulta.com
+Beauty & Personal Care|Bath & Body Works|bathandbodyworks.com
+Beauty & Personal Care|Sally Beauty|sallybeauty.com
+Beauty & Personal Care|Great Clips|greatclips.com
+Beauty & Personal Care|Supercuts|supercuts.com
+Beauty & Personal Care|Sport Clips|sportclips.com
+Beauty & Personal Care|European Wax Center|waxcenter.com
+Pharmacy & Healthcare|CVS Pharmacy|cvs.com
+Pharmacy & Healthcare|Walgreens|walgreens.com
+Pharmacy & Healthcare|Rite Aid|riteaid.com
+Pharmacy & Healthcare|The Vitamin Shoppe|vitaminshoppe.com
+Pharmacy & Healthcare|GNC|gnc.com
+Pharmacy & Healthcare|Quest Diagnostics|questdiagnostics.com
+Pharmacy & Healthcare|Labcorp|labcorp.com
+Pharmacy & Healthcare|Kaiser Permanente|kp.org
+Pharmacy & Healthcare|UnitedHealthcare|uhc.com
+Pharmacy & Healthcare|Cigna|cigna.com
+Pharmacy & Healthcare|Aetna|aetna.com
+Pharmacy & Healthcare|Blue Cross Blue Shield|bcbs.com
+Pet Stores & Services|Petco|petco.com
+Pet Stores & Services|PetSmart|petsmart.com
+Pet Stores & Services|Chewy|chewy.com
+Pet Stores & Services|Pet Supplies Plus|petsuppliesplus.com
+Pet Stores & Services|Banfield Pet Hospital|banfield.com
+Pet Stores & Services|VCA Animal Hospitals|vcahospitals.com
+Pet Stores & Services|Rover|rover.com
+Pet Stores & Services|Wag!|wagwalking.com
+Travel & Hotels|Marriott|marriott.com
+Travel & Hotels|Hilton|hilton.com
+Travel & Hotels|Hyatt|hyatt.com
+Travel & Hotels|IHG Hotels & Resorts|ihg.com
+Travel & Hotels|Holiday Inn|ihg.com
+Travel & Hotels|Hampton by Hilton|hilton.com
+Travel & Hotels|Best Western|bestwestern.com
+Travel & Hotels|Wyndham|wyndhamhotels.com
+Travel & Hotels|Choice Hotels|choicehotels.com
+Travel & Hotels|Airbnb|airbnb.com
+Travel & Hotels|Vrbo|vrbo.com
+Travel & Hotels|Booking.com|booking.com
+Travel & Hotels|Expedia|expedia.com
+Travel & Hotels|Hotels.com|hotels.com
+Travel & Hotels|Priceline|priceline.com
+Travel & Hotels|Tripadvisor|tripadvisor.com
+Airlines & Transportation|United Airlines|united.com
+Airlines & Transportation|Delta Air Lines|delta.com
+Airlines & Transportation|American Airlines|aa.com
+Airlines & Transportation|Southwest Airlines|southwest.com
+Airlines & Transportation|JetBlue|jetblue.com
+Airlines & Transportation|Alaska Airlines|alaskaair.com
+Airlines & Transportation|Frontier Airlines|flyfrontier.com
+Airlines & Transportation|Spirit Airlines|spirit.com
+Airlines & Transportation|Uber|uber.com
+Airlines & Transportation|Lyft|lyft.com
+Airlines & Transportation|Amtrak|amtrak.com
+Airlines & Transportation|Greyhound|greyhound.com
+Airlines & Transportation|Hertz|hertz.com
+Airlines & Transportation|Avis|avis.com
+Airlines & Transportation|Enterprise Rent-A-Car|enterprise.com
+Airlines & Transportation|National Car Rental|nationalcar.com
+Airlines & Transportation|Budget Rent a Car|budget.com
+Food Delivery & Shopping|DoorDash|doordash.com
+Food Delivery & Shopping|Uber Eats|ubereats.com
+Food Delivery & Shopping|Grubhub|grubhub.com
+Food Delivery & Shopping|Instacart|instacart.com
+Food Delivery & Shopping|Shipt|shipt.com
+Food Delivery & Shopping|Gopuff|gopuff.com
+Food Delivery & Shopping|HelloFresh|hellofresh.com
+Food Delivery & Shopping|Blue Apron|blueapron.com
+Streaming & Entertainment|Netflix|netflix.com
+Streaming & Entertainment|Disney+|disneyplus.com
+Streaming & Entertainment|Hulu|hulu.com
+Streaming & Entertainment|Max|hbomax.com
+Streaming & Entertainment|Prime Video|primevideo.com
+Streaming & Entertainment|Apple TV+|tv.apple.com
+Streaming & Entertainment|Peacock|peacocktv.com
+Streaming & Entertainment|Paramount+|paramountplus.com
+Streaming & Entertainment|YouTube|youtube.com
+Streaming & Entertainment|YouTube TV|tv.youtube.com
+Streaming & Entertainment|Spotify|spotify.com
+Streaming & Entertainment|Apple Music|music.apple.com
+Streaming & Entertainment|SiriusXM|siriusxm.com
+Streaming & Entertainment|Audible|audible.com
+Streaming & Entertainment|Twitch|twitch.tv
+Streaming & Entertainment|Steam|steampowered.com
+Streaming & Entertainment|Xbox|xbox.com
+Streaming & Entertainment|PlayStation|playstation.com
+Streaming & Entertainment|AMC Theatres|amctheatres.com
+Streaming & Entertainment|Regal Cinemas|regmovies.com
+Streaming & Entertainment|Cinemark|cinemark.com
+Telecom & Internet|Verizon|verizon.com
+Telecom & Internet|AT&T|att.com
+Telecom & Internet|T-Mobile|t-mobile.com
+Telecom & Internet|Xfinity|xfinity.com
+Telecom & Internet|Spectrum|spectrum.com
+Telecom & Internet|Cox Communications|cox.com
+Telecom & Internet|CenturyLink|centurylink.com
+Telecom & Internet|Google Fiber|fiber.google.com
+Telecom & Internet|Starlink|starlink.com
+Telecom & Internet|Mint Mobile|mintmobile.com
+Telecom & Internet|Cricket Wireless|cricketwireless.com
+Telecom & Internet|Boost Mobile|boostmobile.com
+Banking & Credit Cards|Chase|chase.com
+Banking & Credit Cards|Bank of America|bankofamerica.com
+Banking & Credit Cards|Wells Fargo|wellsfargo.com
+Banking & Credit Cards|Capital One|capitalone.com
+Banking & Credit Cards|Citi|citi.com
+Banking & Credit Cards|American Express|americanexpress.com
+Banking & Credit Cards|Discover|discover.com
+Banking & Credit Cards|US Bank|usbank.com
+Banking & Credit Cards|PNC Bank|pnc.com
+Banking & Credit Cards|Truist|truist.com
+Banking & Credit Cards|Ally Bank|ally.com
+Banking & Credit Cards|SoFi|sofi.com
+Banking & Credit Cards|Charles Schwab|schwab.com
+Banking & Credit Cards|Fidelity Investments|fidelity.com
+Banking & Credit Cards|Vanguard|vanguard.com
+Banking & Credit Cards|Navy Federal Credit Union|navyfederal.org
+Banking & Credit Cards|USAA|usaa.com
+Banking & Credit Cards|BMO|bmo.com
+Payments & Fintech|PayPal|paypal.com
+Payments & Fintech|Venmo|venmo.com
+Payments & Fintech|Cash App|cash.app
+Payments & Fintech|Zelle|zellepay.com
+Payments & Fintech|Stripe|stripe.com
+Payments & Fintech|Square|squareup.com
+Payments & Fintech|Klarna|klarna.com
+Payments & Fintech|Affirm|affirm.com
+Payments & Fintech|Afterpay|afterpay.com
+Payments & Fintech|Wise|wise.com
+Payments & Fintech|Western Union|westernunion.com
+Payments & Fintech|MoneyGram|moneygram.com
+Insurance|State Farm|statefarm.com
+Insurance|GEICO|geico.com
+Insurance|Progressive|progressive.com
+Insurance|Allstate|allstate.com
+Insurance|Liberty Mutual|libertymutual.com
+Insurance|Nationwide|nationwide.com
+Insurance|Farmers Insurance|farmers.com
+Insurance|Travelers|travelers.com
+Insurance|The Hartford|thehartford.com
+Insurance|Lemonade|lemonade.com
+Insurance|AAA|aaa.com
+Utilities & Energy|Xcel Energy|xcelenergy.com
+Utilities & Energy|Duke Energy|duke-energy.com
+Utilities & Energy|Pacific Gas and Electric|pge.com
+Utilities & Energy|Southern California Edison|sce.com
+Utilities & Energy|Florida Power & Light|fpl.com
+Utilities & Energy|Dominion Energy|dominionenergy.com
+Utilities & Energy|ComEd|comed.com
+Utilities & Energy|Con Edison|coned.com
+Utilities & Energy|National Grid|nationalgridus.com
+Utilities & Energy|AT&T Internet|att.com
+Shipping & Office|USPS|usps.com
+Shipping & Office|UPS|ups.com
+Shipping & Office|FedEx|fedex.com
+Shipping & Office|DHL|dhl.com
+Shipping & Office|The UPS Store|theupsstore.com
+Shipping & Office|Staples|staples.com
+Shipping & Office|Office Depot|officedepot.com
+Shipping & Office|FedEx Office|office.fedex.com
+Automotive|AutoZone|autozone.com
+Automotive|O'Reilly Auto Parts|oreillyauto.com
+Automotive|Advance Auto Parts|advanceautoparts.com
+Automotive|NAPA Auto Parts|napaonline.com
+Automotive|Jiffy Lube|jiffylube.com
+Automotive|Valvoline Instant Oil Change|vioc.com
+Automotive|Firestone Complete Auto Care|firestonecompleteautocare.com
+Automotive|Discount Tire|discounttire.com
+Automotive|Les Schwab|lesschwab.com
+Automotive|CarMax|carmax.com
+Automotive|Carvana|carvana.com
+Automotive|Tesla|tesla.com
+Automotive|Toyota|toyota.com
+Automotive|Honda|honda.com
+Automotive|Ford|ford.com
+Automotive|Chevrolet|chevrolet.com
+Fitness & Recreation|Planet Fitness|planetfitness.com
+Fitness & Recreation|LA Fitness|lafitness.com
+Fitness & Recreation|24 Hour Fitness|24hourfitness.com
+Fitness & Recreation|Anytime Fitness|anytimefitness.com
+Fitness & Recreation|YMCA|ymca.org
+Fitness & Recreation|Life Time|lifetime.life
+Fitness & Recreation|Orangetheory Fitness|orangetheory.com
+Fitness & Recreation|Peloton|onepeloton.com
+Fitness & Recreation|ClassPass|classpass.com
+Fitness & Recreation|Topgolf|topgolf.com
+Fitness & Recreation|Dave & Buster's|daveandbusters.com
+Fitness & Recreation|Bowlero|bowlero.com
+Software & Subscriptions|Adobe|adobe.com
+Software & Subscriptions|Canva|canva.com
+Software & Subscriptions|Dropbox|dropbox.com
+Software & Subscriptions|Google Workspace|workspace.google.com
+Software & Subscriptions|Microsoft 365|microsoft.com
+Software & Subscriptions|OpenAI|openai.com
+Software & Subscriptions|GitHub|github.com
+Software & Subscriptions|Notion|notion.so
+Software & Subscriptions|Slack|slack.com
+Software & Subscriptions|Zoom|zoom.us
+Software & Subscriptions|Figma|figma.com
+Software & Subscriptions|Vercel|vercel.com
+Software & Subscriptions|GoDaddy|godaddy.com
+Software & Subscriptions|1Password|1password.com
+Software & Subscriptions|NordVPN|nordvpn.com
+Software & Subscriptions|QuickBooks|quickbooks.intuit.com
+Software & Subscriptions|TurboTax|turbotax.intuit.com
+Education & Childcare|Amazon Kids+|amazon.com
+Education & Childcare|Khan Academy|khanacademy.org
+Education & Childcare|Coursera|coursera.org
+Education & Childcare|Udemy|udemy.com
+Education & Childcare|Duolingo|duolingo.com
+Education & Childcare|KinderCare|kindercare.com
+Education & Childcare|Bright Horizons|brighthorizons.com
+Education & Childcare|The Learning Experience|thelearningexperience.com
+Education & Childcare|Sylvan Learning|sylvanlearning.com
+Education & Childcare|Lakeshore Learning|lakeshorelearning.com
+Gifts, Crafts & Books|Hallmark|hallmark.com
+Gifts, Crafts & Books|Michaels|michaels.com
+Gifts, Crafts & Books|Hobby Lobby|hobbylobby.com
+Gifts, Crafts & Books|JOANN|joann.com
+Gifts, Crafts & Books|Barnes & Noble|barnesandnoble.com
+Gifts, Crafts & Books|Books-A-Million|booksamillion.com
+Gifts, Crafts & Books|Shutterfly|shutterfly.com
+Gifts, Crafts & Books|Snapfish|snapfish.com
+Gifts, Crafts & Books|1-800-Flowers|1800flowers.com
+Gifts, Crafts & Books|Edible Arrangements|ediblearrangements.com
+Gifts, Crafts & Books|LEGO|lego.com
+Gifts, Crafts & Books|Build-A-Bear Workshop|buildabear.com
+Gifts, Crafts & Books|Gamewright|gamewright.com
+Gifts, Crafts & Books|BoardGameGeek|boardgamegeek.com
+Gifts, Crafts & Books|Board Game Arena|boardgamearena.com`.split('\n').map(line=>{const [category,name,domain]=line.split('|');return {category,name,domain};});
+const $=id=>document.getElementById(id);
+const results=$('results'), matches=$('matches'), status=$('status'), substatus=$('substatus');
+const STORAGE_RECENT='merchant-logo-finder-recent-v1';
+const quickPickNames=["Chipotle","Costco","Amazon","Target","Walmart","Starbucks","McDonald\'s","Verizon","PayPal","OpenAI"];
+let seq=0, category='All', selected='', selectedObj=null;
+const categories=['All',...new Set(CATALOG.map(x=>x.category))];
+
+function normalDomain(value){
+  try{
+    if(!value.trim()) return '';
+    const u=new URL(/^https?:\/\//i.test(value)?value:'https://'+value);
+    if(!['https:','http:'].includes(u.protocol)||u.username||u.password||u.port) return '';
+    const host=u.hostname.toLowerCase().replace(/^www\./,'');
+    return /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(host)?host:'';
+  }catch{return ''}
+}
+function imageUrl(file){return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(file).replace(/%2F/gi,'/')}
+function values(e,p){return e?.claims?.[p]?.map(x=>x.mainsnak?.datavalue?.value).filter(Boolean)||[]}
+async function api(params){
+  const url=new URL('https://www.wikidata.org/w/api.php');
+  Object.entries({...params,format:'json',origin:'*'}).forEach(([k,v])=>url.searchParams.set(k,v));
+  const control=new AbortController(), timer=setTimeout(()=>control.abort(),12000);
+  try{
+    const r=await fetch(url,{signal:control.signal});
+    if(!r.ok) throw Error('Wikidata HTTP '+r.status);
+    const data=await r.json();
+    if(data.error) throw Error(data.error.info||'Wikidata error');
+    return data;
+  } finally {clearTimeout(timer)}
+}
+function setStatus(main, detail=''){status.textContent=main; if(detail) substatus.textContent=detail;}
+let toastTimer;
+function showToast(title,msg=''){
+  const el=$('toast');
+  el.innerHTML='<strong>'+escapeHtml(title)+'</strong>'+(msg?'<div>'+escapeHtml(msg)+'</div>':'');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function el(tag, cls='', text=''){const x=document.createElement(tag); if(cls) x.className=cls; if(text) x.textContent=text; return x;}
+function btn(label, fn, cls=''){const b=document.createElement('button'); b.type='button'; b.textContent=label; if(cls) b.className=cls; b.addEventListener('click', fn); return b;}
+function makeLogoTile(domain,name,size=''){
+  const tile=el('div','logo-tile fallback'+(size?(' '+size):''));
+  tile.textContent=(name||'?').trim().slice(0,2).toUpperCase();
+  if(domain){
+    const img=new Image(); img.alt=''; img.loading='lazy'; img.referrerPolicy='no-referrer';
+    img.src='https://www.google.com/s2/favicons?domain='+encodeURIComponent(domain)+'&sz=64';
+    img.onload=()=>{tile.textContent=''; tile.classList.remove('fallback'); tile.append(img);};
+  }
+  return tile;
+}
+async function copy(value){
+  try{await navigator.clipboard.writeText(value); showToast('Copied', 'Logo URL copied to clipboard.');}
+  catch{const t=document.createElement('textarea'); t.value=value; document.body.append(t); t.select(); const ok=document.execCommand('copy'); t.remove(); showToast(ok?'Copied':'Copy unavailable', ok?'Logo URL copied to clipboard.':'Open the image to copy it manually.');}
+}
+async function save(url,name){
+  try{
+    const res=await fetch(url);
+    if(!res.ok) throw Error('Download blocked');
+    const blob=await res.blob();
+    if(!blob.type.startsWith('image/')) throw Error('Not an image');
+    const ext=blob.type.includes('svg')?'svg':blob.type.includes('webp')?'webp':blob.type.includes('jpeg')?'jpg':blob.type.includes('ico')?'ico':'png';
+    const object=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=object; a.download=(name.replace(/[^a-z0-9-]+/gi,'-').slice(0,60)||'merchant-logo')+'.'+ext;
+    document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(object),5000);
+    showToast('Download started', 'Saving '+name+'.');
+  }catch{window.open(url,'_blank','noopener,noreferrer'); showToast('Opened image', 'Host blocks direct download, so the image opened in a new tab.');}
+}
+function updateBadges(){
+  $('resultCountBadge').textContent=(results.querySelectorAll('.result-card').length||0)+' source'+((results.querySelectorAll('.result-card').length||0)===1?'':'s');
+  $('selectionBadge').textContent=selectedObj?selectedObj.name:'No merchant selected';
+  $('recentCountTop').textContent=getRecent().length;
+}
+function addLogo({title,source,url,description='',name=''}){
+  if(!url) return;
+  const card=el('article','result-card');
+  const top=el('div','result-top');
+  const left=document.createElement('div');
+  left.innerHTML='<strong>'+escapeHtml(title)+'</strong>';
+  const sourceTag=el('span','source',source);
+  top.append(left,sourceTag);
+  const preview=el('div','preview');
+  const img=new Image(); img.src=url; img.alt=title+' preview'; img.loading='lazy'; img.referrerPolicy='no-referrer';
+  const fallback=el('div','preview-fallback',(name||title).slice(0,2).toUpperCase());
+  img.onerror=()=>{img.remove(); fallback.style.display='block';};
+  preview.append(img,fallback);
+  const meta=el('div','result-meta',description||'');
+  const actions=el('div','result-actions');
+  actions.append(
+    btn('Copy URL',()=>copy(url),'soft'),
+    btn('Save',()=>save(url,name||title),'soft'),
+    btn('Open ↗',()=>window.open(url,'_blank','noopener,noreferrer'),'soft')
+  );
+  card.append(top,preview,meta,actions);
+  results.append(card);
+  updateBadges();
+}
+function clearResults(emptyText='Select a merchant to preview its logo sources.'){
+  results.replaceChildren(el('div','empty',emptyText));
+  updateBadges();
+}
+function showSources(name,domain,token){
+  results.replaceChildren();
+  if(domain){
+    if(token) addLogo({title:'Full-size brand logo',source:'Logo.dev',url:'https://img.logo.dev/'+encodeURIComponent(domain)+'?token='+encodeURIComponent(token)+'&size=512&format=png&fallback=404',description:domain,name});
+    addLogo({title:'Website icon',source:'Google favicon',url:'https://www.google.com/s2/favicons?domain='+encodeURIComponent(domain)+'&sz=256',description:domain+' · Often an icon rather than the full logo',name});
+  }
+  if(token) addLogo({title:'Name-based lookup',source:'Logo.dev',url:'https://img.logo.dev/name/'+encodeURIComponent(name)+'?token='+encodeURIComponent(token)+'&size=512&format=png&fallback=404',description:'Verify that this matches the intended company.',name});
+  if(!results.children.length) clearResults('No known domain yet. Click Find logos to search Wikidata for official artwork and a website.');
+  updateBadges();
+}
+function setSelection(merchant, fromSearch=false){
+  selectedObj=merchant || null;
+  selected=merchant?.name || '';
+  const card=$('selectionCard');
+  if(!merchant){
+    card.classList.add('hidden');
+    $('selectedTitle').textContent='Logo results';
+    $('selectedCategory').classList.add('hidden');
+    $('selectedDomain').classList.add('hidden');
+    $('selectionHint').textContent='';
+    updateBadges();
+    return;
+  }
+  card.classList.remove('hidden');
+  $('selectedTitle').textContent=merchant.name;
+  const cat=$('selectedCategory'), dom=$('selectedDomain');
+  if(merchant.category){cat.textContent=merchant.category; cat.classList.remove('hidden');} else cat.classList.add('hidden');
+  if(merchant.domain){dom.textContent=merchant.domain; dom.classList.remove('hidden');} else dom.classList.add('hidden');
+  $('selectionLogo').replaceWith(Object.assign(makeLogoTile(merchant.domain, merchant.name, 'big-logo'), {id:'selectionLogo'}));
+  $('selectionHint').textContent=fromSearch?'Manual search':'Directory selection';
+  updateBadges();
+}
+function getRecent(){ try{ const v=JSON.parse(localStorage.getItem(STORAGE_RECENT)||'[]'); return Array.isArray(v)?v:[]; }catch{ return []; } }
+function saveRecent(name){
+  const next=[name,...getRecent().filter(x=>x!==name)].slice(0,8);
+  localStorage.setItem(STORAGE_RECENT, JSON.stringify(next));
+  renderRecentPicks(); updateBadges();
+}
+function renderQuickPicks(){
+  const wrap=$('quickPicks'); wrap.replaceChildren();
+  quickPickNames.map(n=>CATALOG.find(x=>x.name===n)).filter(Boolean).forEach(m=>wrap.append(btn(m.name,()=>selectMerchant(m,true),'chip')));
+}
+function renderRecentPicks(){
+  const wrap=$('recentPicks'); wrap.replaceChildren();
+  const recents=getRecent();
+  if(!recents.length){ wrap.append(el('span','tiny','Nothing yet')); return; }
+  recents.map(n=>CATALOG.find(x=>x.name===n)||{name:n,domain:'',category:'Recent'}).forEach(m=>wrap.append(btn(m.name,()=>selectMerchant(m,true),'chip')));
+}
+function renderCategories(){
+  const elBox=$('categories'); elBox.replaceChildren();
+  for(const c of categories){
+    const count=c==='All'?CATALOG.length:CATALOG.filter(x=>x.category===c).length;
+    const b=btn(c+' ('+count+')',()=>{category=c; renderCategories(); renderDirectory();},'chip'+(category===c?' active':''));
+    elBox.append(b);
+  }
+}
+function renderDirectory(){
+  const term=$('filter').value.trim().toLowerCase();
+  const rows=CATALOG.filter(x=>(category==='All'||x.category===category)&&(!term||(x.name+' '+x.category+' '+x.domain).toLowerCase().includes(term)));
+  $('shownCount').textContent=rows.length+' / '+CATALOG.length;
+  const box=$('directory'); box.replaceChildren();
+  if(!rows.length){ box.append(el('div','empty','No matching merchants. Try a broader filter or use manual search.')); return; }
+  const frag=document.createDocumentFragment();
+  for(const m of rows){
+    const b=document.createElement('button');
+    b.type='button'; b.className='merchant'+(selected===m.name?' active':''); b.title=m.name+' · '+m.category+' · '+m.domain;
+    b.addEventListener('click',()=>selectMerchant(m,true));
+    const tile=makeLogoTile(m.domain,m.name);
+    const info=el('div');
+    info.innerHTML='<div class="name">'+escapeHtml(m.name)+'</div><div class="sub">'+escapeHtml(m.category)+' · '+escapeHtml(m.domain)+'</div>';
+    const go=el('div','go','›');
+    b.append(tile,info,go);
+    frag.append(b);
+  }
+  box.append(frag);
+}
+function selectMerchant(merchant, autoSearch=false){
+  ++seq;
+  $('company').value=merchant.name||'';
+  $('domain').value=merchant.domain||'';
+  setSelection(merchant,false);
+  showSources(merchant.name||'', merchant.domain||'', $('token').value.trim());
+  setStatus('Showing '+merchant.name+' from the directory.', 'Click another company, or run a full search for extra Wikidata artwork and website info.');
+  renderDirectory(); saveRecent(merchant.name);
+  if(autoSearch) search();
+}
+async function chooseEntity(id,name,domain,token,current){
+  if(current!==seq) return;
+  setStatus('Loading '+name+'…','Pulling Wikimedia artwork and website data from Wikidata.');
+  try{
+    const data=await api({action:'wbgetentities',ids:id,props:'labels|descriptions|claims',languages:'en'});
+    if(current!==seq) return;
+    const entity=data.entities?.[id];
+    if(!entity || entity.missing!==undefined) throw Error('No company record');
+    const web=values(entity,'P856').map(v=>normalDomain(String(v))).find(Boolean)||'';
+    const finalDomain=domain||web;
+    showSources(name,finalDomain,token);
+    const files=[...new Set(values(entity,'P154').filter(v=>typeof v==='string'))].slice(0,6);
+    for(const f of files) addLogo({title:'Wikimedia logo',source:'Wikidata',url:imageUrl(f),description:f,name});
+    if(finalDomain && !domain) $('domain').value=finalDomain;
+    setSelection({name,domain:finalDomain,category:selectedObj?.category||''}, true);
+    setStatus(
+      (files.length ? 'Found '+files.length+' Wikimedia logo source'+(files.length===1?'':'s')+'.' : 'No Wikimedia logo listed for this result.'),
+      finalDomain ? 'Website detected: '+finalDomain+'.' : 'No website detected from Wikidata.'
+    );
+    updateBadges();
+  }catch(e){
+    if(current!==seq) return;
+    setStatus('Could not load Wikimedia result: '+e.message, 'Domain-based logo sources are still shown below when available.');
+    showSources(name,domain,token);
+  }
+}
+async function search(evt){
+  evt?.preventDefault?.();
+  const name=$('company').value.trim(), raw=$('domain').value.trim(), domain=normalDomain(raw), token=$('token').value.trim();
+  if(!name){ setStatus('Enter a company name to search.','You can also pick a merchant from the directory on the left.'); $('company').focus(); return; }
+  if(raw && !domain){ setStatus('Enter a valid domain like chipotle.com.','Remove protocols, ports, and paths for best results.'); return; }
+  const current=++seq;
+  const known=CATALOG.find(x=>x.name.toLowerCase()===name.toLowerCase()) || {name,domain,category:'Manual search'};
+  setSelection(known,true);
+  showSources(name,domain||known.domain,$('token').value.trim());
+  matches.replaceChildren();
+  $('searchBtn').disabled=true;
+  setStatus('Searching Wikidata for '+name+'…','You can still use the source cards that are already shown below.');
+  saveRecent(name);
+  try{
+    const data=await api({action:'wbsearchentities',search:name,language:'en',uselang:'en',type:'item',limit:'8'});
+    if(current!==seq) return;
+    const items=data.search||[];
+    if(!items.length){ setStatus('No Wikidata match found for '+name+'.','Domain-based logo sources are shown when a domain is available.'); return; }
+    const frag=document.createDocumentFragment();
+    for(const item of items){
+      const label=item.label+(item.description?' · '+item.description:'');
+      frag.append(btn(label,()=>chooseEntity(item.id,item.label,domain||known.domain,token,current),'chip'));
+    }
+    matches.append(frag);
+    await chooseEntity(items[0].id, items[0].label, domain||known.domain, token, current);
+  } catch(err){
+    if(current===seq) setStatus('Wikidata search failed: '+err.message, 'Domain-based sources remain available below.');
+  } finally { if(current===seq) $('searchBtn').disabled=false; }
+}
+function clearAll(){
+  ++seq; selected=''; selectedObj=null;
+  $('company').value=''; $('domain').value=''; $('filter').value=''; category='All';
+  matches.replaceChildren(); clearResults(); renderCategories(); renderDirectory(); setSelection(null);
+  setStatus('Choose a merchant or enter a company name.','Wikidata is used for artwork and website lookup. Domain-based logo sources still work even if search is unavailable.');
+  $('company').focus();
+}
+
+$('form').addEventListener('submit', search);
+$('clearBtn').addEventListener('click', clearAll);
+$('filter').addEventListener('input', renderDirectory);
+$('token').addEventListener('change', ()=>{
+  if(selectedObj) showSources(selectedObj.name, selectedObj.domain||$('domain').value.trim(), $('token').value.trim());
+  showToast('Token updated', 'Logo.dev lookups will use the new token.');
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='/' && !/input|textarea/i.test(document.activeElement?.tagName||'')){e.preventDefault(); $('company').focus(); $('company').select();}
+});
+$('catalogCountTop').textContent=CATALOG.length;
+$('categoryCountTop').textContent=categories.length-1;
+renderQuickPicks(); renderRecentPicks(); renderCategories(); renderDirectory(); clearResults(); updateBadges();
+</script>
+</body>
+</html>
