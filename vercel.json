@@ -3,10 +3,41 @@
   "trailingSlash": true,
   "installCommand": "npm install --omit=optional",
   "rewrites": [
-    { "source": "/api/party/start", "destination": "/api/party?action=start" },
-    { "source": "/api/party/advance", "destination": "/api/party?action=advance" },
-    { "source": "/api/party/filter", "destination": "/api/party?action=filter" },
-    { "source": "/api/oura/key", "destination": "/api/oura?action=key-status" },
-    { "source": "/api/sleep-score", "destination": "/api/oura?action=sleep-score" }
+    {
+      "source": "/api/auth",
+      "destination": "/api/tools?action=auth"
+    },
+    {
+      "source": "/api/env",
+      "destination": "/api/tools?action=env"
+    },
+    {
+      "source": "/api/supabase-config",
+      "destination": "/api/tools?action=supabase-config"
+    },
+    {
+      "source": "/api/images",
+      "destination": "/api/tools?action=images"
+    },
+    {
+      "source": "/api/party/start",
+      "destination": "/api/party?action=start"
+    },
+    {
+      "source": "/api/party/advance",
+      "destination": "/api/party?action=advance"
+    },
+    {
+      "source": "/api/party/filter",
+      "destination": "/api/party?action=filter"
+    },
+    {
+      "source": "/api/oura/key",
+      "destination": "/api/oura?action=key-status"
+    },
+    {
+      "source": "/api/sleep-score",
+      "destination": "/api/oura?action=sleep-score"
+    }
   ]
 }
