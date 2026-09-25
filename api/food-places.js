@@ -14,15 +14,16 @@ export default async function handler(req,res){
   if(!types.length)return res.status(200).json({elements:[]});
   const re=types.join('|');
   const query=`[out:json][timeout:25];(nwr["amenity"~"^(${re})$"](around:${Math.round(radius)},${lat},${lon}););out center tags;`;
-  let last='';
+  let last=''; const attempts=[];
   for(const url of OVERPASS){
     try{
       const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json','User-Agent':'InternalApps-FoodMap/1.0'},body:new URLSearchParams({data:query}),signal:AbortSignal.timeout(28000)});
-      if(!r.ok){last=`${r.status} ${r.statusText}`;continue;}
+      if(!r.ok){last=`${r.status} ${r.statusText}`;attempts.push({provider:new URL(url).host,status:r.status,error:last});continue;}
       const data=await r.json();
+      attempts.push({provider:new URL(url).host,status:r.status,count:(data.elements||[]).length});
       res.setHeader('Cache-Control','s-maxage=300, stale-while-revalidate=1800');
-      return res.status(200).json({elements:data.elements||[],source:new URL(url).host});
+      return res.status(200).json({elements:data.elements||[],source:new URL(url).host,attempts});
     }catch(e){last=e.message;}
   }
-  return res.status(502).json({error:'All OpenStreetMap data providers failed',detail:last});
+  return res.status(502).json({error:'All OpenStreetMap data providers failed',detail:last,attempts});
 }
