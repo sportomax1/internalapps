@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cruise Explorer</title>
+<style>*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#07131d;color:#eef7fb}header{padding:18px 24px;background:linear-gradient(110deg,#082d46,#075f7d);display:flex;align-items:center;gap:12px}h1{margin:0;font-size:21px}.pill{background:#0a765d;padding:5px 9px;border-radius:99px;font-size:12px}.wrap{max-width:1200px;margin:auto;padding:20px}.hero{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:#0d1d29;border:1px solid #233746;border-radius:16px;padding:18px;margin-bottom:16px}h2{margin:0 0 8px}.muted{color:#9db1bd}.filters{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}label{display:block;color:#9db1bd;font-size:12px;margin-bottom:5px}input,select,button{width:100%;padding:11px;border-radius:9px;border:1px solid #34505f;background:#091722;color:#fff}button{background:#087ba0;border:0;font-weight:700;cursor:pointer}.quick{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.quick button{width:auto;background:#173546}.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}.result{background:#102432;border:1px solid #294353;border-radius:12px;padding:14px}.result h3{margin:0 0 6px}.notice{border-left:3px solid #28a9d1;padding-left:12px}.tabs{display:flex;gap:8px;margin-bottom:14px}.tabs button{width:auto}.hidden{display:none}iframe{width:100%;height:720px;border:0;border-radius:12px;background:white}@media(max-width:700px){.hero,.filters{grid-template-columns:1fr}}</style></head><body>
+<header><h1>🚢 Cruise Explorer</h1><span class="pill">NO PAID API REQUIRED</span></header><div class="wrap">
+<div class="hero"><div class="card"><h2>Find a cruise</h2><p class="muted">Search the open Siloah Travel cruise catalog. No API key or account.</p>
+<div class="filters"><div><label>Destination</label><input id="dest" placeholder="Caribbean, Alaska, Mediterranean"></div><div><label>Departure city</label><input id="city" placeholder="Miami, Galveston, Seattle"></div><div><label>Earliest departure</label><input id="from" type="date"></div><div><label>Latest departure</label><input id="to" type="date"></div></div>
+<div class="quick"><button onclick="q('Caribbean')">Caribbean</button><button onclick="q('Alaska')">Alaska</button><button onclick="q('Mediterranean')">Mediterranean</button><button onclick="q('Bahamas')">Bahamas</button></div>
+<button onclick="search()">Search cruises</button><div id="status" class="muted" style="margin-top:10px">Ready.</div></div>
+<div class="card"><h2>Data approach</h2><p class="notice">Cruise inventory does not have an ADS-B equivalent. This app first tries the free, no-key Siloah MCP catalog. If browser/CORS access is blocked, use the built-in public sailing schedule tab below.</p><p class="muted">The catalog advertises 70,000+ voyages, 678 ships and 62 cruise lines. Prices should always be verified with the cruise line before booking.</p></div></div>
+<div class="card"><div class="tabs"><button onclick="tab('searchTab')">Cruise search</button><button onclick="tab('scheduleTab')">Upcoming sailings</button></div>
+<div id="searchTab"><div id="results" class="results"><div class="muted">Enter filters and search.</div></div></div>
+<div id="scheduleTab" class="hidden"><iframe src="https://cruiseportschedule.com/embed" title="Upcoming cruise sailings"></iframe><p class="muted">Schedule provided by Cruise Port Schedule from published port schedules.</p></div></div>
+</div><script>
+const $=id=>document.getElementById(id);
+function q(v){$('dest').value=v}
+function tab(id){$('searchTab').classList.toggle('hidden',id!=='searchTab');$('scheduleTab').classList.toggle('hidden',id!=='scheduleTab')}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+async function search(){
+ const args={}; if($('dest').value)args.destination=$('dest').value;if($('city').value)args.departureCity=$('city').value;if($('from').value)args.departureDateFrom=$('from').value;if($('to').value)args.departureDateTo=$('to').value;
+ $('status').textContent='Searching free cruise catalog…';$('results').innerHTML='';
+ try{
+  const body={jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'searchVoyages',arguments:args}};
+  const r=await fetch('https://mcp.siloah.travel/mcp',{method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream'},body:JSON.stringify(body)});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const txt=await r.text(); let payload;
+  try{payload=JSON.parse(txt)}catch(_){const line=txt.split('\n').find(x=>x.startsWith('data:'));if(line)payload=JSON.parse(line.slice(5));}
+  if(!payload)throw Error('Unexpected MCP response');
+  const content=payload.result?.content||[]; let data=content.find(x=>x.type==='text')?.text||'';
+  try{data=JSON.parse(data)}catch(_){}
+  const arr=Array.isArray(data)?data:(data.voyages||data.results||data.data||[]);
+  if(!arr.length){$('results').innerHTML='<div class="muted">No structured results returned. Open Upcoming sailings for the no-key schedule fallback.</div>';return}
+  $('results').innerHTML=arr.slice(0,60).map(v=>'<div class="result"><h3>'+esc(v.shipName||v.ship||v.name||'Cruise')+'</h3><b>'+esc(v.brand||v.cruiseLine||v.line||'')+'</b><p>'+esc(v.departureCity||v.departurePort||'')+' → '+esc(v.arrivalCity||v.arrivalPort||'')+'</p><div class="muted">'+esc(v.departureDate||v.date||'')+(v.nights?' · '+esc(v.nights)+' nights':'')+'</div>'+(v.price?'<p><b>From '+esc(v.price)+'</b></p>':'')+(v.url?'<p><a style="color:#65d7ff" target="_blank" rel="noopener" href="'+esc(v.url)+'">View sailing ↗</a></p>':'')+'</div>').join('');
+  $('status').textContent=arr.length+' results returned.';
+ }catch(e){$('status').textContent='Direct browser search unavailable ('+e.message+'). Showing the free sailing schedule instead.';tab('scheduleTab')}
+}
+</script></body></html>
