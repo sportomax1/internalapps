@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flight Explorer</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#08111f;color:#e8eef8}header{height:58px;display:flex;align-items:center;gap:14px;padding:0 18px;background:#0d1727;border-bottom:1px solid #24324a}h1{font-size:18px;margin:0}.pill{padding:5px 9px;border-radius:99px;background:#123c2d;color:#7ee2ae;font-size:12px}.app{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 58px)}aside{padding:16px;overflow:auto;border-right:1px solid #24324a}.mapwrap{position:relative}#map{height:100%;width:100%}.card{background:#101d30;border:1px solid #263650;border-radius:14px;padding:14px;margin-bottom:12px}label{display:block;color:#9fb0c8;font-size:12px;margin:10px 0 5px}input,select,button{width:100%;padding:10px;border-radius:9px;border:1px solid #34445e;background:#0a1424;color:#fff}button{background:#2878ff;border:0;font-weight:700;cursor:pointer;margin-top:12px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{font-size:26px;font-weight:750}.muted{color:#93a4bc;font-size:12px}.plane{font-size:20px;line-height:20px}.list{max-height:44vh;overflow:auto}.item{padding:9px 0;border-bottom:1px solid #24324a;cursor:pointer}.item b{color:#fff}.error{color:#ff9e9e}.topright{margin-left:auto;color:#91a4bd;font-size:12px}@media(max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:44% 56%}aside{order:2;border:0}.mapwrap{order:1}}
+</style></head><body>
+<header><h1>✈ Flight Explorer</h1><span class="pill">FREE · NO API KEY</span><span class="topright">ADSB.lol + OpenStreetMap</span></header>
+<div class="app"><aside>
+<div class="card"><div class="stat" id="count">—</div><div class="muted">aircraft in current search radius</div>
+<label>Location preset</label><select id="preset"><option value="39.8561,-104.6737">Denver International (DEN)</option><option value="33.9416,-118.4085">Los Angeles (LAX)</option><option value="40.6413,-73.7781">New York JFK</option><option value="25.7959,-80.2870">Miami (MIA)</option><option value="51.4700,-0.4543">London Heathrow</option></select>
+<div class="row"><div><label>Latitude</label><input id="lat" type="number" step=".0001" value="39.8561"></div><div><label>Longitude</label><input id="lon" type="number" step=".0001" value="-104.6737"></div></div>
+<label>Radius</label><select id="radius"><option>25</option><option selected>50</option><option>100</option><option>200</option></select>
+<button id="load">Load live aircraft</button><button id="loc" style="background:#263650">Use my location</button>
+<div id="status" class="muted" style="margin-top:10px">Ready.</div></div>
+<div class="card"><b>Aircraft</b><div class="list" id="list"></div></div>
+</aside><main class="mapwrap"><div id="map"></div></main></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id), map=L.map('map').setView([39.8561,-104.6737],8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);
+let layer=L.layerGroup().addTo(map), timer;
+function icon(a){const deg=Number(a.track||0);return L.divIcon({className:'',html:'<div class="plane" style="transform:rotate('+deg+'deg)">▲</div>',iconSize:[20,20],iconAnchor:[10,10]})}
+function fmtAlt(a){return typeof a.alt_baro==='number'?Math.round(a.alt_baro).toLocaleString()+' ft':a.alt_baro||'—'}
+async function load(){
+ clearTimeout(timer); const lat=+$('lat').value,lon=+$('lon').value,r=+$('radius').value;
+ $('status').textContent='Loading live ADS-B positions…';
+ try{
+  const u='https://api.adsb.lol/v2/point/'+lat+'/'+lon+'/'+r;
+  const res=await fetch(u); if(!res.ok)throw Error('HTTP '+res.status);
+  const d=await res.json(), ac=(d.ac||[]).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));
+  layer.clearLayers(); $('list').innerHTML=''; $('count').textContent=ac.length;
+  ac.sort((a,b)=>(a.seen||99)-(b.seen||99));
+  ac.forEach(a=>{
+   const call=(a.flight||'').trim()||a.r||a.hex||'Unknown';
+   const m=L.marker([a.lat,a.lon],{icon:icon(a)}).addTo(layer).bindPopup('<b>'+call+'</b><br>'+fmtAlt(a)+' · '+(a.gs?Math.round(a.gs)+' kt':'—')+'<br>'+(a.t||''));
+   const el=document.createElement('div');el.className='item';el.innerHTML='<b>'+call+'</b><div class="muted">'+fmtAlt(a)+' · '+(a.gs?Math.round(a.gs)+' kt':'—')+' · '+(a.t||'type —')+'</div>';el.onclick=()=>{map.setView([a.lat,a.lon],11);m.openPopup()};$('list').appendChild(el);
+  });
+  map.setView([lat,lon],r<=25?9:r<=50?8:r<=100?7:6); $('status').textContent='Live · updated '+new Date().toLocaleTimeString()+' · auto-refresh 15s';
+ }catch(e){$('status').innerHTML='<span class="error">API request failed: '+e.message+'. Try again shortly.</span>'}
+ timer=setTimeout(load,15000);
+}
+$('preset').onchange=e=>{const [a,b]=e.target.value.split(',');$('lat').value=a;$('lon').value=b;load()};
+$('load').onclick=load;$('loc').onclick=()=>navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(4);$('lon').value=p.coords.longitude.toFixed(4);load()},()=>{$('status').textContent='Location permission unavailable.'});
+load();
+</script></body></html>
