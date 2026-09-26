@@ -26,7 +26,7 @@ async function load(){
  clearTimeout(timer); const lat=+$('lat').value,lon=+$('lon').value,r=+$('radius').value;
  $('status').textContent='Loading live ADS-B positions…';
  try{
-  const u='https://api.adsb.lol/v2/point/'+lat+'/'+lon+'/'+r;
+  const u='/api/flight?lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&radius='+encodeURIComponent(r);
   const res=await fetch(u); if(!res.ok)throw Error('HTTP '+res.status);
   const d=await res.json(), ac=(d.ac||[]).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));
   layer.clearLayers(); $('list').innerHTML=''; $('count').textContent=ac.length;
