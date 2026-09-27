@@ -40,7 +40,7 @@ stage.addEventListener('pointerdown',e=>{if(e.target.closest('.hex'))return;if(l
 stage.addEventListener('pointermove',e=>{if(lassoStart){let r=stage.getBoundingClientRect(),x=e.clientX-r.left+stage.scrollLeft,y=e.clientY-r.top+stage.scrollTop,z=$('#lassoBox');z.style.left=Math.min(x,lassoStart.x)+'px';z.style.top=Math.min(y,lassoStart.y)+'px';z.style.width=Math.abs(x-lassoStart.x)+'px';z.style.height=Math.abs(y-lassoStart.y)+'px';return}if(drag){let dx=(e.clientX-drag.sx)/zoom,dy=(e.clientY-drag.sy)/zoom;drag.orig.forEach(o=>{let h=hexes.find(x=>x.id===o.id);h.x=o.x+dx;h.y=o.y+dy});render();return}if(panDrag){stage.scrollLeft=panDrag.x-(e.clientX-panDrag.sx);stage.scrollTop=panDrag.y-(e.clientY-panDrag.sy)}});
 stage.addEventListener('pointerup',e=>{if(lassoStart){let z=$('#lassoBox'),a=z.getBoundingClientRect();sel=new Set(hexes.filter(h=>{let el=world.querySelector('.hex[data-id="'+h.id+'"]');if(!el)return false;let b=el.getBoundingClientRect();return b.right>=a.left&&b.left<=a.right&&b.bottom>=a.top&&b.top<=a.bottom}).map(h=>h.id));z.remove();lassoStart=null;render()}drag=null;panDrag=null;stage.style.cursor=lassoMode?'crosshair':'grab'});stage.addEventListener('pointercancel',()=>{drag=null;panDrag=null;stage.style.cursor='grab'});
 stage.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.1,Math.min(5,zoom*(e.deltaY<0?1.1:.9)));render()},{passive:false});
-document.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>{let base=hexes.find(h=>sel.has(h.id));if(!base)return;let [dq,dr]=b.dataset.d.split(',').map(Number),d=neighborOffset(b.dataset.screen,base),tx=base.x+d.x,ty=base.y+d.y,tol=Math.max(2,Math.min(base.width||geom().width,base.height||geom().height)*.08),existing=hexes.find(h=>h.id!==base.id&&Math.hypot(h.x-tx,h.y-ty)<=tol);if(existing){sel=new Set([existing.id]);render();return}snapshot();hexes.push({id:nextId++,x:tx,y:ty,q:base.q+dq,r:base.r+dr,width:base.width||geom().width,height:base.height||geom().height,stroke:base.stroke||defaultStyle().stroke,fill:base.fill||defaultStyle().fill,lineWidth:base.lineWidth??defaultStyle().lineWidth,lineStyle:base.lineStyle||defaultStyle().lineStyle});sel=new Set([hexes.at(-1).id]);render()});
+document.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>{let base=hexes.find(h=>sel.has(h.id));if(!base)return;let [dq,dr]=b.dataset.d.split(',').map(Number),d=neighborOffset(b.dataset.screen,base),tx=base.x+d.x,ty=base.y+d.y,tol=Math.max(2,Math.min(base.width||geom().width,base.height||geom().height)*.08),existing=hexes.find(h=>h.id!==base.id&&Math.hypot(h.x-tx,h.y-ty)<=tol);if(existing){sel=new Set([existing.id]);render();return}snapshot();hexes.push({id:nextId++,x:tx,y:ty,q:base.q+dq,r:base.r+dr,width:base.width||geom().width,height:base.height||geom().height,stroke:base.stroke||defaultStyle().stroke,fill:base.fill||defaultStyle().fill,lineWidth:base.lineWidth??defaultStyle().lineWidth,lineStyle:base.lineStyle||defaultStyle().lineStyle,opacity:base.opacity??defaultStyle().opacity,name:'',locked:false});sel=new Set([hexes.at(-1).id]);render()});
 $('#addFree').onclick=()=>{let rect=stage.getBoundingClientRect();add((rect.width/2-pan.x)/zoom,(rect.height/2-pan.y)/zoom,0,0)};
 $('#renumber').onclick=()=>{if(!hexes.length)return;snapshot();let avgH=hexes.reduce((s,h)=>s+(h.height||geom().height),0)/hexes.length,rowTol=Math.max(8,avgH*.35),sorted=[...hexes].sort((a,b)=>Math.abs(a.y-b.y)>rowTol?a.y-b.y:a.x-b.x);sorted.forEach((h,i)=>h.id=i+1);nextId=hexes.length+1;sel.clear();render()};
 $('#all').onclick=()=>{sel=new Set(hexes.map(h=>h.id));render()};$('#none').onclick=()=>{sel.clear();render()};$('#del').onclick=()=>{snapshot();hexes=hexes.filter(h=>!sel.has(h.id)||h.locked);sel.clear();render()};
@@ -83,7 +83,39 @@ $('#selRow').onclick=()=>{let a=hexes.find(h=>sel.has(h.id));if(a){sel=new Set(h
 $('#selCol').onclick=()=>{let a=hexes.find(h=>sel.has(h.id));if(a){sel=new Set(hexes.filter(h=>h.q===a.q).map(h=>h.id));render()}};
 $('#selDiag').onclick=()=>{let a=hexes.find(h=>sel.has(h.id));if(a){let k=a.q+a.r;sel=new Set(hexes.filter(h=>h.q+h.r===k).map(h=>h.id));render()}};
 $('#resnap').onclick=()=>{let arr=hexes.filter(h=>sel.has(h.id));if(!arr.length)arr=hexes;if(!arr.length)return;snapshot();let a=arr[0],w=a.width||geom().width,hh=a.height||geom().height;arr.filter(h=>!h.locked).forEach(h=>{let d=gridOffset(h.q-a.q,h.r-a.r,w,hh);h.x=a.x+d.x;h.y=a.y+d.y});render()};
-function validateGrid(){hexes.forEach(h=>h.problem=false);let issues=[],seen=new Map(),tol=2;hexes.forEach(h=>{let k=h.q+','+h.r;if(seen.has(k)){h.problem=true;seen.get(k).problem=true;issues.push('duplicate grid '+k)}else seen.set(k,h)});for(let i=0;i<hexes.length;i++)for(let j=i+1;j<hexes.length;j++){let a=hexes[i],b=hexes[j];if(Math.hypot(a.x-b.x,a.y-b.y)<tol){a.problem=b.problem=true;issues.push('overlapping centers '+a.id+'/'+b.id)}}let connected=new Set();if(hexes.length){let stack=[hexes[0]];while(stack.length){let a=stack.pop();if(connected.has(a.id))continue;connected.add(a.id);hexes.forEach(b=>{if(!connected.has(b.id)){let dq=b.q-a.q,dr=b.r-a.r;if([[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]].some(v=>v[0]===dq&&v[1]===dr))stack.push(b)}})}}hexes.filter(h=>!connected.has(h.id)).forEach(h=>h.problem=true);if(connected.size<hexes.length)issues.push((hexes.length-connected.size)+' disconnected cell(s)');$('#validationMsg').textContent=issues.length?[...new Set(issues)].join(' • '):'Grid looks good — no duplicate positions or disconnected cells.';render()}
+function validateGrid(){
+  hexes.forEach(h=>h.problem=false);
+  const issues=[],seen=new Map(),tol=2;
+  hexes.forEach(h=>{
+    const k=h.q+','+h.r;
+    if(seen.has(k)){h.problem=true;seen.get(k).problem=true;issues.push('duplicate grid '+k)}
+    else seen.set(k,h);
+  });
+  for(let i=0;i<hexes.length;i++){
+    for(let j=i+1;j<hexes.length;j++){
+      const a=hexes[i],b=hexes[j];
+      if(Math.hypot(a.x-b.x,a.y-b.y)<tol){a.problem=true;b.problem=true;issues.push('overlapping centers '+a.id+'/'+b.id)}
+    }
+  }
+  const connected=new Set();
+  if(hexes.length){
+    const stack=[hexes[0]];
+    while(stack.length){
+      const a=stack.pop();
+      if(connected.has(a.id))continue;
+      connected.add(a.id);
+      hexes.forEach(b=>{
+        if(connected.has(b.id))return;
+        const dq=b.q-a.q,dr=b.r-a.r;
+        if([[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]].some(v=>v[0]===dq&&v[1]===dr))stack.push(b);
+      });
+    }
+  }
+  hexes.filter(h=>!connected.has(h.id)).forEach(h=>h.problem=true);
+  if(connected.size<hexes.length)issues.push((hexes.length-connected.size)+' disconnected cell(s)');
+  $('#validationMsg').textContent=issues.length?[...new Set(issues)].join(' • '):'Grid looks good — no duplicate positions or disconnected cells.';
+  render();
+}
 $('#validate').onclick=validateGrid;
 $('#exportPng').onclick=()=>{if(!hexes.length&&!bg.naturalWidth)return;let g=geom(),maxX=Math.max(bg.naturalWidth||0,...hexes.map(h=>h.x+(h.width||g.width)/2+10)),maxY=Math.max(bg.naturalHeight||0,...hexes.map(h=>h.y+(h.height||g.height)/2+10)),cv=document.createElement('canvas');cv.width=Math.ceil(maxX);cv.height=Math.ceil(maxY);let x=cv.getContext('2d');if(bg.naturalWidth){x.globalAlpha=+$('#bgOpacity').value;x.drawImage(bg,0,0);x.globalAlpha=1}hexes.forEach(h=>{let w=h.width||g.width,hh=h.height||g.height,p=pts(w,hh,g.o).split(' ').map(s=>s.split(',').map(Number));x.beginPath();p.forEach((v,i)=>i?x.lineTo(h.x+v[0],h.y+v[1]):x.moveTo(h.x+v[0],h.y+v[1]));x.closePath();x.globalAlpha=h.opacity??defaultStyle().opacity;x.fillStyle=h.fill||defaultStyle().fill;x.fill();x.globalAlpha=1;x.strokeStyle=h.stroke||defaultStyle().stroke;x.lineWidth=h.lineWidth??defaultStyle().lineWidth;x.setLineDash(h.lineStyle==='dashed'?[10,7]:h.lineStyle==='dotted'?[2,6]:[]);x.stroke();let lm=$('#labels').value,label=lm==='id'?h.id:lm==='name'?(h.name||''):lm==='both'?(h.id+(h.name?' · '+h.name:'')):lm==='qr'?h.q+','+h.r:'';if(label){x.setLineDash([]);x.fillStyle='#fff';x.globalAlpha=1;x.font='bold 14px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(label,h.x,h.y)}});cv.toBlob(b=>{let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='hex-map.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},'image/png')};
 function copySelected(){clipboard=hexes.filter(h=>sel.has(h.id)).map(h=>({...h}))}
