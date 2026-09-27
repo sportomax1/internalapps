@@ -44,7 +44,10 @@ input[type=file]{display:none}input[type=range]{width:140px}
 <div class="row"><button id="alignX" class="grow">Align X</button><button id="alignY" class="grow">Align Y</button></div>
 <div class="row"><button id="spaceX" class="grow">Equal Space X</button><button id="spaceY" class="grow">Equal Space Y</button></div>
 <div class="row"><button id="sameSize" class="grow">Same Size</button><button id="applyStyle" class="grow">Apply Style</button></div>
-<div class="small">Check multiple markings below. Layout tools use their center points, matching Hex Studio behavior.</div>
+<div class="row"><button id="autoNumber" class="grow">Auto Number</button><button id="deleteSelected" class="danger grow">Delete Selected</button></div>
+<div class="row"><label class="lbl grow">Copies<input id="repeatCount" class="field" type="number" min="1" value="3"></label><label class="lbl grow">ΔX<input id="repeatX" class="field" type="number" value="70"></label><label class="lbl grow">ΔY<input id="repeatY" class="field" type="number" value="0"></label></div>
+<button id="repeatSelected">Repeat Active Marking</button>
+<div class="small">Check multiple markings below. Layout tools use center points. Auto Number sorts top-left → bottom-right.</div>
 </div></section>
 <section class="sec"><h2>Markings</h2><div id="items"></div></section>
 </aside>
@@ -128,6 +131,9 @@ function distribute(axis){const a=chosen().sort((p,q)=>p[axis]-q[axis]);if(a.len
 $('spaceX').onclick=()=>distribute('x');$('spaceY').onclick=()=>distribute('y');
 $('sameSize').onclick=()=>{const a=chosen();if(a.length<2)return;snapshot();const w=a[0].width,h=a[0].height;a.forEach(m=>{m.width=w;m.height=m.type==='square'?w:h});render()};
 $('applyStyle').onclick=()=>{const a=chosen(),src=mark();if(!src||!a.length)return;snapshot();a.forEach(m=>{m.stroke=src.stroke;m.fill=src.fill;m.lineWidth=src.lineWidth;m.lineStyle=src.lineStyle;m.opacity=src.opacity});render()};
+$('autoNumber').onclick=()=>{const a=chosen().sort((p,q)=>Math.abs(p.y-q.y)>Math.max(10,Math.min(p.height,q.height)*.45)?p.y-q.y:p.x-q.x);if(!a.length)return;snapshot();a.forEach((m,i)=>{m.name=String(i+1)});render()};
+$('deleteSelected').onclick=()=>{const a=chosen();if(!a.length)return;snapshot();const ids=new Set(a.map(m=>m.id));S.marks=S.marks.filter(m=>!ids.has(m.id));if(ids.has(S.sel))S.sel=null;S.multi.clear();render()};
+$('repeatSelected').onclick=()=>{const src=mark();if(!src)return;const n=Math.max(1,+$('repeatCount').value||1),dx=+$('repeatX').value||0,dy=+$('repeatY').value||0;snapshot();for(let i=1;i<=n;i++){const m=JSON.parse(JSON.stringify(src));m.id=uid();m.name=(src.name||src.id)+' '+(i+1);m.x=snap(src.x+dx*i);m.y=snap(src.y+dy*i);clamp(m);S.marks.push(m)}render()};
 $('dup').onclick=()=>{const m=mark();if(!m)return;snapshot();const c=JSON.parse(JSON.stringify(m));c.id=uid();c.name=(m.name||m.id)+' Copy';c.x=snap(c.x+15);c.y=snap(c.y+15);clamp(c);S.marks.push(c);S.sel=c.id;render()};
 $('del').onclick=()=>{if(!mark())return;snapshot();S.multi.delete(S.sel);S.marks=S.marks.filter(m=>m.id!==S.sel);S.sel=null;render()};
 ['showNames','showCoords'].forEach(k=>$(k).onchange=render);
