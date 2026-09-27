@@ -11,8 +11,8 @@
 <body>
 <div class="app">
 <header>
-<h1>Shape & Sprite Studio</h1>
-<button id="up" class="primary">Upload Images / PDF</button><input id="fi" type="file" accept=".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf" multiple>
+<h1>Shape & Sprite Studio</h1><select id="appmode" style="width:auto"><option value="assets">Sprite / Board Assets</option><option value="cropper">PDF / Image Cropper</option></select>
+<button id="up" class="primary">Upload Images / PDF</button><input id="fi" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.gif,.pdf,image/*,application/pdf" multiple>
 <button id="c1" disabled>+ Circle</button><button id="c2" disabled>+ Square</button><button id="c3" disabled>+ Hex</button><button id="cr" disabled>+ Rectangle</button><button id="mx" disabled>+ X</button><button id="smart" disabled>Smart Detect</button><button id="fit" disabled>Fit</button>
 </header>
 <aside class="side left">
@@ -33,18 +33,25 @@
 <div class="row"><label class="lbl grow">Shape<select id="shape" disabled><option value="circle">Circle</option><option value="square">Square</option><option value="hex">Hex</option><option value="rectangle">Rectangle</option></select></label><label class="lbl grow">Source W px<input id="ss" type="number" min="8" disabled></label><label class="lbl grow">Output W px<input id="os" type="number" min="16" value="256" disabled></label></div><div class="row"><label class="lbl grow">Source H px<input id="sh" type="number" min="8" disabled></label><label class="lbl grow">Output H px<input id="oh" type="number" min="8" value="256" disabled></label></div>
 <label class="lbl">Marker size px<input id="ms" type="number" min="4" disabled></label>
 </div></div>
-<div class="sec"><h2>PDF Loading</h2><div class="stack"><label class="lbl">Render quality<select id="pdfq"><option value="fast" selected>Fast</option><option value="balanced">Balanced</option><option value="high">High</option></select></label><label class="row small"><input id="pdfbg" type="checkbox" checked> Pre-render remaining pages in background</label><div class="small">Page 1 opens first. Other PDF pages render only when selected, with optional idle pre-render in the background.</div></div></div><div class="sec"><h2>Smart Detect</h2><div class="stack"><div class="row"><label class="lbl grow">Mode<select id="dm"><option value="auto">Auto</option><option value="circle">Circle-ish</option><option value="square">Square-ish</option><option value="hex">Hex-ish</option><option value="cutout">Any cutout</option></select></label><label class="lbl grow">Min px<input id="dmin" type="number" value="24" min="4"></label></div><div class="row"><label class="lbl grow">Padding<input id="dpad" type="number" value="6" min="0"></label><label class="lbl grow">Alpha<input id="da" type="number" value="16" min="1" max="255"></label></div><button id="detect">Detect Current Image</button><div class="small">Best on transparent PNGs. Detects disconnected opaque islands.</div></div></div>
-<div class="sec"><h2>Copy / Align / Space</h2><div class="stack">
+<div class="sec"><h2>PDF Loading</h2><div class="stack"><label class="lbl">Render quality<select id="pdfq"><option value="fast" selected>Fast</option><option value="balanced">Balanced</option><option value="high">High</option></select></label><label class="row small"><input id="pdfbg" type="checkbox" checked> Pre-render remaining pages in background</label><div class="small">Page 1 opens first. Other PDF pages render only when selected, with optional idle pre-render in the background.</div></div></div><div class="sec" id="smartSec"><h2>Smart Detect</h2><div class="stack"><div class="row"><label class="lbl grow">Mode<select id="dm"><option value="auto">Auto</option><option value="circle">Circle-ish</option><option value="square">Square-ish</option><option value="hex">Hex-ish</option><option value="cutout">Any cutout</option></select></label><label class="lbl grow">Min px<input id="dmin" type="number" value="24" min="4"></label></div><div class="row"><label class="lbl grow">Padding<input id="dpad" type="number" value="6" min="0"></label><label class="lbl grow">Alpha<input id="da" type="number" value="16" min="1" max="255"></label></div><button id="detect">Detect Current Image</button><div class="small">Best on transparent PNGs. Detects disconnected opaque islands.</div></div></div>
+<div class="sec" id="alignSec"><h2>Copy / Align / Space</h2><div class="stack">
 <div class="row"><label class="lbl grow">Copies<input id="rc" type="number" value="5" min="1"></label><label class="lbl grow">ΔX<input id="rdx" type="number" value="50"></label><label class="lbl grow">ΔY<input id="rdy" type="number" value="0"></label></div><button id="repeat">Repeat Selected</button>
 <div class="row"><button id="dx">Distribute X</button><button id="dy">Distribute Y</button><button id="same">Same Size</button></div>
 <div class="row"><button id="ax">Align X</button><button id="ay">Align Y</button></div>
 <div class="row"><label class="lbl grow">Exact edge gap<input id="gap" type="number" value="10"></label><button id="gh">Equal Gaps H</button><button id="gv">Equal Gaps V</button></div>
 </div></div>
-<div class="sec"><h2>Sprite Sheet</h2><div class="stack"><label class="lbl">Export grouping<select id="grouping"><option value="combined" selected>One combined spritesheet</option><option value="perImage">Multiple spritesheets (per image/page)</option></select></label><div class="row"><label class="lbl grow">Columns<input id="cols" type="number" value="4" min="1"></label><label class="lbl grow">Cell W px<input id="cell" type="number" value="256" min="16"></label><label class="lbl grow">Cell H px<input id="cellh" type="number" value="256" min="16"></label></div><div class="row"><label class="lbl grow">Padding<input id="pad" type="number" value="16" min="0"></label><label class="lbl grow">Margin<input id="mar" type="number" value="16" min="0"></label></div><div class="stats"><div class="stat"><b id="sz">0 × 0</b><span>sheet px</span></div><div class="stat"><b id="sc">0</b><span>sprites</span></div></div><div class="preview"><canvas id="sp" width="1" height="1"></canvas></div><button id="exp" class="primary" disabled>Export Sprite PNG</button></div></div>
-<div class="sec"><h2>Board Coordinates</h2><div class="stack"><div class="row"><button id="ann" disabled>Annotated PNG</button><button id="csv" disabled>Coordinates CSV</button></div><textarea id="txt" readonly></textarea></div></div>
+<div class="sec" id="spriteSec"><h2>Sprite Sheet</h2><div class="stack"><label class="lbl">Export grouping<select id="grouping"><option value="combined" selected>One combined spritesheet</option><option value="perImage">Multiple spritesheets (per image/page)</option></select></label><div class="row"><label class="lbl grow">Columns<input id="cols" type="number" value="4" min="1"></label><label class="lbl grow">Cell W px<input id="cell" type="number" value="256" min="16"></label><label class="lbl grow">Cell H px<input id="cellh" type="number" value="256" min="16"></label></div><div class="row"><label class="lbl grow">Padding<input id="pad" type="number" value="16" min="0"></label><label class="lbl grow">Margin<input id="mar" type="number" value="16" min="0"></label></div><div class="stats"><div class="stat"><b id="sz">0 × 0</b><span>sheet px</span></div><div class="stat"><b id="sc">0</b><span>sprites</span></div></div><div class="preview"><canvas id="sp" width="1" height="1"></canvas></div><button id="exp" class="primary" disabled>Export Sprite PNG</button></div></div>
+<div class="sec" id="cropperSec"><h2>PDF / Image Cropper</h2><div class="stack">
+<label class="lbl">Export format<select id="cropfmt"><option value="png" selected>PNG</option><option value="jpeg">JPG / JPEG</option><option value="webp">WebP</option><option value="pdf">PDF</option></select></label>
+<div class="row"><button id="addcrop">+ Crop Box</button><button id="copycrop">Copy Box to All Pages</button></div>
+<div class="row"><button id="expcrop" class="primary">Export Selected Crop</button><button id="expcrops">Export All Crops</button></div>
+<div class="small"><b>True crop only:</b> exported width/height come directly from the crop bounds. No stretching, fitting, squeezing, or forced output dimensions. PDF pages use a high-detail source render at export time.</div>
+</div></div>
+<div class="sec" id="coordSec"><h2>Board Coordinates</h2><div class="stack"><div class="row"><button id="ann" disabled>Annotated PNG</button><button id="csv" disabled>Coordinates CSV</button></div><textarea id="txt" readonly></textarea></div></div>
 </aside>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (()=>{'use strict';const $=x=>document.getElementById(x),S={imgs:[],img:null,sel:null,batch:new Set,seq:1,drag:null,ptr:new Map};const fi=$('fi'),cv=$('cv'),cx=cv.getContext('2d'),wrap=$('wrap');function id(p){return p+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}function img(){return S.imgs.find(x=>x.id===S.img)||null}function sel(){for(const im of S.imgs){const it=im.items.find(x=>x.id===S.sel);if(it)return{im,it}}return null}function all(){return S.imgs.flatMap(im=>im.items.map(it=>({im,it})))}function snap(v){if(!$('snap').checked)return v;const s=Math.max(1,+$('grid').value||1);return Math.round(v/s)*s}function i2s(im,x,y){return{x:im.vx+x*im.s,y:im.vy+y*im.s}}function s2i(im,x,y){return{x:(x-im.vx)/im.s,y:(y-im.vy)/im.s}}function hp(x,y,r){let a=[];for(let i=0;i<6;i++){let q=Math.PI/3*i;a.push({x:x+r*Math.cos(q),y:y+r*Math.sin(q)})}return a}function path(c,sh,x,y,r){c.beginPath();if(sh==='circle')c.arc(x,y,r,0,Math.PI*2);else if(sh==='square')c.rect(x-r,y-r,r*2,r*2);else{let p=hp(x,y,r);c.moveTo(p[0].x,p[0].y);for(let i=1;i<6;i++)c.lineTo(p[i].x,p[i].y);c.closePath()}}function pip(p,a){let q=false;for(let i=0,j=a.length-1;i<a.length;j=i++){let A=a[i],B=a[j],h=((A.y>p.y)!=(B.y>p.y))&&(p.x<(B.x-A.x)*(p.y-A.y)/((B.y-A.y)||1e-9)+A.x);if(h)q=!q}return q}function inside(it,p,c,r){if(it.kind==='marker')return Math.abs(p.x-c.x)<=r&&Math.abs(p.y-c.y)<=r;if(it.shape==='circle')return Math.hypot(p.x-c.x,p.y-c.y)<=r;if(it.shape==='square')return Math.abs(p.x-c.x)<=r&&Math.abs(p.y-c.y)<=r;return pip(p,hp(c.x,c.y,r))}function iw(it){return it.kind==='marker'?it.ms:it.ss}function ih(it){return it.kind==='marker'?it.ms:(it.shape==='rectangle'?(it.sh||it.ss):it.ss)}function ow(it){return it.kind==='crop'?it.os:it.ms}function ohv(it){return it.kind==='crop'?(it.shape==='rectangle'?(it.oh||it.os):it.os):it.ms}function size(it){return Math.max(iw(it),ih(it))}
 function resize(){let r=wrap.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=Math.max(1,r.width*d);cv.height=Math.max(1,r.height*d);cv.style.width=r.width+'px';cv.style.height=r.height+'px';cx.setTransform(d,0,0,d,0,0);draw()}function fit(){let im=img();if(!im||!im.el)return;let r=wrap.getBoundingClientRect(),s=Math.min((r.width-60)/im.w,(r.height-60)/im.h);im.s=Math.max(.03,s);im.vx=(r.width-im.w*im.s)/2;im.vy=(r.height-im.h*im.s)/2;syncZ();draw()}function syncZ(){let im=img(),v=im?Math.round(im.s*100):100;$('zoom').value=Math.max(10,Math.min(800,v));$('zv').textContent=v+'%'}function grid(im){if(!$('gridShow').checked)return;let st=Math.max(2,+$('grid').value||25)*im.s;if(st<8)return;cx.save();cx.strokeStyle='#ffffff12';for(let x=((im.vx%st)+st)%st;x<cv.clientWidth;x+=st){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,cv.clientHeight);cx.stroke()}for(let y=((im.vy%st)+st)%st;y<cv.clientHeight;y+=st){cx.beginPath();cx.moveTo(0,y);cx.lineTo(cv.clientWidth,y);cx.stroke()}cx.restore()}function draw(){cx.clearRect(0,0,cv.clientWidth,cv.clientHeight);let im=img();$('empty').style.display=im?'none':'grid';if(!im||!im.el)return;cx.drawImage(im.el,im.vx,im.vy,im.w*im.s,im.h*im.s);grid(im);for(const it of im.items)ditem(im,it,it.id===S.sel,S.batch.has(it.id))}
@@ -149,7 +156,7 @@ async function processFiles(files){
       setUploadStatus('Loading '+f.name+' ('+(i+1)+'/'+list.length+')...');
       try{
         const isPdf=f.type==='application/pdf'||/\.pdf$/i.test(f.name);
-        const isImage=f.type.startsWith('image/')||/\.(png|jpe?g|webp)$/i.test(f.name);
+        const isImage=f.type.startsWith('image/')||/\.(png|jpe?g|webp|bmp|gif)$/i.test(f.name);
         if(!isPdf&&!isImage){failed.push(f.name+' (unsupported type)');continue}
         const imported=isPdf?await loadPdfFile(f):await loadImageFile(f);
         for(const im of imported){S.imgs.push(im);added++;if(!S.img)S.img=im.id;}
@@ -172,7 +179,7 @@ wrap.addEventListener('drop',e=>processFiles(e.dataTransfer.files));
 function renderFiles(){$('files').innerHTML='';$('noFiles').style.display=S.imgs.length?'none':'block';for(const im of S.imgs){let d=document.createElement('div');d.className='file '+(im.id===S.img?'active':'');let status=im.pdfDoc&&!im.rendered?(im.rendering?'Rendering…':'Click to render'):(im.w+'×'+im.h);d.innerHTML='<div class="thumb"><img></div><div><b>'+im.name+'</b><div class="meta">'+status+' · '+im.items.length+' items</div></div>';let ti=d.querySelector('img');if(im.el)ti.src=im.el.src;else ti.alt='PDF page';d.onclick=async()=>{S.img=im.id;S.sel=null;renderFiles();renderItems();syncSel();if(im.pdfDoc&&!im.rendered){setUploadStatus('Rendering '+im.name+'...');await renderPdfPage(im);setUploadStatus(im.name+' ready')}fit();coord()};$('files').appendChild(d)}}
 function addCrop(sh){let im=img();if(!im||!im.el)return;let r=wrap.getBoundingClientRect(),p=s2i(im,r.width/2,r.height/2),s=Math.max(60,Math.min(300,Math.min(im.w,im.h)*.18)),it={id:id('it'),kind:'crop',label:sh[0].toUpperCase()+sh.slice(1)+' '+S.seq++,shape:sh,x:snap(p.x),y:snap(p.y),ss:sh==='rectangle'?Math.round(s*1.4):s,sh:sh==='rectangle'?s:undefined,os:+$('cell').value||256,oh:sh==='rectangle'?(+$('cellh').value||192):undefined};im.items.push(it);S.sel=it.id;refresh()}function addX(){let im=img();if(!im||!im.el)return;let r=wrap.getBoundingClientRect(),p=s2i(im,r.width/2,r.height/2),it={id:id('it'),kind:'marker',label:'X '+S.seq++,x:snap(p.x),y:snap(p.y),ms:40};im.items.push(it);S.sel=it.id;refresh()}$('c1').onclick=()=>addCrop('circle');$('c2').onclick=()=>addCrop('square');$('c3').onclick=()=>addCrop('hex');$('cr').onclick=()=>addCrop('rectangle');$('mx').onclick=addX;$('fit').onclick=fit;
 function renderItems(){$('items').innerHTML='';for(const {im,it} of all()){let d=document.createElement('div');d.className='item '+(it.id===S.sel?'active':'');let cb=document.createElement('input');cb.type='checkbox';cb.checked=S.batch.has(it.id);cb.onclick=e=>{e.stopPropagation();cb.checked?S.batch.add(it.id):S.batch.delete(it.id);draw();coord()};let info=document.createElement('div');info.innerHTML='<b>'+it.label+'</b> <span class="pill">'+it.kind+(it.shape?' '+it.shape:'')+'</span><div class="meta">'+im.name+' · x '+Math.round(it.x)+' · y '+Math.round(it.y)+'</div>';let b=document.createElement('button');b.textContent='×';b.className='danger';b.onclick=e=>{e.stopPropagation();im.items=im.items.filter(x=>x.id!==it.id);S.batch.delete(it.id);if(S.sel===it.id)S.sel=null;refresh()};d.onclick=()=>{S.img=im.id;S.sel=it.id;renderFiles();renderItems();syncSel();draw();coord()};d.append(cb,info,b);$('items').appendChild(d)}$('ic').textContent=all().length}
-function syncSel(){let s=sel(),en=!!s;['label','ix','iy','shape','ss','sh','os','oh','ms','dup','center','del'].forEach(k=>$(k).disabled=!en);if(!en)return;let it=s.it;$('label').value=it.label;$('ix').value=Math.round(it.x*10)/10;$('iy').value=Math.round(it.y*10)/10;$('shape').disabled=it.kind!=='crop';$('ss').disabled=it.kind!=='crop';$('sh').disabled=it.kind!=='crop'||it.shape!=='rectangle';$('os').disabled=it.kind!=='crop';$('oh').disabled=it.kind!=='crop'||it.shape!=='rectangle';$('ms').disabled=it.kind!=='marker';if(it.kind==='crop'){$('shape').value=it.shape;$('ss').value=Math.round(it.ss);$('sh').value=Math.round(it.shape==='rectangle'?(it.sh||it.ss):it.ss);$('os').value=Math.round(it.os);$('oh').value=Math.round(it.shape==='rectangle'?(it.oh||it.os):it.os)}else $('ms').value=Math.round(it.ms)}
+function syncSel(){let s=sel(),en=!!s;['label','ix','iy','shape','ss','sh','os','oh','ms','dup','center','del'].forEach(k=>$(k).disabled=!en);if(!en)return;let it=s.it;$('label').value=it.label;$('ix').value=Math.round(it.x*10)/10;$('iy').value=Math.round(it.y*10)/10;$('shape').disabled=it.kind!=='crop'||$('appmode').value==='cropper';$('ss').disabled=it.kind!=='crop';$('sh').disabled=it.kind!=='crop'||it.shape!=='rectangle';$('os').disabled=it.kind!=='crop';$('oh').disabled=it.kind!=='crop'||it.shape!=='rectangle';$('ms').disabled=it.kind!=='marker';if(it.kind==='crop'){$('shape').value=it.shape;$('ss').value=Math.round(it.ss);$('sh').value=Math.round(it.shape==='rectangle'?(it.sh||it.ss):it.ss);$('os').value=Math.round(it.os);$('oh').value=Math.round(it.shape==='rectangle'?(it.oh||it.os):it.os)}else $('ms').value=Math.round(it.ms)}
 function refresh(){renderFiles();renderItems();syncSel();enable();draw();preview();coord()}$('label').oninput=()=>{let s=sel();if(s){s.it.label=$('label').value;renderItems();coord()}};$('ix').oninput=()=>{let s=sel();if(s){s.it.x=snap(+$('ix').value||0);draw();renderItems();coord()}};$('iy').oninput=()=>{let s=sel();if(s){s.it.y=snap(+$('iy').value||0);draw();renderItems();coord()}};$('shape').onchange=()=>{let s=sel();if(s&&s.it.kind==='crop'){let v=$('shape').value;if(v==='rectangle'&&s.it.shape!=='rectangle'){s.it.sh=s.it.ss;s.it.oh=s.it.os}else if(v!=='rectangle'&&s.it.shape==='rectangle'){delete s.it.sh;delete s.it.oh}s.it.shape=v;refresh()}};$('ss').oninput=()=>{let s=sel();if(s&&s.it.kind==='crop'){if(s.it.shape==='rectangle'){let left=s.it.x-s.it.ss/2,newW=Math.max(8,+$('ss').value||8);s.it.ss=newW;s.it.x=left+newW/2}else s.it.ss=Math.max(8,+$('ss').value||8);renderItems();syncSel();draw();preview();coord()}};$('sh').oninput=()=>{let s=sel();if(s&&s.it.kind==='crop'&&s.it.shape==='rectangle'){let top=s.it.y-(s.it.sh||s.it.ss)/2,newH=Math.max(8,+$('sh').value||8);s.it.sh=newH;s.it.y=top+newH/2;renderItems();syncSel();draw();preview();coord()}};$('os').oninput=()=>{let s=sel();if(s&&s.it.kind==='crop'){s.it.os=Math.max(16,+$('os').value||16);preview();coord()}};$('oh').oninput=()=>{let s=sel();if(s&&s.it.kind==='crop'&&s.it.shape==='rectangle'){s.it.oh=Math.max(8,+$('oh').value||8);preview();coord()}};$('ms').oninput=()=>{let s=sel();if(s&&s.it.kind==='marker'){s.it.ms=Math.max(4,+$('ms').value||4);refresh()}};
 function clone(){let s=sel();if(!s)return;let k=JSON.parse(JSON.stringify(s.it));k.id=id('it');k.label='Copy '+S.seq++;k.x=snap(k.x+size(k)*.25);k.y=snap(k.y+size(k)*.25);s.im.items.push(k);S.sel=k.id;refresh()}$('dup').onclick=clone;$('center').onclick=()=>{let s=sel();if(s){s.it.x=snap(s.im.w/2);s.it.y=snap(s.im.h/2);refresh()}};$('del').onclick=()=>{let s=sel();if(s){s.im.items=s.im.items.filter(x=>x.id!==s.it.id);S.batch.delete(s.it.id);S.sel=null;refresh()}};
 $('all').onclick=()=>{let im=img();if(im){im.items.forEach(x=>S.batch.add(x.id));renderItems();draw();coord()}};$('none').onclick=()=>{S.batch.clear();renderItems();draw();coord()};function batch(){return all().filter(x=>S.batch.has(x.it.id))}
@@ -180,7 +187,92 @@ $('repeat').onclick=()=>{let s=sel();if(!s)return;let n=Math.max(1,+$('rc').valu
 function classify(mode,w,h,fill){let sq=w/h>.78&&w/h<1.28;if(mode==='circle')return sq?'circle':null;if(mode==='square'||mode==='cutout')return'square';if(mode==='hex')return sq?'hex':null;if(!sq)return'square';return fill>.72?'circle':fill>.5?'hex':'square'}function detect(){let im=img();if(!im||!im.el)return;let w=im.w,h=im.h,off=document.createElement('canvas');off.width=w;off.height=h;let c=off.getContext('2d',{willReadFrequently:true});c.drawImage(im.el,0,0);let d=c.getImageData(0,0,w,h).data,v=new Uint8Array(w*h),st=[],found=0,min=+$('dmin').value||24,pad=+$('dpad').value||0,alpha=+$('da').value||16,mode=$('dm').value;for(let y=0;y<h;y++)for(let x=0;x<w;x++){let n=y*w+x;if(v[n])continue;v[n]=1;if(d[n*4+3]<alpha)continue;let x0=x,x1=x,y0=y,y1=y,count=0;st.push(n);while(st.length){let z=st.pop(),yy=(z/w)|0,xx=z-yy*w;count++;x0=Math.min(x0,xx);x1=Math.max(x1,xx);y0=Math.min(y0,yy);y1=Math.max(y1,yy);for(const k of [[xx-1,yy],[xx+1,yy],[xx,yy-1],[xx,yy+1]]){let X=k[0],Y=k[1];if(X<0||Y<0||X>=w||Y>=h)continue;let j=Y*w+X;if(v[j])continue;v[j]=1;if(d[j*4+3]>=alpha)st.push(j)}}let bw=x1-x0+1,bh=y1-y0+1;if(bw<min||bh<min)continue;let sh=classify(mode,bw,bh,count/(bw*bh));if(!sh)continue;im.items.push({id:id('it'),kind:'crop',label:sh[0].toUpperCase()+sh.slice(1)+' '+S.seq++,shape:sh,x:snap((x0+x1)/2),y:snap((y0+y1)/2),ss:Math.max(bw,bh)+pad*2,os:+$('cell').value||256});found++}if(!found)alert('No separate cutouts detected. Try a lower minimum size or alpha threshold.');refresh()}$('smart').onclick=detect;$('detect').onclick=detect;
 function cropCanvas(im,it,w,h){h=h||w;let c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));let g=c.getContext('2d');g.save();if(it.shape==='rectangle'){g.beginPath();g.rect(0,0,c.width,c.height)}else path(g,it.shape,c.width/2,c.height/2,Math.min(c.width,c.height)/2);g.clip();g.drawImage(im.el,it.x-iw(it)/2,it.y-ih(it)/2,iw(it),ih(it),0,0,c.width,c.height);g.restore();return c}function sheet(pairs){let a=(pairs||all()).filter(x=>x.it.kind==='crop'),cols=Math.max(1,+$('cols').value||1),cellW=Math.max(16,+$('cell').value||256),cellH=Math.max(16,+$('cellh').value||256),pad=Math.max(0,+$('pad').value||0),mar=Math.max(0,+$('mar').value||0),rows=Math.ceil(a.length/cols)||1,w=a.length?mar*2+cols*cellW+(cols-1)*pad:1,h=a.length?mar*2+rows*cellH+(rows-1)*pad:1,c=document.createElement('canvas');c.width=w;c.height=h;let g=c.getContext('2d');a.forEach(({im,it},i)=>{let tw=Math.max(1,Math.round(ow(it)||cellW)),th=Math.max(1,Math.round(ohv(it)||cellH)),t=cropCanvas(im,it,tw,th),x=mar+(i%cols)*(cellW+pad),y=mar+Math.floor(i/cols)*(cellH+pad),s=Math.min(cellW/tw,cellH/th),dw=tw*s,dh=th*s;g.drawImage(t,x+(cellW-dw)/2,y+(cellH-dh)/2,dw,dh)});return{c,n:a.length}}function preview(){let groups=$('grouping').value==='combined'?[{pairs:all()}]:S.imgs.map(im=>({pairs:im.items.map(it=>({im,it}))})).filter(g=>g.pairs.some(x=>x.it.kind==='crop')),q=sheet(groups[0]?groups[0].pairs:[]);$('sp').width=q.c.width;$('sp').height=q.c.height;$('sp').getContext('2d').drawImage(q.c,0,0);$('sz').textContent=q.c.width+' × '+q.c.height;$('sc').textContent=q.n;$('exp').disabled=!q.n}['grouping','cols','cell','cellh','pad','mar'].forEach(x=>$(x).oninput=preview);$('exp').onclick=()=>{if($('grouping').value==='combined'){let q=sheet();q.c.toBlob(b=>down(b,'shape-spritesheet.png'))}else{S.imgs.forEach((im,idx)=>{let pairs=im.items.filter(it=>it.kind==='crop').map(it=>({im,it}));if(!pairs.length)return;let q=sheet(pairs),base=im.name.split('.').slice(0,-1).join('.')||('sheet-'+(idx+1));base=base.replace(/[^a-z0-9_-]+/gi,'-');q.c.toBlob(b=>down(b,base+'-spritesheet.png'))})}};function down(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $('ann').onclick=()=>{let im=img();if(!im||!im.el)return;let c=document.createElement('canvas');c.width=im.w;c.height=im.h;let g=c.getContext('2d');g.drawImage(im.el,0,0);for(const it of im.items){if(it.kind==='crop'){if(it.shape==='rectangle'){g.beginPath();g.rect(it.x-iw(it)/2,it.y-ih(it)/2,iw(it),ih(it))}else path(g,it.shape,it.x,it.y,it.ss/2);g.lineWidth=3;g.strokeStyle='#6ea8fe';g.stroke()}else{let r=it.ms/2;g.strokeStyle='#f33';g.lineWidth=3;g.beginPath();g.moveTo(it.x-r,it.y-r);g.lineTo(it.x+r,it.y+r);g.moveTo(it.x+r,it.y-r);g.lineTo(it.x-r,it.y+r);g.stroke()}g.font='14px system-ui';let t=it.label+' ('+Math.round(it.x)+', '+Math.round(it.y)+')';g.fillStyle='#000b';g.fillRect(it.x+7,it.y-24,g.measureText(t).width+8,19);g.fillStyle='#fff';g.fillText(t,it.x+11,it.y-10)}c.toBlob(b=>down(b,'annotated-board.png'))};$('csv').onclick=()=>{let r=[['image','label','kind','shape','x','y','sourceWidth','sourceHeight','outputWidth','outputHeight','markerSize']];all().forEach(({im,it})=>r.push([im.name,it.label,it.kind,it.shape||'',Math.round(it.x),Math.round(it.y),it.kind==='crop'?Math.round(iw(it)):'',it.kind==='crop'?Math.round(ih(it)):'',it.kind==='crop'?Math.round(ow(it)):'',it.kind==='crop'?Math.round(ohv(it)):'',it.ms||'']));let s=r.map(a=>a.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');down(new Blob([s],{type:'text/csv'}),'shape-coordinates.csv')};function coord(){let s=sel(),b=batch(),a=[];if(s)a.push(s.it.label+'\nimage='+s.im.name+'\nx='+Math.round(s.it.x)+', y='+Math.round(s.it.y)+(s.it.shape?'\nshape='+s.it.shape:'')+(s.it.ss?'\nsource='+Math.round(s.it.ss)+' px':'')+(s.it.ms?'\nmarker='+Math.round(s.it.ms)+' px':''));if(b.length){a.push('\nBatch: '+b.length);b.forEach(x=>a.push(x.it.label+' | x='+Math.round(x.it.x)+' y='+Math.round(x.it.y)))}$('txt').value=a.join('\n')}
-function enable(){let cur=img(),h=!!(cur&&cur.el);['c1','c2','c3','cr','mx','smart','fit'].forEach(x=>$(x).disabled=!h);$('ann').disabled=!h;$('csv').disabled=!all().length;preview()}['gridShow','coords','snap'].forEach(x=>$(x).oninput=draw);$('grid').oninput=draw;window.addEventListener('resize',resize);resize();renderFiles();renderItems();syncSel();enable();coord()})();
+
+function modeApply(){
+  let crop=$('appmode').value==='cropper';
+  ['c1','c2','c3','mx','smart'].forEach(k=>$(k).style.display=crop?'none':'');
+  $('cr').textContent=crop?'+ Crop Box':'+ Rectangle';
+  ['smartSec','alignSec','spriteSec','coordSec'].forEach(k=>$(k).style.display=crop?'none':'');
+  $('cropperSec').style.display=crop?'block':'none';
+  if(crop){
+    let s=sel();
+    if(s&&s.it.kind==='crop'&&s.it.shape!=='rectangle'){
+      s.it.shape='rectangle';s.it.sh=s.it.ss;s.it.oh=s.it.os;syncSel();draw()
+    }
+  }
+}
+async function trueCropCanvas(im,it){
+  if(!im||!it||it.kind!=='crop')return null;
+  let sw=Math.max(1,Math.round(iw(it))),sh=Math.max(1,Math.round(ih(it)));
+  if(im.pdfDoc){
+    const page=await im.pdfDoc.getPage(im.pageNum);
+    const base=page.getViewport({scale:1});
+    const scale=Math.min(4,5200/Math.max(base.width,base.height));
+    const vp=page.getViewport({scale});
+    const full=document.createElement('canvas');
+    full.width=Math.max(1,Math.ceil(vp.width));full.height=Math.max(1,Math.ceil(vp.height));
+    const fg=full.getContext('2d',{alpha:false});
+    await page.render({canvasContext:fg,viewport:vp,background:'#fff'}).promise;
+    const rx=full.width/im.w,ry=full.height/im.h;
+    let sx=Math.max(0,Math.round((it.x-iw(it)/2)*rx)),sy=Math.max(0,Math.round((it.y-ih(it)/2)*ry));
+    let cw=Math.max(1,Math.round(iw(it)*rx)),ch=Math.max(1,Math.round(ih(it)*ry));
+    cw=Math.min(cw,full.width-sx);ch=Math.min(ch,full.height-sy);
+    const out=document.createElement('canvas');out.width=cw;out.height=ch;
+    out.getContext('2d').drawImage(full,sx,sy,cw,ch,0,0,cw,ch);
+    return out;
+  }
+  const out=document.createElement('canvas');out.width=sw;out.height=sh;
+  const g=out.getContext('2d');
+  g.drawImage(im.el,Math.round(it.x-sw/2),Math.round(it.y-sh/2),sw,sh,0,0,sw,sh);
+  return out;
+}
+function safeBase(s){return (s||'crop').replace(/\.[^.]+$/,'').replace(/[^a-z0-9_-]+/gi,'-').replace(/^-+|-+$/g,'')||'crop'}
+function canvasBlob(canvas,fmt){return new Promise(resolve=>canvas.toBlob(resolve,fmt==='jpeg'?'image/jpeg':fmt==='webp'?'image/webp':'image/png',fmt==='jpeg'?0.95:0.96))}
+async function exportCropEntries(entries,fmt){
+  if(!entries.length)return alert('Add/select a rectangle crop first.');
+  if(fmt==='pdf'){
+    if(!window.jspdf)return alert('PDF export library did not load.');
+    const {jsPDF}=window.jspdf;
+    let doc=null;
+    for(let i=0;i<entries.length;i++){
+      const {im,it}=entries[i],can=await trueCropCanvas(im,it);
+      if(!can)continue;
+      const orient=can.width>=can.height?'landscape':'portrait';
+      if(!doc)doc=new jsPDF({orientation:orient,unit:'pt',format:[can.width,can.height],compress:true});
+      else doc.addPage([can.width,can.height],orient);
+      doc.addImage(can.toDataURL('image/png'),'PNG',0,0,can.width,can.height,undefined,'FAST');
+    }
+    if(doc)doc.save(entries.length===1?safeBase(entries[0].it.label)+'.pdf':'cropped-pages.pdf');
+    return;
+  }
+  for(let i=0;i<entries.length;i++){
+    const {im,it}=entries[i],can=await trueCropCanvas(im,it);
+    if(!can)continue;
+    const blob=await canvasBlob(can,fmt);
+    const ext=fmt==='jpeg'?'jpg':fmt;
+    down(blob,safeBase(im.name)+'-'+safeBase(it.label)+'.'+ext);
+    if(entries.length>1)await new Promise(r=>setTimeout(r,80));
+  }
+}
+$('appmode').onchange=modeApply;
+$('addcrop').onclick=()=>addCrop('rectangle');
+$('copycrop').onclick=()=>{
+  let s=sel();if(!s||s.it.kind!=='crop'||s.it.shape!=='rectangle')return alert('Select a rectangle crop first.');
+  for(const im of S.imgs){
+    if(im.id===s.im.id)continue;
+    let k=JSON.parse(JSON.stringify(s.it));k.id=id('it');k.label=s.it.label+' '+(im.pageNum?('P'+im.pageNum):'copy');im.items.push(k)
+  }
+  refresh()
+};
+$('expcrop').onclick=async()=>{
+  let s=sel();if(!s||s.it.kind!=='crop'||s.it.shape!=='rectangle')return alert('Select a rectangle crop first.');
+  await exportCropEntries([s],$('cropfmt').value)
+};
+$('expcrops').onclick=async()=>{
+  let entries=all().filter(x=>x.it.kind==='crop'&&x.it.shape==='rectangle');
+  await exportCropEntries(entries,$('cropfmt').value)
+};
+function enable(){let cur=img(),h=!!(cur&&cur.el);['c1','c2','c3','cr','mx','smart','fit'].forEach(x=>$(x).disabled=!h);$('ann').disabled=!h;$('csv').disabled=!all().length;preview()}['gridShow','coords','snap'].forEach(x=>$(x).oninput=draw);$('grid').oninput=draw;window.addEventListener('resize',resize);resize();renderFiles();renderItems();syncSel();enable();coord();modeApply()})();
 </script>
 </body>
 </html>
