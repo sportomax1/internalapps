@@ -45,7 +45,20 @@ $('#renumber').onclick=()=>{if(!hexes.length)return;snapshot();let avgH=hexes.re
 $('#all').onclick=()=>{sel=new Set(hexes.map(h=>h.id));render()};$('#none').onclick=()=>{sel.clear();render()};$('#del').onclick=()=>{snapshot();hexes=hexes.filter(h=>!sel.has(h.id));sel.clear();render()};
 $('#duplicate').onclick=()=>{snapshot();let old=hexes.filter(h=>sel.has(h.id)),ids=[];old.forEach(h=>{let n={...h,id:nextId++,x:h.x+20,y:h.y+20};hexes.push(n);ids.push(n.id)});sel=new Set(ids);render()};
 $('#moveExact').onclick=()=>{snapshot();let dx=+$('#dx').value||0,dy=+$('#dy').value||0;hexes.filter(h=>sel.has(h.id)).forEach(h=>{h.x+=dx;h.y+=dy});render()};
-$('#apply').onclick=()=>{if(!sel.size)return;snapshot();let arr=hexes.filter(h=>sel.has(h.id)),w=+$('#selWidth').value,hh=+$('#selHeight').value;if(w>=5)arr.forEach(h=>h.width=w);if(hh>=5)arr.forEach(h=>h.height=hh);if(arr.length===1){let h=arr[0];h.x=+$('#cx').value;h.y=+$('#cy').value;h.q=+$('#q').value;h.r=+$('#r').value}render()};
+function gridOffset(dq,dr,w,h){let g=geom(),gap=Math.max(0,g.gap),rt3=Math.sqrt(3),step;
+ if(g.o==='pointy'){
+   // Basis vectors match the exact snug point-top neighbor geometry.
+   let bx={x:rt3/4*w,y:.75*h},by={x:-rt3/4*w,y:.75*h};
+   let x=bx.x*dq+by.x*dr,y=bx.y*dq+by.y*dr;if(gap){let sx=dq-dr,sy=dq+dr;x+=sx*gap*.5;y+=sy*gap*rt3/2}return{x,y};
+ }
+ // Flat/side-pointed basis.
+ let bx={x:.75*w,y:rt3/4*h},by={x:.75*w,y:-rt3/4*h};
+ let x=bx.x*dq+by.x*dr,y=bx.y*dq+by.y*dr;if(gap){let sx=dq+dr,sy=dq-dr;x+=sx*gap*rt3/2;y+=sy*gap*.5}return{x,y};
+}
+$('#apply').onclick=()=>{if(!sel.size)return;snapshot();let arr=hexes.filter(h=>sel.has(h.id)),w=+$('#selWidth').value,hh=+$('#selHeight').value,anchor=arr[0],ax=anchor.x,ay=anchor.y,aq=anchor.q,ar=anchor.r;
+ if(w>=5)arr.forEach(h=>h.width=w);if(hh>=5)arr.forEach(h=>h.height=hh);
+ if(arr.length>1&&w>=5&&hh>=5){arr.forEach(h=>{let d=gridOffset(h.q-aq,h.r-ar,w,hh);h.x=ax+d.x;h.y=ay+d.y})}
+ if(arr.length===1){let h=arr[0];h.x=+$('#cx').value;h.y=+$('#cy').value;h.q=+$('#q').value;h.r=+$('#r').value}render()};
 let globalRatio=(+$('#hexWidth').value||125)/(+$('#hexHeight').value||125),selectedRatio=null;
 $('#hexWidth').onchange=()=>{if($('#lockGlobal').checked)$('#hexHeight').value=Math.max(5,Math.round((+$('#hexWidth').value/globalRatio)*100)/100);globalRatio=(+$('#hexWidth').value)/(+$('#hexHeight').value);render()};
 $('#hexHeight').onchange=()=>{if($('#lockGlobal').checked)$('#hexWidth').value=Math.max(5,Math.round((+$('#hexHeight').value*globalRatio)*100)/100);globalRatio=(+$('#hexWidth').value)/(+$('#hexHeight').value);render()};
