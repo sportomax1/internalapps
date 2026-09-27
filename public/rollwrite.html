@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roll & Write Studio</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141a22;--panel2:#1b2430;--border:#2c3747;--text:#eef3f8;--muted:#91a0b5;--accent:#6ea8fe;--danger:#ff6b6b;--ok:#52cf80}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+button,input,select,textarea{font:inherit}button{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer}button:hover{border-color:#55708f}button:disabled{opacity:.4;cursor:not-allowed}.primary{background:var(--accent);color:#08111e;border-color:var(--accent);font-weight:700}.danger{color:#ffd8d8;border-color:#64333a}
+.app{height:100%;display:grid;grid-template:56px 1fr/260px minmax(0,1fr) 330px}header{grid-column:1/-1;display:flex;gap:8px;align-items:center;padding:0 10px;background:#10161d;border-bottom:1px solid var(--border);overflow:auto}header h1{font-size:15px;margin:0 8px 0 0;white-space:nowrap}.side{background:var(--panel);overflow:auto;min-height:0}.left{border-right:1px solid var(--border)}.right{border-left:1px solid var(--border)}.sec{padding:12px;border-bottom:1px solid var(--border)}.sec h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 9px}.stack{display:grid;gap:7px}.row{display:flex;gap:7px;align-items:center}.grow{flex:1}.lbl{display:grid;gap:4px;color:var(--muted);font-size:11px}.field,select,textarea{width:100%;background:#0e141b;color:var(--text);border:1px solid var(--border);border-radius:7px;padding:7px}textarea{min-height:70px;resize:vertical}.small{font-size:11px;color:var(--muted);line-height:1.45}.pill{display:inline-block;padding:2px 6px;border:1px solid var(--border);border-radius:999px;font-size:10px;color:#cfe1ff}
+.stage{position:relative;overflow:auto;background-color:#090c11;background-image:linear-gradient(#141a22 1px,transparent 1px),linear-gradient(90deg,#141a22 1px,transparent 1px);background-size:24px 24px}.world{position:relative;transform-origin:0 0;margin:30px}.world img{position:absolute;left:0;top:0;user-select:none;pointer-events:none;display:block}.overlay{position:absolute;left:0;top:0;overflow:visible;touch-action:none}.mark{cursor:move}.mark .shape{fill:rgba(110,168,254,.18);stroke:#6ea8fe;stroke-width:2;vector-effect:non-scaling-stroke}.mark.x .shape{fill:none}.mark.selected .shape{stroke:#facc15;stroke-width:3}.mark text{fill:white;font:600 13px system-ui;paint-order:stroke;stroke:#000;stroke-width:3px;pointer-events:none;vector-effect:non-scaling-stroke}.handle{fill:#fff;stroke:#111;stroke-width:1;vector-effect:non-scaling-stroke;cursor:nwse-resize}.mark:not(.selected) .handle{display:none}
+.item{display:grid;grid-template-columns:1fr auto;gap:7px;padding:8px;border:1px solid var(--border);border-radius:9px;background:#101720;margin-bottom:6px;cursor:pointer}.item.active{border-color:var(--accent)}.item b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.meta{font-size:10px;color:var(--muted);margin-top:2px}.empty{padding:14px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:9px}.status{position:absolute;left:12px;bottom:12px;background:#0b0f14dc;border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:11px;color:#cbd5e1;z-index:5;pointer-events:none}.badge{padding:4px 7px;border-radius:7px;background:#0e141b;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+input[type=file]{display:none}input[type=range]{width:140px}
+@media(max-width:900px){.app{grid-template:56px 1fr/220px minmax(0,1fr)}.right{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<h1>🎯 Roll & Write Studio</h1>
+<button id="upload" class="primary">Upload Image</button><input id="file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp">
+<button id="fit">Fit</button>
+<label class="badge">Zoom <input id="zoom" type="range" min="10" max="400" value="100"></label>
+<button id="undo">Undo</button><button id="redo">Redo</button>
+<span class="badge" id="dims">No image</span>
+</header>
+
+<aside class="side left">
+<section class="sec"><h2>Add Marking</h2><div class="stack">
+<div class="row"><button class="grow add" data-type="circle">○ Circle</button><button class="grow add" data-type="x">✕ X</button></div>
+<div class="row"><button class="grow add" data-type="rectangle">▭ Rectangle</button><button class="grow add" data-type="square">□ Square</button></div>
+<button class="add" data-type="point">• Point</button>
+<div class="small">Click a tool, then click the board where the marking belongs. Coordinates always use the original image pixels.</div>
+</div></section>
+<section class="sec"><h2>View</h2><div class="stack">
+<label class="row small"><input id="showNames" type="checkbox" checked> Show names</label>
+<label class="row small"><input id="showCoords" type="checkbox"> Show coordinates</label>
+<label class="row small"><input id="snap" type="checkbox"> Snap to grid</label>
+<label class="lbl">Grid px<input id="grid" class="field" type="number" min="1" value="10"></label>
+</div></section>
+<section class="sec"><h2>Markings</h2><div id="items"></div></section>
+</aside>
+
+<main id="stage" class="stage">
+<div id="world" class="world"><img id="board"><svg id="overlay" class="overlay"></svg></div>
+<div id="status" class="status">Upload an image to begin.</div>
+</main>
+
+<aside class="side right">
+<section class="sec"><h2>Selected Marking</h2><div id="none" class="empty">Select a marking.</div><div id="editor" class="stack" hidden>
+<label class="lbl">Name<input id="name" class="field" type="text"></label>
+<div class="row"><label class="lbl grow">Type<select id="type"><option>circle</option><option>x</option><option>rectangle</option><option>square</option><option>point</option></select></label><label class="lbl grow">ID<input id="id" class="field" type="text"></label></div>
+<div class="row"><label class="lbl grow">Center X<input id="x" class="field" type="number" step=".1"></label><label class="lbl grow">Center Y<input id="y" class="field" type="number" step=".1"></label></div>
+<div class="row"><label class="lbl grow">Width<input id="w" class="field" type="number" min="1" step=".1"></label><label class="lbl grow">Height<input id="h" class="field" type="number" min="1" step=".1"></label></div>
+<label class="lbl">Group<input id="group" class="field" type="text" placeholder="e.g. Wine, Bonus, Score"></label>
+<label class="lbl">Value<input id="value" class="field" type="text"></label>
+<label class="lbl">Notes<textarea id="notes"></textarea></label>
+<div class="row"><button id="dup" class="grow">Duplicate</button><button id="del" class="danger grow">Delete</button></div>
+</div></section>
+<section class="sec"><h2>Project</h2><div class="stack">
+<div class="row"><button id="import" class="grow">Import JSON</button><input id="jsonFile" type="file" accept=".json,application/json"><button id="export" class="primary grow">Export JSON</button></div>
+<div class="row"><button id="csv" class="grow">Export CSV</button><button id="annotated" class="grow">Annotated PNG</button></div>
+<div class="small">JSON includes image dimensions plus pixel and normalized coordinates for every marking.</div>
+</div></section>
+<section class="sec"><h2>Selected JSON</h2><textarea id="preview" readonly></textarea></section>
+</aside>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
+const S={img:null,w:0,h:0,marks:[],sel:null,tool:null,zoom:1,seq:1,history:[],future:[],drag:null};
+const board=$('board'),overlay=$('overlay'),world=$('world'),stage=$('stage');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function snap(v){if(!$('snap').checked)return v;const g=Math.max(1,+$('grid').value||10);return Math.round(v/g)*g}
+function uid(){return 'm'+String(S.seq++).padStart(3,'0')}
+function mark(){return S.marks.find(m=>m.id===S.sel)||null}
+function snapshot(){S.history.push(JSON.stringify({marks:S.marks,seq:S.seq}));if(S.history.length>80)S.history.shift();S.future=[]}
+function restore(raw){const x=JSON.parse(raw);S.marks=x.marks||[];S.seq=x.seq||1;S.sel=null;render()}
+function undo(){if(!S.history.length)return;S.future.push(JSON.stringify({marks:S.marks,seq:S.seq}));restore(S.history.pop())}
+function redo(){if(!S.future.length)return;S.history.push(JSON.stringify({marks:S.marks,seq:S.seq}));restore(S.future.pop())}
+$('undo').onclick=undo;$('redo').onclick=redo;
+function setZoom(v,keepCenter=true){const old=S.zoom;S.zoom=Math.max(.1,Math.min(4,v));$('zoom').value=Math.round(S.zoom*100);world.style.width=(S.w*S.zoom)+'px';world.style.height=(S.h*S.zoom)+'px';board.style.width=overlay.style.width=(S.w*S.zoom)+'px';board.style.height=overlay.style.height=(S.h*S.zoom)+'px';overlay.setAttribute('viewBox',`0 0 ${S.w} ${S.h}`);if(keepCenter&&old&&S.w){const cx=(stage.scrollLeft+stage.clientWidth/2)/old,cy=(stage.scrollTop+stage.clientHeight/2)/old;requestAnimationFrame(()=>{stage.scrollLeft=cx*S.zoom-stage.clientWidth/2;stage.scrollTop=cy*S.zoom-stage.clientHeight/2})}}
+$('zoom').oninput=()=>setZoom(+$('zoom').value/100);
+function fit(){if(!S.w)return;const pad=70,z=Math.min((stage.clientWidth-pad)/S.w,(stage.clientHeight-pad)/S.h,1.5);setZoom(z,false);stage.scrollLeft=0;stage.scrollTop=0}
+$('fit').onclick=fit;
+function loadImage(file){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{S.img=r.result;S.w=im.naturalWidth;S.h=im.naturalHeight;S.marks=[];S.sel=null;S.seq=1;S.history=[];S.future=[];board.src=S.img;$('dims').textContent=S.w+' × '+S.h+' px';render();requestAnimationFrame(fit)};im.src=r.result};r.readAsDataURL(file)}
+$('upload').onclick=()=>$('file').click();$('file').onchange=e=>{if(e.target.files[0])loadImage(e.target.files[0]);e.target.value=''};
+function add(type,x,y){snapshot();let w=60,h=60;if(type==='rectangle'){w=110;h=60}else if(type==='point'){w=h=18}else if(type==='x'){w=h=55}
+const m={id:uid(),name:type[0].toUpperCase()+type.slice(1)+' '+S.seq,type,x:snap(x),y:snap(y),width:w,height:h,group:'',value:'',notes:''};S.marks.push(m);S.sel=m.id;S.tool=null;document.querySelectorAll('.add').forEach(b=>b.classList.remove('primary'));render()}
+document.querySelectorAll('.add').forEach(b=>b.onclick=()=>{S.tool=b.dataset.type;document.querySelectorAll('.add').forEach(x=>x.classList.toggle('primary',x===b));$('status').textContent='Click the board to place a '+S.tool+'.'});
+function svg(tag,attrs={}){const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e}
+function drawMark(m){const g=svg('g',{class:'mark '+m.type+(m.id===S.sel?' selected':''),'data-id':m.id});const x=m.x,y=m.y,w=m.width,h=m.height;
+let sh;if(m.type==='circle')sh=svg('ellipse',{class:'shape',cx:x,cy:y,rx:w/2,ry:h/2});else if(m.type==='rectangle'||m.type==='square')sh=svg('rect',{class:'shape',x:x-w/2,y:y-h/2,width:w,height:h,rx:4});else if(m.type==='x'){sh=svg('path',{class:'shape',d:`M ${x-w/2} ${y-h/2} L ${x+w/2} ${y+h/2} M ${x+w/2} ${y-h/2} L ${x-w/2} ${y+h/2}`})}else{sh=svg('circle',{class:'shape',cx:x,cy:y,r:Math.max(4,w/2)})}
+g.appendChild(sh);if($('showNames').checked||$('showCoords').checked){let t=[];if($('showNames').checked)t.push(m.name||m.id);if($('showCoords').checked)t.push('('+Math.round(x)+', '+Math.round(y)+')');const tx=svg('text',{x:x+Math.max(9,w/2+5),y:y-6});tx.textContent=t.join(' ');g.appendChild(tx)}
+const handle=svg('rect',{class:'handle',x:x+w/2-5,y:y+h/2-5,width:10,height:10,'data-handle':'se'});g.appendChild(handle);return g}
+function render(){overlay.innerHTML='';overlay.setAttribute('width',S.w*S.zoom);overlay.setAttribute('height',S.h*S.zoom);for(const m of S.marks)overlay.appendChild(drawMark(m));renderList();syncEditor();$('status').textContent=S.w?`${S.marks.length} marking${S.marks.length===1?'':'s'} · ${Math.round(S.zoom*100)}% zoom`:'Upload an image to begin.';$('undo').disabled=!S.history.length;$('redo').disabled=!S.future.length}
+function renderList(){$('items').innerHTML='';if(!S.marks.length){$('items').innerHTML='<div class="empty">No markings yet.</div>';return}for(const m of S.marks){const d=document.createElement('div');d.className='item'+(m.id===S.sel?' active':'');d.innerHTML='<div><b>'+esc(m.name||m.id)+'</b><div class="meta">'+esc(m.type)+' · '+Math.round(m.x)+', '+Math.round(m.y)+(m.group?' · '+esc(m.group):'')+'</div></div><span class="pill">'+esc(m.id)+'</span>';d.onclick=()=>{S.sel=m.id;render()};$('items').appendChild(d)}}
+function syncEditor(){const m=mark();$('none').hidden=!!m;$('editor').hidden=!m;if(!m){$('preview').value='';return}for(const k of ['id','name','type','x','y','group','value','notes'])$(k).value=m[k]??'';$('w').value=Math.round(m.width*10)/10;$('h').value=Math.round(m.height*10)/10;$('preview').value=JSON.stringify(exportMark(m),null,2)}
+function exportMark(m){return{id:m.id,name:m.name,type:m.type,x:+m.x.toFixed(2),y:+m.y.toFixed(2),width:+m.width.toFixed(2),height:+m.height.toFixed(2),xPct:+(m.x/S.w).toFixed(6),yPct:+(m.y/S.h).toFixed(6),widthPct:+(m.width/S.w).toFixed(6),heightPct:+(m.height/S.h).toFixed(6),group:m.group||'',value:m.value||'',notes:m.notes||''}}
+['name','id','group','value','notes'].forEach(k=>$(k).onchange=()=>{const m=mark();if(!m)return;snapshot();m[k]=$(k).value;render()});
+$('type').onchange=()=>{const m=mark();if(!m)return;snapshot();m.type=$('type').value;if(m.type==='square'){m.height=m.width}render()};
+['x','y','w','h'].forEach(k=>$(k).onchange=()=>{const m=mark();if(!m)return;snapshot();if(k==='x')m.x=snap(+$('x').value||0);if(k==='y')m.y=snap(+$('y').value||0);if(k==='w'){m.width=Math.max(1,+$('w').value||1);if(m.type==='square')m.height=m.width}if(k==='h'){m.height=Math.max(1,+$('h').value||1);if(m.type==='square')m.width=m.height}clamp(m);render()});
+function clamp(m){m.width=Math.min(S.w,Math.max(1,m.width));m.height=Math.min(S.h,Math.max(1,m.height));m.x=Math.max(0,Math.min(S.w,m.x));m.y=Math.max(0,Math.min(S.h,m.y))}
+$('dup').onclick=()=>{const m=mark();if(!m)return;snapshot();const c=JSON.parse(JSON.stringify(m));c.id=uid();c.name=(m.name||m.id)+' Copy';c.x=snap(c.x+15);c.y=snap(c.y+15);clamp(c);S.marks.push(c);S.sel=c.id;render()};
+$('del').onclick=()=>{if(!mark())return;snapshot();S.marks=S.marks.filter(m=>m.id!==S.sel);S.sel=null;render()};
+['showNames','showCoords'].forEach(k=>$(k).onchange=render);
+function boardPoint(ev){const r=overlay.getBoundingClientRect();return{x:(ev.clientX-r.left)/r.width*S.w,y:(ev.clientY-r.top)/r.height*S.h}}
+overlay.addEventListener('pointerdown',e=>{if(!S.w)return;const p=boardPoint(e),g=e.target.closest('.mark');if(S.tool&&!g){add(S.tool,p.x,p.y);return}if(!g){S.sel=null;render();return}const m=S.marks.find(x=>x.id===g.dataset.id);if(!m)return;S.sel=m.id;snapshot();S.drag={id:m.id,mode:e.target.dataset.handle?'resize':'move',sx:p.x,sy:p.y,ox:m.x,oy:m.y,ow:m.width,oh:m.height};overlay.setPointerCapture(e.pointerId);render()});
+overlay.addEventListener('pointermove',e=>{if(!S.drag)return;const m=S.marks.find(x=>x.id===S.drag.id),p=boardPoint(e),dx=p.x-S.drag.sx,dy=p.y-S.drag.sy;if(S.drag.mode==='move'){m.x=snap(S.drag.ox+dx);m.y=snap(S.drag.oy+dy)}else{m.width=Math.max(4,S.drag.ow+dx*2);m.height=Math.max(4,S.drag.oh+dy*2);if(m.type==='square'){const z=Math.max(m.width,m.height);m.width=m.height=z}}clamp(m);render()});
+overlay.addEventListener('pointerup',e=>{if(S.drag){S.drag=null;try{overlay.releasePointerCapture(e.pointerId)}catch{}}});
+document.addEventListener('keydown',e=>{const m=mark();if(!m)return;if(e.key==='Delete'||e.key==='Backspace'&&document.activeElement===document.body){e.preventDefault();$('del').click();return}if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();snapshot();const d=e.shiftKey?10:1;if(e.key==='ArrowLeft')m.x-=d;if(e.key==='ArrowRight')m.x+=d;if(e.key==='ArrowUp')m.y-=d;if(e.key==='ArrowDown')m.y+=d;clamp(m);render()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}});
+function project(){return{version:1,image:{width:S.w,height:S.h},markings:S.marks.map(exportMark)}}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('export').onclick=()=>download(new Blob([JSON.stringify(project(),null,2)],{type:'application/json'}),'rollwrite-coordinates.json');
+$('csv').onclick=()=>{const rows=[['id','name','type','x','y','width','height','xPct','yPct','widthPct','heightPct','group','value','notes'],...S.marks.map(m=>{const x=exportMark(m);return[x.id,x.name,x.type,x.x,x.y,x.width,x.height,x.xPct,x.yPct,x.widthPct,x.heightPct,x.group,x.value,x.notes]})];download(new Blob([rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n')],{type:'text/csv'}),'rollwrite-coordinates.csv')};
+$('import').onclick=()=>$('jsonFile').click();$('jsonFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const p=JSON.parse(r.result),a=p.markings||p;if(!Array.isArray(a))throw Error('JSON must contain a markings array');snapshot();S.marks=a.map((m,i)=>({id:String(m.id||('m'+(i+1))),name:m.name||String(m.id||('Mark '+(i+1))),type:m.type||'circle',x:+m.x||0,y:+m.y||0,width:+m.width||40,height:+m.height||40,group:m.group||'',value:m.value||'',notes:m.notes||''}));S.seq=Math.max(S.seq,S.marks.length+1);S.sel=null;render()}catch(err){alert('Could not import JSON: '+err.message)}};r.readAsText(f);e.target.value=''};
+$('annotated').onclick=()=>{if(!S.img)return;const c=document.createElement('canvas');c.width=S.w;c.height=S.h;const g=c.getContext('2d'),im=new Image();im.onload=()=>{g.drawImage(im,0,0);g.font='600 14px system-ui';for(const m of S.marks){g.strokeStyle='#1677ff';g.fillStyle='#1677ff';g.lineWidth=3;if(m.type==='circle'){g.beginPath();g.ellipse(m.x,m.y,m.width/2,m.height/2,0,0,Math.PI*2);g.stroke()}else if(m.type==='rectangle'||m.type==='square')g.strokeRect(m.x-m.width/2,m.y-m.height/2,m.width,m.height);else if(m.type==='x'){g.beginPath();g.moveTo(m.x-m.width/2,m.y-m.height/2);g.lineTo(m.x+m.width/2,m.y+m.height/2);g.moveTo(m.x+m.width/2,m.y-m.height/2);g.lineTo(m.x-m.width/2,m.y+m.height/2);g.stroke()}else{g.beginPath();g.arc(m.x,m.y,Math.max(4,m.width/2),0,Math.PI*2);g.fill()}const t=(m.name||m.id)+' ('+Math.round(m.x)+', '+Math.round(m.y)+')';g.fillStyle='rgba(0,0,0,.75)';const tw=g.measureText(t).width;g.fillRect(m.x+8,m.y-25,tw+8,20);g.fillStyle='#fff';g.fillText(t,m.x+12,m.y-10)}c.toBlob(b=>download(b,'rollwrite-annotated.png'))};im.src=S.img};
+window.addEventListener('resize',()=>{if(S.w)render()});
+render();
+</script>
+</body>
+</html>
