@@ -96,16 +96,22 @@ function drawShadows(alt,az){
  shadowLayers.forEach(x=>x.remove());shadowLayers=[];
  if(!$('shadows').checked||alt<=0)return;
  const lenFactor=1/Math.tan(alt*Math.PI/180),bearing=(az+180)%360;
- buildings.forEach(b=>{const dist=Math.min(b.height*0.3048*lenFactor,500),shifted=b.points.map(p=>shiftPoint(p,dist,bearing));const poly=[...b.points,...shifted.slice().reverse()];shadowLayers.push(L.polygon(poly,{stroke:false,fillColor:'#0f172a',fillOpacity:.48,interactive:false}).addTo(map))});
+ buildings.forEach(b=>{const dist=Math.min(b.height*lenFactor,500),shifted=b.points.map(p=>shiftPoint(p,dist,bearing));const poly=[...b.points,...shifted.slice().reverse()];shadowLayers.push(L.polygon(poly,{stroke:false,fillColor:'#0f172a',fillOpacity:.48,interactive:false}).addTo(map))});
  buildingLayers.forEach(x=>x.bringToFront());if(userMarker)userMarker.bringToFront();
 }
 async function loadBuildings(){
  $('status').textContent='Loading nearby building footprints…';
  buildingLayers.forEach(x=>x.remove());shadowLayers.forEach(x=>x.remove());buildings=[];buildingLayers=[];shadowLayers=[];
  const q='[out:json][timeout:20];way["building"](around:450,'+lat+','+lng+');out geom tags;';
- const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
  let data=null;
- for(const ep of endpoints){try{const r=await fetch(ep,{method:'POST',body:new URLSearchParams({data:q})});if(r.ok){data=await r.json();break}}catch(e){}}
+ try{
+  const r=await fetch('/api/overpass',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat,lng,radius:450})});
+  if(r.ok)data=await r.json();
+ }catch(e){}
+ if(!data){
+  const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  for(const ep of endpoints){try{const r=await fetch(ep,{method:'POST',body:new URLSearchParams({data:q})});if(r.ok){data=await r.json();break}}catch(e){}}
+ }
  if(!data){$('status').textContent='Building service unavailable. Try again shortly.';return}
  for(const el of data.elements||[]){
   if(!el.geometry||el.geometry.length<3)continue;
@@ -118,7 +124,7 @@ async function loadBuildings(){
  }
  $('status').textContent='Loaded '+buildings.length+' nearby buildings. Tap one to edit height.';update();
 }
-map.on('click',e=>{lat=e.latlng.lat;lng=e.latlng.lng;if(userMarker)userMarker.remove();userMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="home-marker"></div>',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(map);$('status').textContent='Pinned manually · '+lat.toFixed(5)+', '+lng.toFixed(5);update()});
+map.on('click',e=>{lat=e.latlng.lat;lng=e.latlng.lng;if(userMarker)userMarker.remove();userMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="home-marker"></div>',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(map);$('status').textContent='Pinned manually · '+lat.toFixed(5)+', '+lng.toFixed(5);update();setTimeout(loadBuildings,250)});
 $('locate').onclick=locate;$('buildings').onclick=loadBuildings;$('date').onchange=update;$('timeSlider').oninput=e=>setMinutes(e.target.value);$('time').onchange=e=>{const [h,m]=e.target.value.split(':').map(Number);$('timeSlider').value=h*60+m;update()};
 document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setMinutes(b.dataset.time));
 $('now').onclick=()=>{const d=new Date();$('date').value=d.toISOString().slice(0,10);setMinutes(mins(d))};
