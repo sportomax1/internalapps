@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SunShadow</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#0b1020;--panel:#111827ee;--card:#1f2937;--line:#334155;--text:#f8fafc;--muted:#94a3b8;--accent:#f59e0b}
+*{box-sizing:border-box}html,body,#app{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg)}
+#app{display:grid;grid-template-columns:330px 1fr}.panel{padding:18px;overflow:auto;background:var(--panel);border-right:1px solid var(--line);z-index:1000}
+h1{font-size:24px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:16px}.group{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin:10px 0}
+label{display:block;color:#cbd5e1;font-size:12px;font-weight:700;margin:9px 0 5px}.row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}
+input,button,select{font:inherit}input[type=date],input[type=time],input[type=number],input[type=text]{width:100%;border:1px solid #475569;background:#0f172a;color:white;border-radius:9px;padding:9px}
+input[type=range]{width:100%;accent-color:var(--accent)}button{border:0;border-radius:10px;padding:10px 12px;background:#334155;color:white;font-weight:700;cursor:pointer}button.primary{background:var(--accent);color:#111827}button.active{outline:2px solid #fbbf24}.wide{width:100%}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}.metric{background:#0f172a;border-radius:10px;padding:9px}.metric b{display:block;font-size:17px}.metric span{font-size:11px;color:var(--muted)}
+#map{height:100%;width:100%}.floating{position:absolute;right:12px;top:12px;z-index:800;background:#111827e8;border:1px solid #334155;border-radius:12px;padding:8px;max-width:220px;font-size:12px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px}.status{font-size:12px;color:#cbd5e1;min-height:18px;margin-top:8px}
+.sun-marker{width:36px;height:36px;background:#fbbf24;border-radius:50%;box-shadow:0 0 22px #f59e0b;border:3px solid white;display:grid;place-items:center;color:#111;font-size:19px}
+.home-marker{width:24px;height:24px;background:#3b82f6;border:4px solid white;border-radius:50%;box-shadow:0 2px 8px #0008}
+@media(max-width:760px){#app{grid-template-columns:1fr;grid-template-rows:auto 1fr}.panel{padding:10px;max-height:44vh;border-right:0;border-bottom:1px solid var(--line)}h1{font-size:20px}.group{padding:9px;margin:7px 0}#map{min-height:56vh}.floating{top:8px;right:8px}}
+</style>
+</head>
+<body><div id="app">
+<aside class="panel">
+<h1>☀️ SunShadow</h1><div class="sub">See how buildings cast shadows at any date and time.</div>
+<button class="primary wide" id="locate">◎ Use my current location</button>
+<div class="status" id="status">Requesting your location…</div>
+<div class="group">
+<label>Date</label><input id="date" type="date">
+<label>Time <span id="timeLabel"></span></label><input id="timeSlider" type="range" min="300" max="1260" step="5">
+<div class="row"><button data-time="540">9 AM</button><button data-time="720">Noon</button><button data-time="900">3 PM</button><button data-time="1080">6 PM</button></div>
+<label>Exact time</label><input id="time" type="time" step="300">
+<div class="row" style="margin-top:9px"><button id="play">▶ Animate day</button><button id="now">Now</button></div>
+</div>
+<div class="group">
+<div class="metrics">
+<div class="metric"><b id="alt">—</b><span>Sun elevation</span></div>
+<div class="metric"><b id="az">—</b><span>Sun azimuth</span></div>
+<div class="metric"><b id="rise">—</b><span>Sunrise</span></div>
+<div class="metric"><b id="set">—</b><span>Sunset</span></div>
+</div>
+</div>
+<div class="group">
+<label>Buildings</label>
+<button class="wide" id="buildings">🏠 Load nearby buildings</button>
+<label>Default height (ft)</label><input id="height" type="number" min="5" max="300" value="25">
+<div class="sub" style="margin:8px 0 0">Uses mapped building footprints. Click a building to set its height. Height is estimated when map data has levels/height.</div>
+</div>
+<div class="group">
+<label>Map</label>
+<div class="row"><button id="street" class="active">Street</button><button id="sat">Satellite</button></div>
+<label><input type="checkbox" id="shadows" checked> Show shadows</label>
+<label><input type="checkbox" id="footprints" checked> Show footprints</label>
+</div>
+<div class="sub">Shadow geometry is an estimate. Roof shape, terrain, trees, and incomplete map heights can affect real-world shade.</div>
+</aside>
+<main style="position:relative"><div id="map"></div><div class="floating legend"><div><i style="background:#3b82f6"></i>Your location</div><div><i style="background:#f59e0b"></i>Buildings</div><div><i style="background:#111827;opacity:.65"></i>Projected shadow</div></div></main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const map=L.map('map',{zoomControl:false}).setView([39.5,-104.8],17); L.control.zoom({position:'bottomright'}).addTo(map);
+const street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap contributors'}).addTo(map);
+const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,attribution:'Esri'});
+let lat=39.5,lng=-104.8,userMarker=null,buildings=[],buildingLayers=[],shadowLayers=[],timer=null;
+const today=new Date(); $('date').value=today.toISOString().slice(0,10);
+function mins(d){return d.getHours()*60+d.getMinutes()} function pad(n){return String(n).padStart(2,'0')}
+function setMinutes(m){m=Math.max(0,Math.min(1439,+m));$('timeSlider').value=m;$('time').value=pad(Math.floor(m/60))+':'+pad(m%60);update()}
+setMinutes(mins(today));
+function selectedDate(){const [y,mo,d]=$('date').value.split('-').map(Number),[h,mi]=$('time').value.split(':').map(Number);return new Date(y,mo-1,d,h,mi,0)}
+function compass(deg){return ['N','NE','E','SE','S','SW','W','NW'][Math.round(deg/45)%8]}
+function update(){
+ const d=selectedDate(),p=SunCalc.getPosition(d,lat,lng),alt=p.altitude*180/Math.PI,az=(p.azimuth*180/Math.PI+180+360)%360,t=SunCalc.getTimes(d,lat,lng);
+ $('alt').textContent=alt.toFixed(1)+'°';$('az').textContent=Math.round(az)+'° '+compass(az);
+ $('rise').textContent=isNaN(t.sunrise)?'—':t.sunrise.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+ $('set').textContent=isNaN(t.sunset)?'—':t.sunset.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+ $('timeLabel').textContent='· '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+ drawShadows(alt,az);
+}
+function locate(){
+ $('status').textContent='Finding current location…';
+ if(!navigator.geolocation){$('status').textContent='Geolocation is not supported.';return}
+ navigator.geolocation.getCurrentPosition(pos=>{
+  lat=pos.coords.latitude;lng=pos.coords.longitude;
+  map.flyTo([lat,lng],18,{duration:.8});
+  if(userMarker)userMarker.remove();
+  userMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="home-marker"></div>',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(map).bindPopup('Current location');
+  $('status').textContent='Pinned to current location · ±'+Math.round(pos.coords.accuracy)+' m';
+  update();setTimeout(loadBuildings,500);
+ },e=>{$('status').textContent='Location unavailable: '+e.message+' — tap the map to choose a location.'},{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
+}
+function destination(a,dist,bearing){const R=6378137,br=bearing*Math.PI/180,la=a[0]*Math.PI/180,lo=a[1]*Math.PI/180;return [Math.asin(Math.sin(la)*Math.cos(dist/R)+Math.cos(la)*Math.sin(dist/R)*Math.cos(br))*180/Math.PI,(lo+Math.atan2(Math.sin(br)*Math.sin(dist/R)*Math.cos(la),Math.cos(dist/R)-Math.sin(la)*Math.sin(la+0)))*180/Math.PI]}
+function shiftPoint(pt,meters,bearing){const R=6378137,br=bearing*Math.PI/180,la=pt[0]*Math.PI/180,lo=pt[1]*Math.PI/180;const la2=Math.asin(Math.sin(la)*Math.cos(meters/R)+Math.cos(la)*Math.sin(meters/R)*Math.cos(br));const lo2=lo+Math.atan2(Math.sin(br)*Math.sin(meters/R)*Math.cos(la),Math.cos(meters/R)-Math.sin(la)*Math.sin(la2));return [la2*180/Math.PI,lo2*180/Math.PI]}
+function drawShadows(alt,az){
+ shadowLayers.forEach(x=>x.remove());shadowLayers=[];
+ if(!$('shadows').checked||alt<=0)return;
+ const lenFactor=1/Math.tan(alt*Math.PI/180),bearing=(az+180)%360;
+ buildings.forEach(b=>{const dist=Math.min(b.height*0.3048*lenFactor,500),shifted=b.points.map(p=>shiftPoint(p,dist,bearing));const poly=[...b.points,...shifted.slice().reverse()];shadowLayers.push(L.polygon(poly,{stroke:false,fillColor:'#0f172a',fillOpacity:.48,interactive:false}).addTo(map))});
+ buildingLayers.forEach(x=>x.bringToFront());if(userMarker)userMarker.bringToFront();
+}
+async function loadBuildings(){
+ $('status').textContent='Loading nearby building footprints…';
+ buildingLayers.forEach(x=>x.remove());shadowLayers.forEach(x=>x.remove());buildings=[];buildingLayers=[];shadowLayers=[];
+ const q='[out:json][timeout:20];way["building"](around:450,'+lat+','+lng+');out geom tags;';
+ const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+ let data=null;
+ for(const ep of endpoints){try{const r=await fetch(ep,{method:'POST',body:new URLSearchParams({data:q})});if(r.ok){data=await r.json();break}}catch(e){}}
+ if(!data){$('status').textContent='Building service unavailable. Try again shortly.';return}
+ for(const el of data.elements||[]){
+  if(!el.geometry||el.geometry.length<3)continue;
+  const pts=el.geometry.map(g=>[g.lat,g.lon]);
+  let h=parseFloat(el.tags?.height);if(!isFinite(h)){const lv=parseFloat(el.tags?.['building:levels']);h=isFinite(lv)?lv*3.1:+$('height').value*0.3048}
+  const b={points:pts,height:h,id:el.id};
+  const layer=L.polygon(pts,{color:'#f59e0b',weight:1,fillColor:'#f59e0b',fillOpacity:.25});
+  layer.on('click',()=>{const ft=Math.round(b.height/0.3048);const v=prompt('Building height in feet:',ft);if(v!==null&&isFinite(+v)&&+v>0){b.height=+v*0.3048;update()}});
+  layer.addTo(map);buildings.push(b);buildingLayers.push(layer);
+ }
+ $('status').textContent='Loaded '+buildings.length+' nearby buildings. Tap one to edit height.';update();
+}
+map.on('click',e=>{lat=e.latlng.lat;lng=e.latlng.lng;if(userMarker)userMarker.remove();userMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="home-marker"></div>',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(map);$('status').textContent='Pinned manually · '+lat.toFixed(5)+', '+lng.toFixed(5);update()});
+$('locate').onclick=locate;$('buildings').onclick=loadBuildings;$('date').onchange=update;$('timeSlider').oninput=e=>setMinutes(e.target.value);$('time').onchange=e=>{const [h,m]=e.target.value.split(':').map(Number);$('timeSlider').value=h*60+m;update()};
+document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>setMinutes(b.dataset.time));
+$('now').onclick=()=>{const d=new Date();$('date').value=d.toISOString().slice(0,10);setMinutes(mins(d))};
+$('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('play').textContent='▶ Animate day';return}$('play').textContent='⏸ Pause';timer=setInterval(()=>{let m=+$('timeSlider').value+10;if(m>1260)m=300;setMinutes(m)},120)};
+$('street').onclick=()=>{map.removeLayer(sat);street.addTo(map);$('street').classList.add('active');$('sat').classList.remove('active')};
+$('sat').onclick=()=>{map.removeLayer(street);sat.addTo(map);$('sat').classList.add('active');$('street').classList.remove('active')};
+$('shadows').onchange=update;$('footprints').onchange=e=>buildingLayers.forEach(l=>e.target.checked?l.addTo(map):l.remove());$('height').onchange=()=>{};
+locate();update();
+</script></body></html>
