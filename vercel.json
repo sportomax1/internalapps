@@ -4,6 +4,14 @@
   "installCommand": "npm install --omit=optional",
   "rewrites": [
     {
+      "source": "/sunshadow",
+      "destination": "/sunshadow.html"
+    },
+    {
+      "source": "/sunshadow/",
+      "destination": "/sunshadow.html"
+    },
+    {
       "source": "/api/auth",
       "destination": "/api/tools?action=auth"
     },
