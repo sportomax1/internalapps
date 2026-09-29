@@ -46,11 +46,46 @@ function setupOpen(){syncSetup();$('setupBg').classList.add('open')}$('setup').o
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const m={normal:[1,1,1,1],narrow:[.5,.5,.5,.5],moderate:[1,.75,1,.75],wide:[1,2,1,2]}[b.dataset.preset];[$('mt').value,$('mr').value,$('mb').value,$('ml').value]=m});
 $('applySetup').onclick=()=>{ps={paper:$('paper').value,orientation:$('orientation').value,top:+$('mt').value,right:+$('mr').value,bottom:+$('mb').value,left:+$('ml').value,guides:$('showGuides').checked};applyPage(true);$('setupBg').classList.remove('open');changed();msg(`Margins: ${ps.top}/${ps.right}/${ps.bottom}/${ps.left} in`)};
 const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function ocrPdfPages(pdf){
+  if(!window.Tesseract)throw new Error('OCR engine did not load. Refresh DocDesk and try again.');
+  msg('No selectable text found — running OCR…',0);
+  const worker=await Tesseract.createWorker('eng',1,{
+    logger:m=>{
+      if(m?.status==='recognizing text'&&Number.isFinite(m.progress)){
+        const pct=Math.round(m.progress*100);
+        msg(`OCR in progress · ${pct}%`,0);
+      }
+    }
+  });
+  const out=[];
+  try{
+    for(let p=1;p<=pdf.numPages;p++){
+      $('state').textContent=`OCR page ${p}/${pdf.numPages}…`;
+      msg(`OCR page ${p} of ${pdf.numPages}…`,0);
+      const page=await pdf.getPage(p);
+      const viewport=page.getViewport({scale:2});
+      const canvas=document.createElement('canvas');
+      canvas.width=Math.ceil(viewport.width);
+      canvas.height=Math.ceil(viewport.height);
+      const ctx=canvas.getContext('2d',{alpha:false});
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+      await page.render({canvasContext:ctx,viewport}).promise;
+      const r=await worker.recognize(canvas);
+      const text=(r?.data?.text||'').replace(/\r/g,'').trim();
+      const lines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+      out.push(lines.length?lines.map(x=>`<p>${esc(x)}</p>`).join(''):'<p><br></p>');
+      canvas.width=1;canvas.height=1;
+    }
+  }finally{await worker.terminate()}
+  const chars=out.join('').replace(/<[^>]*>/g,'').trim().length;
+  if(chars<5)throw new Error('OCR could not detect readable text in this PDF.');
+  return out;
+}
 async function pdfToHtml(f){
   if(!window.pdfjsLib)throw new Error('PDF importer is still loading. Try Open again in a moment.');
   $('state').textContent='Reading PDF…';msg('Extracting editable text from PDF…',0);
   const pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
-  const pages=[];let totalChars=0;
+  let pages=[];let totalChars=0;
   for(let p=1;p<=pdf.numPages;p++){
     $('state').textContent=`Reading PDF ${p}/${pdf.numPages}…`;
     const page=await pdf.getPage(p),tc=await page.getTextContent(),lines=[];let line='',lastY=null;
@@ -66,7 +101,7 @@ async function pdfToHtml(f){
     flush();
     pages.push(lines.length?lines.map(x=>`<p>${esc(x)}</p>`).join(''):'<p><br></p>');
   }
-  if(totalChars<5)throw new Error('No selectable text was found. This PDF appears to be scanned/image-only and needs OCR before it can be edited.');
+  if(totalChars<5)pages=await ocrPdfPages(pdf);
   return pages.map((x,i)=>x+(i<pages.length-1?'<div class="page-break" contenteditable="false"></div>':'')).join('');
 }
 async function openFile(f){try{let h='';if(/\.docx$/i.test(f.name)){const r=await mammoth.convertToHtml({arrayBuffer:await f.arrayBuffer()},{convertImage:mammoth.images.imgElement(async i=>({src:`data:${i.contentType};base64,${await i.read('base64')}`}))});h=r.value}else if(/\.pdf$/i.test(f.name)){h=await pdfToHtml(f)}else if(/\.html?$/i.test(f.name)){h=new DOMParser().parseFromString(await f.text(),'text/html').body.innerHTML}else{let t=await f.text();if(/\.rtf$/i.test(f.name))t=t.replace(/\\par[d]?/g,'\n').replace(/\\'[0-9a-f]{2}/gi,'').replace(/\\[a-z]+-?\d* ?/gi,'').replace(/[{}]/g,'');h=t.split(/\r?\n/).map(x=>`<p>${esc(x)||'<br>'}</p>`).join('')}ed.innerHTML=DOMPurify.sanitize(h,{ADD_ATTR:['target']});name.value=f.name.replace(/\.[^.]+$/,'');dirty=false;scan(false);$('state').textContent='Opened';msg(/\.pdf$/i.test(f.name)?'PDF text imported and is now editable.':'',4000);stats()}catch(e){$('state').textContent='Open failed';msg('',0);alert('Could not open file: '+e.message)}}
