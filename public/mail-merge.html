@@ -34,8 +34,8 @@
   <div class="row"><button id="addSearchRule" class="btn" type="button">+ Add condition</button><button id="clearSearchRules" class="btn" type="button">Clear</button></div>
 </details>
 <div class="mailLayout"><div class="card list" id="messageList"></div><div class="card reader" id="reader"><div class="empty">Select a message.</div></div></div></section>
-<section id="flows" class="pane"><div class="toolbar"><input id="flowSearch" placeholder="Contact / subject…"><button id="refreshFlows" class="btn">Refresh</button></div><div id="flowList"></div></section>
-<section id="contacts" class="pane"><div class="toolbar"><input id="contactSearch" placeholder="Search contacts, subject, body…"><button id="refreshContacts" class="btn">Refresh</button></div><div class="card"><div class="contactRow muted"><b>Contact</b><b>In</b><b>Out</b><b>Total</b><b>Last</b></div><div id="contactList"></div></div></section>
+<section id="flows" class="pane"><div class="toolbar"><input id="flowSearch" placeholder="Contact / subject / body…" style="min-width:260px;flex:1"><button id="flowAdvanced" class="btn">Advanced filters</button><button id="refreshFlows" class="btn">Refresh</button></div><div id="flowFilterHost"></div><div id="flowList"></div></section>
+<section id="contacts" class="pane"><div class="toolbar"><input id="contactSearch" placeholder="Search contacts, subject, body…" style="min-width:260px;flex:1"><button id="contactAdvanced" class="btn">Advanced filters</button><button id="refreshContacts" class="btn">Refresh</button></div><div id="contactFilterHost"></div><div class="card"><div class="contactRow muted"><b>Contact</b><b>In</b><b>Out</b><b>Total</b><b>Last</b></div><div id="contactList"></div></div></section>
 <section id="settings" class="pane">
 <div class="grid setupGrid">
 
@@ -172,6 +172,55 @@ function matchesAdvanced(m){
   for(let i=1;i<rules.length;i++)result=rules[i].join==='OR'?(result||evalSearchRule(m,rules[i])):(result&&evalSearchRule(m,rules[i]));
   return result;
 }
+function evalGroupRule(g,r){
+  const needle=norm(r.value);
+  if(!needle)return true;
+  let hay='';
+  if(r.field==='contact')hay=g.name+' '+g.key;
+  else if(r.field==='from')hay=g.items.map(m=>[m.fromName,m.fromAddress].join(' ')).join(' ');
+  else if(r.field==='to')hay=g.items.map(m=>[m.toName,m.toAddress].join(' ')).join(' ');
+  else if(r.field==='subject')hay=g.items.map(m=>m.subject||'').join(' ');
+  else if(r.field==='body')hay=g.items.map(m=>[m.bodyText,m.bodyHtml].join(' ')).join(' ');
+  else if(r.field==='source')hay=g.items.map(m=>m.source||'').join(' ');
+  else hay=g.name+' '+g.key+' '+g.items.map(m=>searchField(m,'any')).join(' ');
+  hay=norm(hay);
+  if(r.op==='notcontains')return !hay.includes(needle);
+  if(r.op==='equals')return hay===needle;
+  return hay.includes(needle);
+}
+function matchesGroupRules(g,rules){
+  if(!rules.length)return true;
+  let result=evalGroupRule(g,rules[0]);
+  for(let i=1;i<rules.length;i++)result=rules[i].join==='OR'?(result||evalGroupRule(g,rules[i])):(result&&evalGroupRule(g,rules[i]));
+  return result;
+}
+const GROUP_RULE_KEYS={flow:'mailMergeFlowRules',contact:'mailMergeContactRules'};
+function getGroupRules(kind){try{return JSON.parse(localStorage.getItem(GROUP_RULE_KEYS[kind])||'[]')}catch{return []}}
+function groupFilterHtml(kind){
+  return '<details class="card searchBuilder" open><summary><b>'+ (kind==='contact'?'Contact':'Flow') +' advanced filters</b></summary><div class="muted small" style="margin:8px 0">Rules evaluate the full underlying message history, including subject and body.</div><div class="groupRules" data-kind="'+kind+'"></div><div class="row"><button class="btn addGroupRule" data-kind="'+kind+'" type="button">+ Add condition</button><button class="btn clearGroupRules" data-kind="'+kind+'" type="button">Clear</button></div></details>'
+}
+function renderGroupRules(kind){
+  const host=$('#'+kind+'FilterHost');
+  if(!host)return;
+  const rules=getGroupRules(kind);
+  host.innerHTML=groupFilterHtml(kind);
+  const box=host.querySelector('.groupRules');
+  box.innerHTML=rules.map((r,i)=>'<div class="searchRule '+(i===0?'first':'')+'"><select class="join"><option'+(r.join==='AND'?' selected':'')+'>AND</option><option'+(r.join==='OR'?' selected':'')+'>OR</option></select><select class="sfield"><option value="any">Any field</option><option value="contact">Contact</option><option value="from">From</option><option value="to">To</option><option value="subject">Subject</option><option value="body">Body</option><option value="source">Source</option></select><select class="sop"><option value="contains">contains</option><option value="notcontains">does not contain</option><option value="equals">equals</option></select><input class="svalue" placeholder="Value…" value="'+esc(r.value||'')+'"><button class="btn danger removeRule" type="button">×</button></div>').join('');
+  [...box.querySelectorAll('.searchRule')].forEach((row,i)=>{
+    row.querySelector('.join').value=rules[i]?.join||'AND';
+    row.querySelector('.sfield').value=rules[i]?.field||'any';
+    row.querySelector('.sop').value=rules[i]?.op||'contains';
+    row.querySelector('.removeRule').onclick=()=>{row.remove();saveGroupRules(kind);renderAll()};
+    row.querySelectorAll('select,input').forEach(el=>el.oninput=()=>{saveGroupRules(kind);renderAll()});
+  });
+  host.querySelector('.addGroupRule').onclick=()=>{const rs=getGroupRules(kind);rs.push({join:rs.length?'AND':'AND',field:'any',op:'contains',value:''});localStorage.setItem(GROUP_RULE_KEYS[kind],JSON.stringify(rs));renderGroupRules(kind)};
+  host.querySelector('.clearGroupRules').onclick=()=>{localStorage.removeItem(GROUP_RULE_KEYS[kind]);renderGroupRules(kind);renderAll()};
+}
+function saveGroupRules(kind){
+  const host=$('#'+kind+'FilterHost'); if(!host)return;
+  const rules=[...host.querySelectorAll('.searchRule')].map((row,i)=>({join:i===0?'AND':row.querySelector('.join').value,field:row.querySelector('.sfield').value,op:row.querySelector('.sop').value,value:row.querySelector('.svalue').value.trim()})).filter(r=>r.value);
+  localStorage.setItem(GROUP_RULE_KEYS[kind],JSON.stringify(rules));
+}
 function hasGlobalFilters(){
   return !!(norm($('#mailSearch').value)||$('#sourceFilter').value||$('#dirFilter').value||$('#includeFilter').value!=='included'||activeSearchRules().length);
 }
@@ -203,8 +252,27 @@ function addSearchRule(){const rules=activeSearchRules();rules.push({join:rules.
 function renderMailbox(rows,alreadyScoped=false){const a=alreadyScoped?rows:filteredMail(rows);$('#messageList').innerHTML=a.map(m=>'<article class="msg '+(m.id===selectedId?'active':'')+'" data-id="'+esc(m.id)+'"><div class="msgTop"><span class="msgTitle">'+(m.direction==='in'?'← ':'→ ')+esc(displayContact(m))+'</span><span class="muted small">'+fmtDate(m.timestamp)+'</span></div><div class="subj">'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div><div class="chips"><span class="chip '+norm(m.source)+'">'+esc(m.source)+'</span>'+(m.excluded?'<span class="chip excluded">Excluded</span>':'')+'</div></article>').join('')||'<div class="empty">No matching messages.</div>';$$('#messageList .msg').forEach(e=>e.onclick=()=>openMessage(e.dataset.id,rows))}
 function openMessage(id,rows){selectedId=id;const m=rows.find(x=>x.id===id);if(!m)return;$('#reader').innerHTML='<div class="muted">'+esc(m.source)+' · '+esc(m.direction==='in'?'Incoming':'Outgoing')+' · '+fmtFull(m.timestamp)+'</div><h2>'+esc(m.subject)+'</h2><div><b>From:</b> '+esc((m.fromName?m.fromName+' ':'')+(m.fromAddress?'<'+m.fromAddress+'>':''))+'</div><div><b>To:</b> '+esc((m.toName?m.toName+' ':'')+(m.toAddress?'<'+m.toAddress+'>':''))+'</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><div class="body">'+esc(m.bodyText)+'</div><div class="row" style="margin-top:14px"><button id="toggleExclude" class="btn">'+(m.excluded?'Include in stats':'Exclude from stats')+'</button></div>';$('#toggleExclude').onclick=async()=>{m.excluded=!m.excluded;m.exclusionReason=m.excluded?'Manual':'';await putMsg(m);await renderAll();openMessage(id,await allMsgs())};renderAll()}
 function groupContacts(rows){const mp=new Map();for(const m of rows){const k=m.contactKey||'(unknown)';if(!mp.has(k))mp.set(k,{key:k,name:displayContact(m),in:0,out:0,total:0,last:m,items:[]});const g=mp.get(k);g[m.direction]++;g.total++;g.items.push(m);if(new Date(m.timestamp)>new Date(g.last.timestamp))g.last=m}return mp}
-function renderFlows(rows){const q=norm($('#flowSearch').value), groups=[...groupContacts(included(rows)).values()].filter(g=>!q||norm(g.name+' '+g.items.map(x=>x.subject).join(' ')).includes(q)).sort((a,b)=>new Date(b.last.timestamp)-new Date(a.last.timestamp));$('#flowList').innerHTML=groups.slice(0,100).map(g=>'<div class="card" style="margin-bottom:9px"><div class="msgTop"><h3 style="margin:0">'+esc(g.name)+'</h3><span class="muted">'+g.total+' messages</span></div>'+g.items.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).slice(-12).map(m=>'<div class="flow '+m.direction+'"><div class="msgTop"><b>'+(m.direction==='in'?'← Them':'→ You')+'</b><span class="muted small">'+fmtFull(m.timestamp)+'</span></div><div>'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div></div>').join('')+'</div>').join('')||'<div class="empty">No flows yet.</div>'}
+function renderFlows(rows){
+  const q=norm($('#flowSearch').value),rules=getGroupRules('flow');
+  const groups=[...groupContacts(included(rows)).values()]
+    .filter(g=>{
+      const quick=!q||norm(g.name+' '+g.key+' '+g.items.map(m=>searchField(m,'any')).join(' ')).includes(q);
+      return quick&&matchesGroupRules(g,rules);
+    })
+    .sort((a,b)=>new Date(b.last.timestamp)-new Date(a.last.timestamp));
+  $('#flowList').innerHTML=groups.slice(0,100).map(g=>'<div class="card" style="margin-bottom:9px"><div class="msgTop"><h3 style="margin:0">'+esc(g.name)+'</h3><span class="muted">'+g.total+' messages</span></div>'+g.items.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).slice(-12).map(m=>'<div class="flow '+m.direction+'"><div class="msgTop"><b>'+(m.direction==='in'?'← Them':'→ You')+'</b><span class="muted small">'+fmtFull(m.timestamp)+'</span></div><div>'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div></div>').join('')+'</div>').join('')||'<div class="empty">No flows yet.</div>'
+}
 function renderContacts(rows){
+  const q=norm($('#contactSearch').value),rules=getGroupRules('contact');
+  const a=[...groupContacts(included(rows)).values()]
+    .filter(g=>{
+      const quick=!q||norm(g.name+' '+g.key+' '+g.items.map(m=>searchField(m,'any')).join(' ')).includes(q);
+      return quick&&matchesGroupRules(g,rules);
+    })
+    .sort((a,b)=>b.total-a.total);
+  $('#contactList').innerHTML=a.map(g=>'<div class="contactRow"><div><b>'+esc(g.name)+'</b><div class="muted small">'+esc(g.key)+'</div></div><div>'+g.in+'</div><div>'+g.out+'</div><div>'+g.total+'</div><div>'+fmtDate(g.last.timestamp)+'</div></div>').join('')||'<div class="empty">No contacts yet.</div>'
+}
+function displayContact(rows){
   const q=norm($('#contactSearch').value);
   const a=[...groupContacts(included(rows)).values()]
     .filter(g=>{
@@ -320,5 +388,5 @@ $('#importBtn').onclick=()=>$('#importFile').click();$('#importFile').onchange=a
 $('#addRule').onclick=()=>{const d=document.createElement('div');d.className='rule';d.innerHTML='<select><option value="fromAddress">Sender</option><option value="subject">Subject</option><option value="bodyText">Body</option></select><input placeholder="contains…"><button class="btn danger">×</button>';$('#rules').appendChild(d);d.querySelector('.danger').onclick=()=>{d.remove();saveRules()};d.querySelectorAll('select,input').forEach(e=>e.onchange=saveRules)};$('#applyRules').onclick=applyRules;
 $('#exportDb').onclick=async()=>{const data=await allMsgs(),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='mail-merge-export.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('#clearDb').onclick=async()=>{if(confirm('Delete all locally stored Mail Merge messages from this browser?')){await clearMsgs();selectedId=null;log('Local message database cleared');await renderAll()}};
-(async()=>{initGate();$('#redirectUriView').value=redirectUri();$('#copyRedirect').onclick=()=>navigator.clipboard.writeText(redirectUri()).then(()=>log('Microsoft redirect URI copied')).catch(()=>alert(redirectUri()));$('#entraExactUrl').textContent=redirectUri();$('#copyEntraUrl').onclick=()=>navigator.clipboard.writeText(redirectUri()).then(()=>log('Exact Entra redirect URL copied')).catch(()=>alert(redirectUri()));await openDb();$('#dbStatus').textContent='IndexedDB ready';loadRules();let savedSearchRules=[];try{savedSearchRules=JSON.parse(localStorage.getItem(SEARCH_RULES_KEY)||'[]')}catch{}renderSearchRules(Array.isArray(savedSearchRules)?savedSearchRules:[]);$('#bggUser').value=localStorage.getItem('mailMergeBggUser')||'';$('#bggUser').onchange=()=>localStorage.setItem('mailMergeBggUser',$('#bggUser').value.trim());await initOutlook();await renderAll()})().catch(e=>{$('#dbStatus').textContent='Database error';console.error(e)});
+(async()=>{initGate();$('#redirectUriView').value=redirectUri();$('#copyRedirect').onclick=()=>navigator.clipboard.writeText(redirectUri()).then(()=>log('Microsoft redirect URI copied')).catch(()=>alert(redirectUri()));$('#entraExactUrl').textContent=redirectUri();$('#copyEntraUrl').onclick=()=>navigator.clipboard.writeText(redirectUri()).then(()=>log('Exact Entra redirect URL copied')).catch(()=>alert(redirectUri()));await openDb();$('#dbStatus').textContent='IndexedDB ready';loadRules();let savedSearchRules=[];try{savedSearchRules=JSON.parse(localStorage.getItem(SEARCH_RULES_KEY)||'[]')}catch{}renderSearchRules(Array.isArray(savedSearchRules)?savedSearchRules:[]);renderGroupRules('flow');renderGroupRules('contact');$('#bggUser').value=localStorage.getItem('mailMergeBggUser')||'';$('#bggUser').onchange=()=>localStorage.setItem('mailMergeBggUser',$('#bggUser').value.trim());await initOutlook();await renderAll()})().catch(e=>{$('#dbStatus').textContent='Database error';console.error(e)});
 </script></body></html>
