@@ -116,7 +116,7 @@ function clearMsgs(){return new Promise((res,rej)=>{const r=txStore('messages','
 function norm(v){return String(v||'').trim().toLowerCase()}
 function contactKey(m){if(m.direction==='out')return norm(m.toAddress||m.toName);return norm(m.fromAddress||m.fromName)}
 function normalizeMessage(x){
-  const ts=x.timestamp||x.receivedDateTime||x.sentDateTime||x.date||x.datetime||x.time||new Date().toISOString();
+  const ts=x.timestamp||x.receivedDateTime||x.sentDateTime||x.message_date||x.date||x.datetime||x.time||new Date().toISOString();
   const inferredBgg=!!(x.bggId||x.bgg_id||x.geekmailId||x.geekmail_id||x.avatar||x.linkedGames);
   const source=x.source||x.mailSource||(inferredBgg?'BGG':'Imported');
   let direction=String(x.direction||'').toLowerCase();
@@ -124,12 +124,12 @@ function normalizeMessage(x){
   direction=(direction==='out'||direction==='sent'||direction==='outbound')?'out':'in';
   const rawId=x.sourceMessageId||x.messageId||x.message_id||x.id||x.geekmailId||x.geekmail_id||crypto.randomUUID();
   const id=String(rawId).startsWith(source+':')?String(rawId):source+':'+String(rawId);
-  const fromName=x.fromName||x.senderName||x.sender||x.from||'';
+  const fromName=x.fromName||x.from_username||x.senderName||x.sender||x.from||'';
   const fromAddress=x.fromAddress||x.senderAddress||x.senderEmail||x.fromEmail||'';
-  const toName=x.toName||x.recipientName||x.recipient||x.to||'';
+  const toName=x.toName||x.to_username||x.recipientName||x.recipient||x.to||'';
   const toAddress=x.toAddress||x.recipientAddress||x.recipientEmail||x.toEmail||'';
-  const html=x.bodyHtml||((x.body?.contentType||'').toLowerCase()==='html'?x.body.content:'');
-  const text=x.bodyText||x.message||x.text||((x.body?.contentType||'').toLowerCase()==='text'?x.body.content:'')||x.bodyPreview||x.body||'';
+  const html=x.bodyHtml||x.body_html||((x.body?.contentType||'').toLowerCase()==='html'?x.body.content:'');
+  const text=x.bodyText||x.body_text||x.message||x.text||((x.body?.contentType||'').toLowerCase()==='text'?x.body.content:'')||x.bodyPreview||x.body||'';
   const m={id,source,sourceMessageId:String(rawId),direction,fromName,fromAddress,toName,toAddress,subject:x.subject||x.title||'(no subject)',bodyText:typeof text==='string'?text:String(text||''),bodyHtml:typeof html==='string'?html:'',timestamp:new Date(ts).toISOString(),threadId:x.threadId||x.conversationId||x.conversation_id||'',excluded:!!x.excluded,exclusionReason:x.exclusionReason||''};
   m.contactKey=contactKey(m);return m
 }
@@ -362,7 +362,88 @@ async function syncOutlook(){
 }
 function csvParse(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){cell+='"';i++}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}else cell+=c}if(cell||row.length){row.push(cell);rows.push(row)}if(!rows.length)return[];const h=rows.shift().map(x=>x.trim());return rows.filter(r=>r.some(Boolean)).map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||''])))}
 async function importFile(file){const text=await file.text();let data;if(file.name.toLowerCase().endsWith('.json'))data=JSON.parse(text);else data=csvParse(text);if(!Array.isArray(data))data=data.messages||data.rows||[];const looksBgg=/bgg|geekmail/i.test(file.name);data=data.map(x=>{if(looksBgg&&!x.source)x.source='BGG';if(!x.direction){const box=String(x.mailbox||x.folder||'').toLowerCase();if(box.includes('out')||box.includes('sent'))x.direction='out';else if(box.includes('in'))x.direction='in'}return x});await saveMany(data)}
-function buildBggHelper(){const start=Number($('#bggStart').value)||1,end=Number($('#bggEnd').value)||start,stop=$('#bggStopDate').value,user=$('#bggUser').value.trim(),box=$('#bggBox').value;return `/* Mail Merge BGG helper. Run in DevTools Console while logged into boardgamegeek.com. */\n(async()=>{const cfg=${JSON.stringify({start,end,stop,user,box})};const sleep=ms=>new Promise(r=>setTimeout(r,ms));const out=[];const boxes=cfg.box==='both'?['inbox','sent']:cfg.box==='outbox'?['sent']:['inbox'];for(const b of boxes){for(let p=cfg.start;p<=cfg.end;p++){const url='/geekmail?folder='+encodeURIComponent(b)+'&pageid='+p;const r=await fetch(url,{credentials:'include'});if(!r.ok)throw Error('BGG '+r.status+' '+url);const html=await r.text(),doc=new DOMParser().parseFromString(html,'text/html');const links=[...doc.querySelectorAll('a[href*="/geekmail?"]')].filter(a=>/messageid|messageId|id=/i.test(a.href));const seen=new Set();for(const a of links){if(seen.has(a.href))continue;seen.add(a.href);const row=a.closest('tr,li,div')||a.parentElement;const text=(row?.innerText||'').trim();const ds=text.match(/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d{1,2},?\\s+\\d{4}/i);const dt=ds?new Date(ds[0]):null;if(cfg.stop&&dt&&dt<new Date(cfg.stop+'T00:00:00')){p=cfg.end+1;break}out.push({source:'BGG',direction:b==='sent'?'out':'in',subject:(a.textContent||'').trim()||'(no subject)',bodyText:text,timestamp:dt?dt.toISOString():new Date().toISOString(),sourceMessageId:a.href,fromName:b==='sent'?cfg.user:'',toName:b==='sent'?'':cfg.user});}console.log('Mail Merge BGG',b,'page',p,'captured',out.length);await sleep(650)}}const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),x=document.createElement('a');x.href=URL.createObjectURL(blob);x.download='bgg-geekmail-mailmerge.json';x.click();setTimeout(()=>URL.revokeObjectURL(x.href),1000)})();`}
+function buildBggHelper(){
+  const startPage=Number($('#bggStart').value)||1;
+  const endPage=Math.max(startPage,Number($('#bggEnd').value)||startPage);
+  const stopDate=$('#bggStopDate').value;
+  const configuredUser=$('#bggUser').value.trim();
+  const box=$('#bggBox').value;
+  const cfg={startPage,endPage,stopDate,configuredUser,box};
+  return `(async()=>{
+const CFG=${JSON.stringify(cfg)};
+const MESSAGE_DELAY_MS=300,PAGE_DELAY_MS=1200;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const clean=v=>String(v??'').replace(/\\u00a0/g,' ').replace(/\\r\\n?/g,'\\n').replace(/[ \\t]+\\n/g,'\\n').replace(/\\n{3,}/g,'\\n\\n').trim();
+async function waitUntil(test,timeout=20000){const started=Date.now();while(Date.now()-started<timeout){const result=test();if(result)return result;await sleep(100)}throw Error('Timed out waiting for GeekMail.')}
+function getMyUsername(){const avatar=document.querySelector('button img[alt$=" Avatar"]');return clean(avatar?.alt?.replace(/\\s+Avatar$/,''))||CFG.configuredUser}
+function getMessageSignature(){return [...document.querySelectorAll('input[name="messagelist[]"]')].map(x=>x.value).join(',')}
+function getPageInfo(){const m=document.body.innerText.match(/Pg\\.(\\d+)\\s*\\/\\s*(\\d+)/);return m?{current:Number(m[1]),total:Number(m[2])}:{current:1,total:1}}
+async function waitForPageChange(previous,timeout=20000){await sleep(400);return waitUntil(()=>getMessageSignature()!==previous,timeout)}
+async function openFolder(folder){
+ const link=[...document.querySelectorAll('a')].find(a=>a.textContent.trim()===folder&&(a.getAttribute('onclick')||'').includes('ClearAndViewFolder'));
+ if(!link)throw Error('Could not find '+folder+' folder link.');
+ const previous=getMessageSignature();link.click();await sleep(PAGE_DELAY_MS);
+ if(getMessageSignature()===previous&&folder==='Outbox'){try{await waitForPageChange(previous,10000)}catch{}}
+}
+async function goToPage(folder,nextPage){
+ const name=folder.toLowerCase();
+ const link=[...document.querySelectorAll('a[onclick]')].find(a=>{const code=a.getAttribute('onclick')||'';const m=code.match(/ViewFolder\\(\\s*['"]([^'"]+)['"]\\s*,\\s*(\\d+)/);return m&&m[1].toLowerCase()===name&&Number(m[2])===nextPage});
+ if(!link)throw Error('Could not find '+folder+' page '+nextPage+'.');
+ const previous=getMessageSignature();link.click();await waitForPageChange(previous);await sleep(PAGE_DELAY_MS);
+}
+function currentMessages(){return [...document.querySelectorAll('input[name="messagelist[]"]')].map(cb=>{const id=cb.value,row=cb.closest('tr'),container=cb.closest('table')?.parentElement;return{id,listRow:row,subjectLink:container?.querySelector('#subject_'+CSS.escape(id))}})}
+async function waitForBody(id){return waitUntil(()=>{const box=document.getElementById('message_'+id),subject=box?.querySelector('.gm_subject');return box&&subject?{box,subject}:null})}
+function extractBody(cell){
+ if(!cell)return{bodyText:'',bodyHtml:''};
+ const clone=cell.cloneNode(true);clone.querySelector('.gm_subject')?.remove();clone.querySelectorAll('script,style').forEach(x=>x.remove());
+ const bodyHtml=clone.innerHTML.trim();clone.querySelectorAll('br').forEach(br=>br.replaceWith(document.createTextNode('\\n')));
+ clone.querySelectorAll('p,div,blockquote,li,tr').forEach(el=>el.appendChild(document.createTextNode('\\n')));
+ return{bodyText:clean(clone.textContent),bodyHtml};
+}
+async function readMessage(item,folder,myUser){
+ if(!item.subjectLink)throw Error('Subject link missing for '+item.id);
+ const cells=item.listRow?[...item.listRow.children]:[];
+ const listedUser=clean(cells[1]?.textContent),listedSubject=clean(item.subjectLink.textContent),messageDate=clean(item.listRow?.querySelector('.gm_date')?.textContent);
+ let box=document.getElementById('message_'+item.id),subject=box?.querySelector('.gm_subject');
+ if(!box||!subject){item.subjectLink.click();const loaded=await waitForBody(item.id);box=loaded.box;subject=loaded.subject}
+ const otherUser=clean(box.querySelector('.js-avatar[data-username]')?.getAttribute('data-username'))||listedUser;
+ const subjectText=clean(subject.querySelector('b')?.textContent)||listedSubject;
+ const bodies=extractBody(subject.closest('td')),isInbox=folder.toLowerCase()==='inbox';
+ box.querySelector('.gm-actions__collapse')?.click();await sleep(MESSAGE_DELAY_MS);
+ return{source:'BGG',direction:isInbox?'in':'out',folder,message_id:item.id,from_username:isInbox?otherUser:myUser,to_username:isInbox?myUser:otherUser,subject:subjectText,message_date:messageDate,body_text:bodies.bodyText,body_html:bodies.bodyHtml};
+}
+async function exportFolder(folder,records){
+ await openFolder(folder);
+ let page=getPageInfo();
+ while(page.current<CFG.startPage&&page.current<page.total){await goToPage(folder,page.current+1);page=getPageInfo()}
+ while(true){
+   page=getPageInfo();
+   if(page.current>CFG.endPage)break;
+   const messages=currentMessages();console.log('Mail Merge',folder,'page',page.current+'/'+page.total,messages.length+' messages');
+   let stopFolder=false;
+   for(let i=0;i<messages.length;i++){
+     const item=messages[i];
+     try{
+       const rec=await readMessage(item,folder,getMyUsername());
+       if(CFG.stopDate&&rec.message_date){const d=new Date(rec.message_date);if(!Number.isNaN(d.getTime())&&d<new Date(CFG.stopDate+'T00:00:00')){stopFolder=true;break}}
+       records.push(rec);window.bggGeekMailExport=records;
+       console.log('✓',folder,item.id,rec.subject);
+     }catch(err){console.error('Failed message',item.id,err)}
+   }
+   if(stopFolder||page.current>=page.total||page.current>=CFG.endPage)break;
+   await goToPage(folder,page.current+1);
+ }
+}
+const me=getMyUsername();if(!me)throw Error('Could not detect BGG username. Set it in Mail Merge one-time BGG setup.');
+const records=[];window.bggGeekMailExport=records;
+const folders=CFG.box==='both'?['Inbox','Outbox']:CFG.box==='outbox'?['Outbox']:['Inbox'];
+for(const folder of folders)await exportFolder(folder,records);
+const blob=new Blob([JSON.stringify(records,null,2)],{type:'application/json'}),a=document.createElement('a');
+a.href=URL.createObjectURL(blob);a.download='bgg-geekmail-mailmerge-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+console.table(records.map(r=>({folder:r.folder,id:r.message_id,from:r.from_username,to:r.to_username,subject:r.subject})));
+console.log('Mail Merge finished. Downloaded',records.length,'records.');
+})();`
+}
 const RULES_KEY='mailMergeRules';
 function loadRules(){let r;try{r=JSON.parse(localStorage.getItem(RULES_KEY)||'[]')}catch{r=[]}if(!r.length)r=[{field:'fromAddress',value:'no-reply'},{field:'subject',value:'security alert'}];$('#rules').innerHTML=r.map((x,i)=>'<div class="rule" data-i="'+i+'"><select><option value="fromAddress" '+(x.field==='fromAddress'?'selected':'')+'>Sender</option><option value="subject" '+(x.field==='subject'?'selected':'')+'>Subject</option><option value="bodyText" '+(x.field==='bodyText'?'selected':'')+'>Body</option></select><input value="'+esc(x.value)+'" placeholder="contains…"><button class="btn danger">×</button></div>').join('');$$('#rules .danger').forEach(b=>b.onclick=()=>{b.parentElement.remove();saveRules()});$$('#rules select,#rules input').forEach(e=>e.onchange=saveRules)}
 function saveRules(){const r=$$('#rules .rule').map(x=>({field:x.querySelector('select').value,value:x.querySelector('input').value.trim()})).filter(x=>x.value);localStorage.setItem(RULES_KEY,JSON.stringify(r));return r}
