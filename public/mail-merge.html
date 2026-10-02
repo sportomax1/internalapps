@@ -16,7 +16,7 @@
 <div id="appShell" class="appLocked">
 <header class="top"><div class="brand">✉️ Mail Merge</div><div class="tabs">
 <button class="tab active" data-tab="dashboard">Dashboard</button><button class="tab" data-tab="mailbox">Mailbox</button><button class="tab" data-tab="flows">Flows</button><button class="tab" data-tab="contacts">Contacts</button><button class="tab" data-tab="settings">Settings</button>
-</div><div class="grow"></div><span id="dbStatus" class="status">Opening local database…</span><a href="/" class="btn">Apps</a></header>
+</div><div class="grow"></div><span id="dbStatus" class="status">Opening local database…</span><span class="status" title="Mail Merge build">build 2026.10.02.1</span><a href="/" class="btn">Apps</a></header>
 <main>
 <section id="dashboard" class="pane active"><div id="metrics" class="grid metrics"></div><div class="grid setupGrid"><div class="card"><h3>Recent activity</h3><div id="recent"></div></div><div class="card"><h3>Needs attention</h3><div id="attention"></div></div></div></section>
 <section id="mailbox" class="pane">
@@ -34,8 +34,8 @@
   <div class="row"><button id="addSearchRule" class="btn" type="button">+ Add condition</button><button id="clearSearchRules" class="btn" type="button">Clear</button></div>
 </details>
 <div class="mailLayout"><div class="card list" id="messageList"></div><div class="card reader" id="reader"><div class="empty">Select a message.</div></div></div></section>
-<section id="flows" class="pane"><div class="toolbar"><input id="flowSearch" placeholder="Contact / subject / body…" style="min-width:260px;flex:1"><button id="flowAdvanced" class="btn">Advanced filters</button><button id="refreshFlows" class="btn">Refresh</button></div><div id="flowFilterHost"></div><div id="flowList"></div></section>
-<section id="contacts" class="pane"><div class="toolbar"><input id="contactSearch" placeholder="Search contacts, subject, body…" style="min-width:260px;flex:1"><button id="contactAdvanced" class="btn">Advanced filters</button><button id="refreshContacts" class="btn">Refresh</button></div><div id="contactFilterHost"></div><div class="card"><div class="contactRow muted"><b>Contact</b><b>In</b><b>Out</b><b>Total</b><b>Last</b></div><div id="contactList"></div></div></section>
+<section id="flows" class="pane"><div class="toolbar"><input id="flowSearch" placeholder="Contact / subject / body…" style="min-width:260px;flex:1"><button id="refreshFlows" class="btn">Refresh</button></div><div id="flowFilterHost"></div><div id="flowList"></div></section>
+<section id="contacts" class="pane"><div class="toolbar"><input id="contactSearch" placeholder="Search contacts, subject, body…" style="min-width:260px;flex:1"><button id="refreshContacts" class="btn">Refresh</button></div><div id="contactFilterHost"></div><div class="card"><div class="contactRow muted"><b>Contact</b><b>In</b><b>Out</b><b>Total</b><b>Last</b></div><div id="contactList"></div></div></section>
 <section id="settings" class="pane">
 <div class="grid setupGrid">
 
