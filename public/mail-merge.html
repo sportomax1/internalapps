@@ -106,8 +106,10 @@ function saveRules(){const r=$$('#rules .rule').map(x=>({field:x.querySelector('
 async function applyRules(){const rules=saveRules(),rows=await allMsgs();let n=0;for(const m of rows){if(m.excluded&&m.exclusionReason==='Manual')continue;let hit='';for(const r of rules)if(norm(m[r.field]).includes(norm(r.value))){hit='Rule: '+r.field+' contains '+r.value;break}const next=!!hit;if(m.excluded!==next||m.exclusionReason!==hit){m.excluded=next;m.exclusionReason=hit;await putMsg(m);n++}}log('Applied exclusion rules to '+n+' changed messages');await renderAll()}
 const AUTH_KEY='mailMergeUnlocked';
 async function unlockApp(password){
-  const r=await fetch('/api/tools?action=auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});
-  if(!r.ok){let m='Incorrect password.';try{m=(await r.json()).error||m}catch{}throw Error(m)}
+  const env=await fetch('/api/tools?action=env',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(env && env.appPassword===false) throw Error('APP_PASSWORD is not configured on this Vercel deployment.');
+  const r=await fetch('/api/tools?action=auth',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({password})});
+  if(!r.ok){let m='Password check failed.';try{m=(await r.json()).error||m}catch{}throw Error(m)}
   sessionStorage.setItem(AUTH_KEY,'1');$('#authGate').style.display='none';$('#appShell').classList.remove('appLocked');$('#authPassword').value='';
 }
 function initGate(){
