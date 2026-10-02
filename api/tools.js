@@ -41,10 +41,13 @@ function supabaseConfig(req,res) {
 }
 function auth(req,res) {
   if(req.method!=='POST') return res.status(405).json({error:'Method not allowed'});
-  const password = req.body && typeof req.body === 'object' ? (req.body.password || '') : '';
-  const secret=process.env.APP_PASSWORD;
-  if(!secret) return res.status(500).json({error:'Server not configured'});
-  return password===secret ? res.status(200).json({ok:true}) : res.status(401).json({error:'Invalid password'});
+  const suppliedRaw = req.body && typeof req.body === 'object' ? (req.body.password || '') : '';
+  const secretRaw = process.env.APP_PASSWORD || '';
+  if(!secretRaw) return res.status(503).json({error:'APP_PASSWORD is not configured for this deployment.'});
+  const supplied=String(suppliedRaw).trim();
+  const secret=String(secretRaw).trim();
+  if(!supplied) return res.status(400).json({error:'Password is required.'});
+  return supplied===secret ? res.status(200).json({ok:true}) : res.status(401).json({error:'Password does not match APP_PASSWORD for this deployment.'});
 }
 export default async function handler(req,res) {
   switch(actionFrom(req)) {
