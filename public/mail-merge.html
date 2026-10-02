@@ -114,7 +114,7 @@ function initGate(){
   if(sessionStorage.getItem(AUTH_KEY)==='1'){$('#authGate').style.display='none';$('#appShell').classList.remove('appLocked')}
   $('#authForm').onsubmit=async e=>{e.preventDefault();$('#authError').textContent='';$('#authSubmit').disabled=true;try{await unlockApp($('#authPassword').value)}catch(err){$('#authError').textContent=err.message}finally{$('#authSubmit').disabled=false}}
 }
-$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));$$('.pane').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.tab).classList.add('active')});
+$$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));$$('.pane').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.tab).classList.add('active')});
 ['mailSearch','sourceFilter','dirFilter','includeFilter'].forEach(id=>$('#'+id).addEventListener('input',async()=>renderMailbox((await allMsgs()).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)))));
 $('#flowSearch').oninput=async()=>renderFlows(await allMsgs());$('#contactSearch').oninput=async()=>renderContacts(await allMsgs());$('#refreshView').onclick=renderAll;$('#refreshFlows').onclick=renderAll;$('#refreshContacts').onclick=renderAll;
 $('#saveClient').onclick=async()=>{localStorage.setItem('outlookGraphClientId',$('#clientId').value.trim());msalApp=null;account=null;await initOutlook();log('Saved Outlook client ID')};$('#outlookLogin').onclick=()=>outlookLogin().catch(e=>{log(e.message);alert(e.message)});$('#outlookSync').onclick=syncOutlook;
