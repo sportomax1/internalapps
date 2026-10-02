@@ -29,7 +29,7 @@
 </div>
 <details id="advancedSearch" class="card searchBuilder">
   <summary><b>Advanced filters</b> <span id="filterCount" class="filterCount">0 rules</span></summary>
-  <div class="muted small" style="margin:8px 0">Build expressions such as <b>Subject contains invoice AND Body does not contain automated OR From contains publisher</b>.</div>
+  <div class="muted small" style="margin:8px 0">These filters apply to <b>Dashboard, Mailbox, Flows, and Contacts</b>. Contacts and flows are rebuilt from matching messages, even when the match is only in message body or subject.</div>
   <div id="searchRules"></div>
   <div class="row"><button id="addSearchRule" class="btn" type="button">+ Add condition</button><button id="clearSearchRules" class="btn" type="button">Clear</button></div>
 </details>
@@ -135,7 +135,17 @@ function normalizeMessage(x){
 }
 function parseAddr(obj){return obj?.emailAddress?.address||''} function parseName(obj){return obj?.emailAddress?.name||''}
 async function saveMany(rows){let n=0;for(const x of rows){await putMsg(normalizeMessage(x));n++}log('Saved '+n+' messages to IndexedDB');await renderAll()}
-async function renderAll(){const rows=(await allMsgs()).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));$('#dbStatus').textContent=rows.length.toLocaleString()+' local messages';renderDashboard(rows);renderMailbox(rows);renderFlows(rows);renderContacts(rows);renderStorage(rows)}
+async function renderAll(){
+  const rows=(await allMsgs()).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  const scoped=globalFilteredRows(rows);
+  const activeFilters=hasGlobalFilters();
+  $('#dbStatus').textContent=activeFilters?(scoped.length.toLocaleString()+' of '+rows.length.toLocaleString()+' messages'):(rows.length.toLocaleString()+' local messages');
+  renderDashboard(scoped);
+  renderMailbox(scoped,true);
+  renderFlows(scoped);
+  renderContacts(scoped);
+  renderStorage(rows);
+}
 function included(rows){return rows.filter(x=>!x.excluded)}
 function renderDashboard(rows){const a=included(rows),ins=a.filter(x=>x.direction==='in').length,outs=a.filter(x=>x.direction==='out').length,contacts=new Set(a.map(x=>x.contactKey).filter(Boolean)).size;const grouped=groupContacts(a),waiting=[...grouped.values()].filter(g=>g.last.direction==='out');$('#metrics').innerHTML=[['Messages',a.length],['Incoming',ins],['Outgoing',outs],['Contacts',contacts]].map(([k,v])=>'<div class="card metric"><span class="muted">'+k+'</span><b>'+v.toLocaleString()+'</b></div>').join('');$('#recent').innerHTML=a.slice(0,8).map(m=>'<div class="msg"><div class="msgTop"><b>'+esc(displayContact(m))+'</b><span class="muted small">'+fmtDate(m.timestamp)+'</span></div><div>'+esc(m.subject)+'</div></div>').join('')||'<div class="empty">No mail yet.</div>';$('#attention').innerHTML=waiting.sort((a,b)=>new Date(a.last.timestamp)-new Date(b.last.timestamp)).slice(0,8).map(g=>'<div class="msg"><div class="msgTop"><b>'+esc(g.name)+'</b><span class="muted small">'+daysAgo(g.last.timestamp)+'d</span></div><div>'+esc(g.last.subject)+'</div></div>').join('')||'<div class="empty">Nothing awaiting reply.</div>'}
 const SEARCH_RULES_KEY='mailMergeSearchRules';
@@ -162,14 +172,18 @@ function matchesAdvanced(m){
   for(let i=1;i<rules.length;i++)result=rules[i].join==='OR'?(result||evalSearchRule(m,rules[i])):(result&&evalSearchRule(m,rules[i]));
   return result;
 }
-function filteredMail(rows){
+function hasGlobalFilters(){
+  return !!(norm($('#mailSearch').value)||$('#sourceFilter').value||$('#dirFilter').value||$('#includeFilter').value!=='included'||activeSearchRules().length);
+}
+function globalFilteredRows(rows){
   const q=norm($('#mailSearch').value),src=$('#sourceFilter').value,dir=$('#dirFilter').value,inc=$('#includeFilter').value;
   return rows.filter(m=>{
     const quick=!q||norm(searchField(m,'any')).includes(q);
     const standard=(!src||m.source===src)&&(!dir||m.direction===dir)&&(inc==='all'||(inc==='excluded'?m.excluded:!m.excluded));
     return quick&&standard&&matchesAdvanced(m);
-  })
+  });
 }
+function filteredMail(rows){return globalFilteredRows(rows)}
 function renderSearchRules(rules){
   const host=$('#searchRules');
   host.innerHTML=(rules||[]).map((r,i)=>'<div class="searchRule '+(i===0?'first':'')+'"><select class="join"><option'+(r.join==='AND'?' selected':'')+'>AND</option><option'+(r.join==='OR'?' selected':'')+'>OR</option></select><select class="sfield"><option value="any">Any field</option><option value="from">From</option><option value="to">To</option><option value="subject">Subject</option><option value="body">Body</option><option value="source">Source</option></select><select class="sop"><option value="contains">contains</option><option value="notcontains">does not contain</option><option value="equals">equals</option></select><input class="svalue" placeholder="Value…" value="'+esc(r.value||'')+'"><button class="btn danger removeRule" type="button" title="Remove condition">×</button></div>').join('');
@@ -186,8 +200,8 @@ function syncSearchRules(){const rules=activeSearchRules();localStorage.setItem(
 function updateFilterCount(){const n=activeSearchRules().length;$('#filterCount').textContent=n+' rule'+(n===1?'':'s')}
 function addSearchRule(){const rules=activeSearchRules();rules.push({join:rules.length?'AND':'AND',field:'any',op:'contains',value:''});renderSearchRules(rules);$('#advancedSearch').open=true;setTimeout(()=>$$('#searchRules .svalue').at(-1)?.focus(),0)}
 
-function renderMailbox(rows){const a=filteredMail(rows);$('#messageList').innerHTML=a.map(m=>'<article class="msg '+(m.id===selectedId?'active':'')+'" data-id="'+esc(m.id)+'"><div class="msgTop"><span class="msgTitle">'+(m.direction==='in'?'← ':'→ ')+esc(displayContact(m))+'</span><span class="muted small">'+fmtDate(m.timestamp)+'</span></div><div class="subj">'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div><div class="chips"><span class="chip '+norm(m.source)+'">'+esc(m.source)+'</span>'+(m.excluded?'<span class="chip excluded">Excluded</span>':'')+'</div></article>').join('')||'<div class="empty">No matching messages.</div>';$$('#messageList .msg').forEach(e=>e.onclick=()=>openMessage(e.dataset.id,rows))}
-function openMessage(id,rows){selectedId=id;const m=rows.find(x=>x.id===id);if(!m)return;$('#reader').innerHTML='<div class="muted">'+esc(m.source)+' · '+esc(m.direction==='in'?'Incoming':'Outgoing')+' · '+fmtFull(m.timestamp)+'</div><h2>'+esc(m.subject)+'</h2><div><b>From:</b> '+esc((m.fromName?m.fromName+' ':'')+(m.fromAddress?'<'+m.fromAddress+'>':''))+'</div><div><b>To:</b> '+esc((m.toName?m.toName+' ':'')+(m.toAddress?'<'+m.toAddress+'>':''))+'</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><div class="body">'+esc(m.bodyText)+'</div><div class="row" style="margin-top:14px"><button id="toggleExclude" class="btn">'+(m.excluded?'Include in stats':'Exclude from stats')+'</button></div>';$('#toggleExclude').onclick=async()=>{m.excluded=!m.excluded;m.exclusionReason=m.excluded?'Manual':'';await putMsg(m);await renderAll();openMessage(id,await allMsgs())};renderMailbox(rows)}
+function renderMailbox(rows,alreadyScoped=false){const a=alreadyScoped?rows:filteredMail(rows);$('#messageList').innerHTML=a.map(m=>'<article class="msg '+(m.id===selectedId?'active':'')+'" data-id="'+esc(m.id)+'"><div class="msgTop"><span class="msgTitle">'+(m.direction==='in'?'← ':'→ ')+esc(displayContact(m))+'</span><span class="muted small">'+fmtDate(m.timestamp)+'</span></div><div class="subj">'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div><div class="chips"><span class="chip '+norm(m.source)+'">'+esc(m.source)+'</span>'+(m.excluded?'<span class="chip excluded">Excluded</span>':'')+'</div></article>').join('')||'<div class="empty">No matching messages.</div>';$$('#messageList .msg').forEach(e=>e.onclick=()=>openMessage(e.dataset.id,rows))}
+function openMessage(id,rows){selectedId=id;const m=rows.find(x=>x.id===id);if(!m)return;$('#reader').innerHTML='<div class="muted">'+esc(m.source)+' · '+esc(m.direction==='in'?'Incoming':'Outgoing')+' · '+fmtFull(m.timestamp)+'</div><h2>'+esc(m.subject)+'</h2><div><b>From:</b> '+esc((m.fromName?m.fromName+' ':'')+(m.fromAddress?'<'+m.fromAddress+'>':''))+'</div><div><b>To:</b> '+esc((m.toName?m.toName+' ':'')+(m.toAddress?'<'+m.toAddress+'>':''))+'</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><div class="body">'+esc(m.bodyText)+'</div><div class="row" style="margin-top:14px"><button id="toggleExclude" class="btn">'+(m.excluded?'Include in stats':'Exclude from stats')+'</button></div>';$('#toggleExclude').onclick=async()=>{m.excluded=!m.excluded;m.exclusionReason=m.excluded?'Manual':'';await putMsg(m);await renderAll();openMessage(id,await allMsgs())};renderAll()}
 function groupContacts(rows){const mp=new Map();for(const m of rows){const k=m.contactKey||'(unknown)';if(!mp.has(k))mp.set(k,{key:k,name:displayContact(m),in:0,out:0,total:0,last:m,items:[]});const g=mp.get(k);g[m.direction]++;g.total++;g.items.push(m);if(new Date(m.timestamp)>new Date(g.last.timestamp))g.last=m}return mp}
 function renderFlows(rows){const q=norm($('#flowSearch').value), groups=[...groupContacts(included(rows)).values()].filter(g=>!q||norm(g.name+' '+g.items.map(x=>x.subject).join(' ')).includes(q)).sort((a,b)=>new Date(b.last.timestamp)-new Date(a.last.timestamp));$('#flowList').innerHTML=groups.slice(0,100).map(g=>'<div class="card" style="margin-bottom:9px"><div class="msgTop"><h3 style="margin:0">'+esc(g.name)+'</h3><span class="muted">'+g.total+' messages</span></div>'+g.items.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).slice(-12).map(m=>'<div class="flow '+m.direction+'"><div class="msgTop"><b>'+(m.direction==='in'?'← Them':'→ You')+'</b><span class="muted small">'+fmtFull(m.timestamp)+'</span></div><div>'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div></div>').join('')+'</div>').join('')||'<div class="empty">No flows yet.</div>'}
 function renderContacts(rows){const q=norm($('#contactSearch').value), a=[...groupContacts(included(rows)).values()].filter(g=>!q||norm(g.name+' '+g.key).includes(q)).sort((a,b)=>b.total-a.total);$('#contactList').innerHTML=a.map(g=>'<div class="contactRow"><div><b>'+esc(g.name)+'</b><div class="muted small">'+esc(g.key)+'</div></div><div>'+g.in+'</div><div>'+g.out+'</div><div>'+g.total+'</div><div>'+fmtDate(g.last.timestamp)+'</div></div>').join('')||'<div class="empty">No contacts yet.</div>'}
