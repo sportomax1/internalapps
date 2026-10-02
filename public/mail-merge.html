@@ -22,26 +22,72 @@
 <section id="mailbox" class="pane"><div class="toolbar"><input id="mailSearch" placeholder="Search mail…"><select id="sourceFilter"><option value="">All sources</option><option>Outlook</option><option>BGG</option></select><select id="dirFilter"><option value="">In + Out</option><option value="in">Incoming</option><option value="out">Outgoing</option></select><select id="includeFilter"><option value="included">Included</option><option value="all">Included + excluded</option><option value="excluded">Excluded only</option></select><button id="refreshView" class="btn">Refresh</button></div><div class="mailLayout"><div class="card list" id="messageList"></div><div class="card reader" id="reader"><div class="empty">Select a message.</div></div></div></section>
 <section id="flows" class="pane"><div class="toolbar"><input id="flowSearch" placeholder="Contact / subject…"><button id="refreshFlows" class="btn">Refresh</button></div><div id="flowList"></div></section>
 <section id="contacts" class="pane"><div class="toolbar"><input id="contactSearch" placeholder="Search contacts…"><button id="refreshContacts" class="btn">Refresh</button></div><div class="card"><div class="contactRow muted"><b>Contact</b><b>In</b><b>Out</b><b>Total</b><b>Last</b></div><div id="contactList"></div></div></section>
-<section id="settings" class="pane"><div class="grid setupGrid">
-<div class="card section"><h2>Outlook / Hotmail</h2><div class="muted">Microsoft Graph sync. Reuses the client ID from Outlook Graph Explorer when available.</div><div class="field"><label>Application client ID</label><input id="clientId" placeholder="Microsoft Entra application ID"></div><div class="field"><label>Redirect URI to register in Microsoft Entra</label><div class="row"><input id="redirectUriView" readonly style="flex:1"><button id="copyRedirect" class="btn" type="button">Copy</button></div></div>
-<div class="card" style="margin-top:10px;background:#0c1627">
-  <b>Microsoft Entra setup</b>
-  <ol class="small" style="margin:8px 0 0;padding-left:20px;line-height:1.7">
-    <li>Open <b>Microsoft Entra admin center</b>.</li>
-    <li>Go to <b>Identity → Applications → App registrations</b>.</li>
-    <li>Open the app whose <b>Application (client) ID</b> matches the Client ID above.</li>
-    <li>Open <b>Authentication</b>.</li>
-    <li>Under <b>Platform configurations</b>, choose <b>Add a platform → Single-page application</b>. If a SPA section already exists, use that instead.</li>
-    <li>Add this exact Redirect URI:</li>
-  </ol>
-  <div class="row" style="margin-top:7px"><code id="entraExactUrl" style="flex:1;overflow-wrap:anywhere;background:#07101c;border:1px solid var(--line);border-radius:8px;padding:9px">https://internalapps-psi.vercel.app/mail-merge/</code><button id="copyEntraUrl" class="btn" type="button">Copy exact URL</button></div>
-  <div class="small warn" style="margin-top:8px">Use the <b>Single-page application (SPA)</b> platform, not Web. The URL must match exactly, including the trailing slash.</div>
+<section id="settings" class="pane">
+<div class="grid setupGrid">
+
+<div class="card section">
+  <h2>Outlook / Hotmail</h2>
+  <div id="outlookState" class="small muted">Not connected.</div>
+
+  <h3 style="margin-bottom:6px">Regular use</h3>
+  <div class="row">
+    <button id="outlookTest" class="btn" disabled>Test connection</button>
+    <button id="outlookSync" class="btn primary" disabled>Sync mail</button>
+  </div>
+  <div class="row">
+    <div class="field" style="flex:1"><label>Sync from date</label><input id="outlookSince" type="date"></div>
+    <div class="field" style="flex:1"><label>Max per folder</label><select id="outlookMax"><option>100</option><option selected>500</option><option>1000</option><option>2000</option><option>5000</option></select></div>
+  </div>
+
+  <details style="margin-top:12px">
+    <summary><b>One-time Microsoft setup</b></summary>
+    <div class="muted small" style="margin-top:8px">Only needed when first connecting or changing the Microsoft app registration.</div>
+    <div class="field"><label>Application client ID</label><input id="clientId" placeholder="Microsoft Entra application ID"></div>
+    <div class="row" style="margin-top:8px"><button id="saveClient" class="btn">Save Client ID</button><button id="outlookLogin" class="btn">Connect / Reconnect Outlook</button></div>
+    <div class="field"><label>Exact redirect URI</label><div class="row"><input id="redirectUriView" readonly style="flex:1"><button id="copyRedirect" class="btn" type="button">Copy</button></div></div>
+    <ol class="small" style="margin:8px 0 0;padding-left:20px;line-height:1.65">
+      <li>Microsoft Entra admin center → <b>App registrations</b>.</li>
+      <li>Open the app matching the Client ID above.</li>
+      <li><b>Authentication</b> → <b>Platform configurations</b>.</li>
+      <li>Add or edit <b>Single-page application (SPA)</b>.</li>
+      <li>Add this exact URL:</li>
+    </ol>
+    <div class="row" style="margin-top:7px"><code id="entraExactUrl" style="flex:1;overflow-wrap:anywhere;background:#07101c;border:1px solid var(--line);border-radius:8px;padding:9px">https://internalapps-psi.vercel.app/mail-merge/</code><button id="copyEntraUrl" class="btn" type="button">Copy exact URL</button></div>
+    <div class="small warn" style="margin-top:8px">Use SPA, not Web. Keep the trailing slash.</div>
+  </details>
 </div>
-<div class="row" style="margin-top:8px"><button id="saveClient" class="btn">Save</button><button id="outlookLogin" class="btn primary">Connect Outlook</button><button id="outlookTest" class="btn" disabled>Test connection</button><button id="outlookSync" class="btn" disabled>Sync mail</button></div><div class="field"><label>Sync from date</label><input id="outlookSince" type="date"></div><div class="field"><label>Max messages per folder</label><select id="outlookMax"><option>100</option><option selected>500</option><option>1000</option><option>2000</option><option>5000</option></select></div><div id="outlookState" class="small muted" style="margin-top:8px">Not connected.</div></div>
-<div class="card section"><h2>BGG GeekMail</h2><div class="muted">BGG is scraped through a helper run while logged into BoardGameGeek, then imported here.</div><div class="field"><label>BGG username</label><input id="bggUser" placeholder="sportomax"></div><div class="field"><label>Mailbox</label><select id="bggBox"><option value="both">Inbox + Outbox</option><option value="inbox">Inbox</option><option value="outbox">Outbox</option></select></div><div class="row"><div class="field" style="flex:1"><label>Start page</label><input id="bggStart" type="number" min="1" value="1"></div><div class="field" style="flex:1"><label>End page</label><input id="bggEnd" type="number" min="1" value="25"></div></div><div class="field"><label>Or stop when older than</label><input id="bggStopDate" type="date"></div><div class="row" style="margin-top:8px"><button id="copyBggHelper" class="btn primary">Copy BGG scraper helper</button><button id="importBtn" class="btn">Import JSON/CSV</button><input id="importFile" type="file" accept=".json,.csv,text/csv,application/json" hidden></div><div class="small warn" style="margin-top:8px">The helper must run on boardgamegeek.com because your BGG login cookie cannot be read cross-origin from this app.</div></div>
-<div class="card section"><h2>Exclusion rules</h2><div class="muted">Excluded mail stays searchable but is omitted from dashboard/contact statistics.</div><div id="rules"></div><button id="addRule" class="btn">+ Rule</button><button id="applyRules" class="btn primary">Apply rules</button></div>
-<div class="card section"><h2>Local data</h2><div class="muted">All normalized messages are stored in IndexedDB in this browser.</div><div class="row" style="margin-top:8px"><button id="exportDb" class="btn">Export JSON</button><button id="clearDb" class="btn danger">Clear messages</button></div><div id="storageInfo" class="small muted" style="margin-top:8px"></div><h3>Activity log</h3><div id="log" class="log">Ready.</div></div>
-</div></section>
+
+<div class="card section">
+  <h2>BGG GeekMail</h2>
+  <h3 style="margin-bottom:6px">Regular use</h3>
+  <div class="row" style="margin-top:8px"><button id="copyBggHelper" class="btn primary">Copy scraper helper</button><button id="importBtn" class="btn">Import JSON/CSV</button><input id="importFile" type="file" accept=".json,.csv,text/csv,application/json" hidden></div>
+  <div class="field"><label>Mailbox</label><select id="bggBox"><option value="both">Inbox + Outbox</option><option value="inbox">Inbox</option><option value="outbox">Outbox</option></select></div>
+  <div class="row"><div class="field" style="flex:1"><label>Start page</label><input id="bggStart" type="number" min="1" value="1"></div><div class="field" style="flex:1"><label>End page</label><input id="bggEnd" type="number" min="1" value="25"></div></div>
+  <div class="field"><label>Stop when older than</label><input id="bggStopDate" type="date"></div>
+
+  <details style="margin-top:12px">
+    <summary><b>One-time BGG setup</b></summary>
+    <div class="field"><label>BGG username</label><input id="bggUser" placeholder="sportomax"></div>
+    <div class="small warn" style="margin-top:8px">Run the copied helper in DevTools while logged into boardgamegeek.com. Mail Merge cannot read your BGG login cookie directly.</div>
+  </details>
+</div>
+
+<div class="card section">
+  <h2>Exclusion rules</h2>
+  <div class="muted">Configure occasionally. Rules affect dashboard and contact statistics, not searchability.</div>
+  <div id="rules"></div>
+  <div class="row"><button id="addRule" class="btn">+ Rule</button><button id="applyRules" class="btn primary">Apply rules</button></div>
+</div>
+
+<div class="card section">
+  <h2>Local data & diagnostics</h2>
+  <div class="row" style="margin-top:8px"><button id="exportDb" class="btn">Export JSON</button><button id="clearDb" class="btn danger">Clear messages</button></div>
+  <div id="storageInfo" class="small muted" style="margin-top:8px"></div>
+  <details style="margin-top:12px"><summary><b>Activity log</b></summary><div id="log" class="log" style="margin-top:8px">Ready.</div></details>
+</div>
+
+</div>
+</section>
 </main>
 </div>
 <script>
