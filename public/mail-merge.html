@@ -35,7 +35,7 @@
 </details>
 <div class="mailLayout"><div class="card list" id="messageList"></div><div class="card reader" id="reader"><div class="empty">Select a message.</div></div></div></section>
 <section id="flows" class="pane"><div class="toolbar"><input id="flowSearch" placeholder="Contact / subject…"><button id="refreshFlows" class="btn">Refresh</button></div><div id="flowList"></div></section>
-<section id="contacts" class="pane"><div class="toolbar"><input id="contactSearch" placeholder="Search contacts…"><button id="refreshContacts" class="btn">Refresh</button></div><div class="card"><div class="contactRow muted"><b>Contact</b><b>In</b><b>Out</b><b>Total</b><b>Last</b></div><div id="contactList"></div></div></section>
+<section id="contacts" class="pane"><div class="toolbar"><input id="contactSearch" placeholder="Search contacts, subject, body…"><button id="refreshContacts" class="btn">Refresh</button></div><div class="card"><div class="contactRow muted"><b>Contact</b><b>In</b><b>Out</b><b>Total</b><b>Last</b></div><div id="contactList"></div></div></section>
 <section id="settings" class="pane">
 <div class="grid setupGrid">
 
@@ -204,7 +204,20 @@ function renderMailbox(rows,alreadyScoped=false){const a=alreadyScoped?rows:filt
 function openMessage(id,rows){selectedId=id;const m=rows.find(x=>x.id===id);if(!m)return;$('#reader').innerHTML='<div class="muted">'+esc(m.source)+' · '+esc(m.direction==='in'?'Incoming':'Outgoing')+' · '+fmtFull(m.timestamp)+'</div><h2>'+esc(m.subject)+'</h2><div><b>From:</b> '+esc((m.fromName?m.fromName+' ':'')+(m.fromAddress?'<'+m.fromAddress+'>':''))+'</div><div><b>To:</b> '+esc((m.toName?m.toName+' ':'')+(m.toAddress?'<'+m.toAddress+'>':''))+'</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><div class="body">'+esc(m.bodyText)+'</div><div class="row" style="margin-top:14px"><button id="toggleExclude" class="btn">'+(m.excluded?'Include in stats':'Exclude from stats')+'</button></div>';$('#toggleExclude').onclick=async()=>{m.excluded=!m.excluded;m.exclusionReason=m.excluded?'Manual':'';await putMsg(m);await renderAll();openMessage(id,await allMsgs())};renderAll()}
 function groupContacts(rows){const mp=new Map();for(const m of rows){const k=m.contactKey||'(unknown)';if(!mp.has(k))mp.set(k,{key:k,name:displayContact(m),in:0,out:0,total:0,last:m,items:[]});const g=mp.get(k);g[m.direction]++;g.total++;g.items.push(m);if(new Date(m.timestamp)>new Date(g.last.timestamp))g.last=m}return mp}
 function renderFlows(rows){const q=norm($('#flowSearch').value), groups=[...groupContacts(included(rows)).values()].filter(g=>!q||norm(g.name+' '+g.items.map(x=>x.subject).join(' ')).includes(q)).sort((a,b)=>new Date(b.last.timestamp)-new Date(a.last.timestamp));$('#flowList').innerHTML=groups.slice(0,100).map(g=>'<div class="card" style="margin-bottom:9px"><div class="msgTop"><h3 style="margin:0">'+esc(g.name)+'</h3><span class="muted">'+g.total+' messages</span></div>'+g.items.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).slice(-12).map(m=>'<div class="flow '+m.direction+'"><div class="msgTop"><b>'+(m.direction==='in'?'← Them':'→ You')+'</b><span class="muted small">'+fmtFull(m.timestamp)+'</span></div><div>'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div></div>').join('')+'</div>').join('')||'<div class="empty">No flows yet.</div>'}
-function renderContacts(rows){const q=norm($('#contactSearch').value), a=[...groupContacts(included(rows)).values()].filter(g=>!q||norm(g.name+' '+g.key).includes(q)).sort((a,b)=>b.total-a.total);$('#contactList').innerHTML=a.map(g=>'<div class="contactRow"><div><b>'+esc(g.name)+'</b><div class="muted small">'+esc(g.key)+'</div></div><div>'+g.in+'</div><div>'+g.out+'</div><div>'+g.total+'</div><div>'+fmtDate(g.last.timestamp)+'</div></div>').join('')||'<div class="empty">No contacts yet.</div>'}
+function renderContacts(rows){
+  const q=norm($('#contactSearch').value);
+  const a=[...groupContacts(included(rows)).values()]
+    .filter(g=>{
+      if(!q)return true;
+      const messageText=g.items.map(m=>[
+        m.fromName,m.fromAddress,m.toName,m.toAddress,
+        m.subject,m.bodyText,m.source
+      ].join(' ')).join(' ');
+      return norm(g.name+' '+g.key+' '+messageText).includes(q);
+    })
+    .sort((a,b)=>b.total-a.total);
+  $('#contactList').innerHTML=a.map(g=>'<div class="contactRow"><div><b>'+esc(g.name)+'</b><div class="muted small">'+esc(g.key)+'</div></div><div>'+g.in+'</div><div>'+g.out+'</div><div>'+g.total+'</div><div>'+fmtDate(g.last.timestamp)+'</div></div>').join('')||'<div class="empty">No contacts yet.</div>'
+}
 function displayContact(m){return m.direction==='out'?(m.toName||m.toAddress||'(unknown)'):(m.fromName||m.fromAddress||'(unknown)')}
 function fmtDate(v){return new Date(v).toLocaleDateString([],{month:'short',day:'numeric',year:new Date(v).getFullYear()===new Date().getFullYear()?undefined:'numeric'})} function fmtFull(v){return new Date(v).toLocaleString()} function daysAgo(v){return Math.floor((Date.now()-new Date(v))/86400000)}
 function renderStorage(rows){const approx=new Blob([JSON.stringify(rows)]).size;$('#storageInfo').textContent=rows.length.toLocaleString()+' messages · ~'+(approx/1024/1024).toFixed(2)+' MB serialized'}
