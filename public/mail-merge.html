@@ -37,7 +37,7 @@
   <div class="row" style="margin-top:7px"><code id="entraExactUrl" style="flex:1;overflow-wrap:anywhere;background:#07101c;border:1px solid var(--line);border-radius:8px;padding:9px">https://internalapps-psi.vercel.app/mail-merge/</code><button id="copyEntraUrl" class="btn" type="button">Copy exact URL</button></div>
   <div class="small warn" style="margin-top:8px">Use the <b>Single-page application (SPA)</b> platform, not Web. The URL must match exactly, including the trailing slash.</div>
 </div>
-<div class="row" style="margin-top:8px"><button id="saveClient" class="btn">Save</button><button id="outlookLogin" class="btn primary">Connect Outlook</button><button id="outlookSync" class="btn" disabled>Sync</button></div><div class="field"><label>Sync from date</label><input id="outlookSince" type="date"></div><div class="field"><label>Max messages per folder</label><select id="outlookMax"><option>100</option><option selected>500</option><option>1000</option><option>2000</option><option>5000</option></select></div><div id="outlookState" class="small muted" style="margin-top:8px">Not connected.</div></div>
+<div class="row" style="margin-top:8px"><button id="saveClient" class="btn">Save</button><button id="outlookLogin" class="btn primary">Connect Outlook</button><button id="outlookTest" class="btn" disabled>Test connection</button><button id="outlookSync" class="btn" disabled>Sync mail</button></div><div class="field"><label>Sync from date</label><input id="outlookSince" type="date"></div><div class="field"><label>Max messages per folder</label><select id="outlookMax"><option>100</option><option selected>500</option><option>1000</option><option>2000</option><option>5000</option></select></div><div id="outlookState" class="small muted" style="margin-top:8px">Not connected.</div></div>
 <div class="card section"><h2>BGG GeekMail</h2><div class="muted">BGG is scraped through a helper run while logged into BoardGameGeek, then imported here.</div><div class="field"><label>BGG username</label><input id="bggUser" placeholder="sportomax"></div><div class="field"><label>Mailbox</label><select id="bggBox"><option value="both">Inbox + Outbox</option><option value="inbox">Inbox</option><option value="outbox">Outbox</option></select></div><div class="row"><div class="field" style="flex:1"><label>Start page</label><input id="bggStart" type="number" min="1" value="1"></div><div class="field" style="flex:1"><label>End page</label><input id="bggEnd" type="number" min="1" value="25"></div></div><div class="field"><label>Or stop when older than</label><input id="bggStopDate" type="date"></div><div class="row" style="margin-top:8px"><button id="copyBggHelper" class="btn primary">Copy BGG scraper helper</button><button id="importBtn" class="btn">Import JSON/CSV</button><input id="importFile" type="file" accept=".json,.csv,text/csv,application/json" hidden></div><div class="small warn" style="margin-top:8px">The helper must run on boardgamegeek.com because your BGG login cookie cannot be read cross-origin from this app.</div></div>
 <div class="card section"><h2>Exclusion rules</h2><div class="muted">Excluded mail stays searchable but is omitted from dashboard/contact statistics.</div><div id="rules"></div><button id="addRule" class="btn">+ Rule</button><button id="applyRules" class="btn primary">Apply rules</button></div>
 <div class="card section"><h2>Local data</h2><div class="muted">All normalized messages are stored in IndexedDB in this browser.</div><div class="row" style="margin-top:8px"><button id="exportDb" class="btn">Export JSON</button><button id="clearDb" class="btn danger">Clear messages</button></div><div id="storageInfo" class="small muted" style="margin-top:8px"></div><h3>Activity log</h3><div id="log" class="log">Ready.</div></div>
@@ -92,11 +92,72 @@ const SCOPES=['User.Read','Mail.Read'];
 async function initOutlook(){const id=localStorage.getItem('outlookGraphClientId')||'';$('#clientId').value=id;if(!id||!window.msal){updateOutlookUi();return}msalApp=new msal.PublicClientApplication({auth:{clientId:id,authority:'https://login.microsoftonline.com/common',redirectUri:redirectUri()},cache:{cacheLocation:'localStorage'}});if(msalApp.initialize)await msalApp.initialize();let redirectResult=null;try{redirectResult=await msalApp.handleRedirectPromise()}catch(e){log('Microsoft redirect handling failed: '+(e?.message||e));$('#outlookState').textContent='Microsoft sign-in failed: '+(e?.message||e)}account=redirectResult?.account||msalApp.getAllAccounts()[0]||null;if(account)msalApp.setActiveAccount?.(account);updateOutlookUi();if(account){try{await identifyOutlook()}catch(e){log('Microsoft session validation failed: '+(e?.message||e));$('#outlookState').textContent='Microsoft session found, but validation failed. Click Connect Outlook.'}}}
 async function token(){if(!account)throw Error('Outlook is not connected. Open Settings and click Connect Outlook.');try{return(await msalApp.acquireTokenSilent({account,scopes:SCOPES,redirectUri:redirectUri()})).accessToken}catch(e){log('Silent Microsoft token refresh failed; redirecting to Microsoft sign-in.');await msalApp.acquireTokenRedirect({account,scopes:SCOPES,redirectUri:redirectUri()});throw Error('Redirecting to Microsoft sign-in…')}}
 async function graph(url){const r=await fetch(url.startsWith('http')?url:'https://graph.microsoft.com/v1.0'+url,{headers:{Authorization:'Bearer '+await token()}});if(!r.ok)throw Error('Graph '+r.status+': '+await r.text());return r.json()}
-async function identifyOutlook(){const me=await graph('/me?$select=displayName,mail,userPrincipalName');myOutlook=norm(me.mail||me.userPrincipalName||account.username);$('#outlookState').textContent='Connected as '+(me.displayName||myOutlook);$('#outlookSync').disabled=false}
-function updateOutlookUi(){if(account){$('#outlookLogin').textContent='Reconnect Outlook';$('#outlookSync').disabled=false}else{$('#outlookLogin').textContent='Connect Outlook';$('#outlookSync').disabled=true}}
+async function identifyOutlook(){const me=await graph('/me?$select=displayName,mail,userPrincipalName');myOutlook=norm(me.mail||me.userPrincipalName||account.username);$('#outlookState').textContent='Connected as '+(me.displayName||myOutlook);$('#outlookSync').disabled=false;$('#outlookTest').disabled=false}
+function updateOutlookUi(){const on=!!account;if(on){$('#outlookLogin').textContent='Reconnect Outlook'}else{$('#outlookLogin').textContent='Connect Outlook'}$('#outlookSync').disabled=!on;$('#outlookTest').disabled=!on}
 async function outlookLogin(){if(!$('#clientId').value.trim())return alert('Enter and save a Microsoft client ID first.');if(!msalApp)await initOutlook();await msalApp.loginRedirect({scopes:SCOPES,prompt:'select_account',redirectUri:redirectUri()})}
-async function syncFolder(folderName,direction,max,since){let count=0,url='/me/mailFolders/'+folderName+'/messages?$top=100&$orderby=receivedDateTime%20desc&$select=id,conversationId,subject,from,toRecipients,receivedDateTime,sentDateTime,bodyPreview,body';while(url&&count<max){const d=await graph(url);for(const m of d.value||[]){const ts=m.sentDateTime||m.receivedDateTime;if(since&&new Date(ts)<since){url=null;break}const to=m.toRecipients?.[0];await putMsg(normalizeMessage({id:m.id,source:'Outlook',direction,fromName:parseName(m.from),fromAddress:parseAddr(m.from),toName:parseName(to),toAddress:parseAddr(to),subject:m.subject,bodyText:(m.body?.contentType||'').toLowerCase()==='text'?(m.body?.content||m.bodyPreview):(m.bodyPreview||''),bodyHtml:(m.body?.contentType||'').toLowerCase()==='html'?(m.body?.content||''):'',timestamp:ts,threadId:m.conversationId}));count++;if(count>=max)break}url=count>=max?null:d['@odata.nextLink']}return count}
-async function syncOutlook(){try{$('#outlookSync').disabled=true;log('Starting Outlook sync…');const max=Number($('#outlookMax').value),since=$('#outlookSince').value?new Date($('#outlookSince').value+'T00:00:00'):null;const [i,o]=await Promise.all([syncFolder('inbox','in',max,since),syncFolder('sentitems','out',max,since)]);log('Outlook sync complete: '+i+' inbox, '+o+' sent');await renderAll()}catch(e){log('Outlook error: '+e.message);alert(e.message)}finally{$('#outlookSync').disabled=false}}
+async function resolveOutlookFolders(){
+  const [inbox,sent]=await Promise.all([
+    graph('/me/mailFolders/inbox?$select=id,displayName,totalItemCount,unreadItemCount'),
+    graph('/me/mailFolders/sentitems?$select=id,displayName,totalItemCount,unreadItemCount')
+  ]);
+  return {inbox,sent};
+}
+async function testOutlook(){
+  try{
+    $('#outlookTest').disabled=true;
+    $('#outlookState').textContent='Testing Microsoft Graph…';
+    const me=await graph('/me?$select=displayName,mail,userPrincipalName');
+    const folders=await resolveOutlookFolders();
+    const label=me.displayName||me.mail||me.userPrincipalName||'Microsoft account';
+    $('#outlookState').innerHTML='<span class="ok">Connected:</span> '+esc(label)+' · Inbox '+Number(folders.inbox.totalItemCount||0).toLocaleString()+' · Sent '+Number(folders.sent.totalItemCount||0).toLocaleString();
+    log('Outlook test OK: Inbox '+(folders.inbox.totalItemCount||0)+', Sent '+(folders.sent.totalItemCount||0));
+    return folders;
+  }catch(e){
+    $('#outlookState').textContent='Outlook test failed: '+e.message;
+    log('Outlook test failed: '+e.message);
+    throw e;
+  }finally{$('#outlookTest').disabled=!account}
+}
+async function syncFolder(folder,direction,max,since){
+  let count=0,pages=0;
+  let url='/me/mailFolders/'+encodeURIComponent(folder.id)+'/messages?$top=100&$orderby=receivedDateTime%20desc&$select=id,conversationId,subject,from,toRecipients,receivedDateTime,sentDateTime,bodyPreview,body';
+  while(url&&count<max){
+    pages++;
+    const d=await graph(url);
+    const values=d.value||[];
+    log(folder.displayName+' page '+pages+': '+values.length+' messages returned');
+    if(!values.length)break;
+    for(const m of values){
+      const ts=m.sentDateTime||m.receivedDateTime;
+      if(since&&ts&&new Date(ts)<since){url=null;break}
+      const to=m.toRecipients?.[0];
+      await putMsg(normalizeMessage({id:m.id,source:'Outlook',direction,fromName:parseName(m.from),fromAddress:parseAddr(m.from),toName:parseName(to),toAddress:parseAddr(to),subject:m.subject,bodyText:(m.body?.contentType||'').toLowerCase()==='text'?(m.body?.content||m.bodyPreview):(m.bodyPreview||''),bodyHtml:(m.body?.contentType||'').toLowerCase()==='html'?(m.body?.content||''):'',timestamp:ts,threadId:m.conversationId}));
+      count++;
+      if(count>=max)break;
+    }
+    url=count>=max?null:d['@odata.nextLink'];
+  }
+  return count;
+}
+async function syncOutlook(){
+  try{
+    $('#outlookSync').disabled=true;
+    $('#outlookState').textContent='Reading Outlook folders…';
+    log('Starting Outlook sync…');
+    const max=Number($('#outlookMax').value)||500;
+    const since=$('#outlookSince').value?new Date($('#outlookSince').value+'T00:00:00'):null;
+    const folders=await testOutlook();
+    const i=await syncFolder(folders.inbox,'in',max,since);
+    const o=await syncFolder(folders.sent,'out',max,since);
+    $('#outlookState').innerHTML='<span class="ok">Sync complete:</span> '+i+' inbox + '+o+' sent messages saved locally.';
+    log('Outlook sync complete: '+i+' inbox, '+o+' sent');
+    await renderAll();
+  }catch(e){
+    log('Outlook error: '+e.message);
+    $('#outlookState').textContent='Outlook sync failed: '+e.message;
+    alert(e.message);
+  }finally{$('#outlookSync').disabled=!account}
+}
 function csvParse(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){cell+='"';i++}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}else cell+=c}if(cell||row.length){row.push(cell);rows.push(row)}if(!rows.length)return[];const h=rows.shift().map(x=>x.trim());return rows.filter(r=>r.some(Boolean)).map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||''])))}
 async function importFile(file){const text=await file.text();let data;if(file.name.toLowerCase().endsWith('.json'))data=JSON.parse(text);else data=csvParse(text);if(!Array.isArray(data))data=data.messages||data.rows||[];const looksBgg=/bgg|geekmail/i.test(file.name);data=data.map(x=>{if(looksBgg&&!x.source)x.source='BGG';if(!x.direction){const box=String(x.mailbox||x.folder||'').toLowerCase();if(box.includes('out')||box.includes('sent'))x.direction='out';else if(box.includes('in'))x.direction='in'}return x});await saveMany(data)}
 function buildBggHelper(){const start=Number($('#bggStart').value)||1,end=Number($('#bggEnd').value)||start,stop=$('#bggStopDate').value,user=$('#bggUser').value.trim(),box=$('#bggBox').value;return `/* Mail Merge BGG helper. Run in DevTools Console while logged into boardgamegeek.com. */\n(async()=>{const cfg=${JSON.stringify({start,end,stop,user,box})};const sleep=ms=>new Promise(r=>setTimeout(r,ms));const out=[];const boxes=cfg.box==='both'?['inbox','sent']:cfg.box==='outbox'?['sent']:['inbox'];for(const b of boxes){for(let p=cfg.start;p<=cfg.end;p++){const url='/geekmail?folder='+encodeURIComponent(b)+'&pageid='+p;const r=await fetch(url,{credentials:'include'});if(!r.ok)throw Error('BGG '+r.status+' '+url);const html=await r.text(),doc=new DOMParser().parseFromString(html,'text/html');const links=[...doc.querySelectorAll('a[href*="/geekmail?"]')].filter(a=>/messageid|messageId|id=/i.test(a.href));const seen=new Set();for(const a of links){if(seen.has(a.href))continue;seen.add(a.href);const row=a.closest('tr,li,div')||a.parentElement;const text=(row?.innerText||'').trim();const ds=text.match(/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d{1,2},?\\s+\\d{4}/i);const dt=ds?new Date(ds[0]):null;if(cfg.stop&&dt&&dt<new Date(cfg.stop+'T00:00:00')){p=cfg.end+1;break}out.push({source:'BGG',direction:b==='sent'?'out':'in',subject:(a.textContent||'').trim()||'(no subject)',bodyText:text,timestamp:dt?dt.toISOString():new Date().toISOString(),sourceMessageId:a.href,fromName:b==='sent'?cfg.user:'',toName:b==='sent'?'':cfg.user});}console.log('Mail Merge BGG',b,'page',p,'captured',out.length);await sleep(650)}}const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),x=document.createElement('a');x.href=URL.createObjectURL(blob);x.download='bgg-geekmail-mailmerge.json';x.click();setTimeout(()=>URL.revokeObjectURL(x.href),1000)})();`}
@@ -119,7 +180,7 @@ function initGate(){
 $$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));$$('.pane').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.tab).classList.add('active')});
 ['mailSearch','sourceFilter','dirFilter','includeFilter'].forEach(id=>$('#'+id).addEventListener('input',async()=>renderMailbox((await allMsgs()).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)))));
 $('#flowSearch').oninput=async()=>renderFlows(await allMsgs());$('#contactSearch').oninput=async()=>renderContacts(await allMsgs());$('#refreshView').onclick=renderAll;$('#refreshFlows').onclick=renderAll;$('#refreshContacts').onclick=renderAll;
-$('#saveClient').onclick=async()=>{localStorage.setItem('outlookGraphClientId',$('#clientId').value.trim());msalApp=null;account=null;await initOutlook();log('Saved Outlook client ID')};$('#outlookLogin').onclick=()=>outlookLogin().catch(e=>{log(e.message);alert(e.message)});$('#outlookSync').onclick=syncOutlook;
+$('#saveClient').onclick=async()=>{localStorage.setItem('outlookGraphClientId',$('#clientId').value.trim());msalApp=null;account=null;await initOutlook();log('Saved Outlook client ID')};$('#outlookLogin').onclick=()=>outlookLogin().catch(e=>{log(e.message);alert(e.message)});$('#outlookTest').onclick=()=>testOutlook().catch(e=>alert(e.message));$('#outlookSync').onclick=syncOutlook;
 $('#copyBggHelper').onclick=async()=>{try{await navigator.clipboard.writeText(buildBggHelper());log('BGG scraper helper copied. Open BGG GeekMail and paste into DevTools Console.');alert('Copied. Open BGG GeekMail while logged in, open DevTools Console, paste and run it. It will download a JSON file for Mail Merge.')}catch(e){alert('Copy failed: '+e.message)}};
 $('#importBtn').onclick=()=>$('#importFile').click();$('#importFile').onchange=async e=>{if(e.target.files[0]){try{await importFile(e.target.files[0]);log('Import complete: '+e.target.files[0].name)}catch(err){alert('Import failed: '+err.message)}}e.target.value=''};
 $('#addRule').onclick=()=>{const d=document.createElement('div');d.className='rule';d.innerHTML='<select><option value="fromAddress">Sender</option><option value="subject">Subject</option><option value="bodyText">Body</option></select><input placeholder="contains…"><button class="btn danger">×</button>';$('#rules').appendChild(d);d.querySelector('.danger').onclick=()=>{d.remove();saveRules()};d.querySelectorAll('select,input').forEach(e=>e.onchange=saveRules)};$('#applyRules').onclick=applyRules;
