@@ -154,7 +154,7 @@ function evalSearchRule(m,r){
   if(r.op==='equals')return hay===needle;
   return hay.includes(needle);
 }
-function activeSearchRules(){return $('#searchRules .searchRule').map((row,i)=>({join:i===0?'AND':row.querySelector('.join').value,field:row.querySelector('.sfield').value,op:row.querySelector('.sop').value,value:row.querySelector('.svalue').value.trim()})).filter(r=>r.value)}
+function activeSearchRules(){return $$('#searchRules .searchRule').map((row,i)=>({join:i===0?'AND':row.querySelector('.join').value,field:row.querySelector('.sfield').value,op:row.querySelector('.sop').value,value:row.querySelector('.svalue').value.trim()})).filter(r=>r.value)}
 function matchesAdvanced(m){
   const rules=activeSearchRules();
   if(!rules.length)return true;
@@ -173,7 +173,7 @@ function filteredMail(rows){
 function renderSearchRules(rules){
   const host=$('#searchRules');
   host.innerHTML=(rules||[]).map((r,i)=>'<div class="searchRule '+(i===0?'first':'')+'"><select class="join"><option'+(r.join==='AND'?' selected':'')+'>AND</option><option'+(r.join==='OR'?' selected':'')+'>OR</option></select><select class="sfield"><option value="any">Any field</option><option value="from">From</option><option value="to">To</option><option value="subject">Subject</option><option value="body">Body</option><option value="source">Source</option></select><select class="sop"><option value="contains">contains</option><option value="notcontains">does not contain</option><option value="equals">equals</option></select><input class="svalue" placeholder="Value…" value="'+esc(r.value||'')+'"><button class="btn danger removeRule" type="button" title="Remove condition">×</button></div>').join('');
-  $('#searchRules .searchRule').forEach((row,i)=>{
+  $$('#searchRules .searchRule').forEach((row,i)=>{
     row.querySelector('.sfield').value=(rules[i]?.field||'any');
     row.querySelector('.sop').value=(rules[i]?.op||'contains');
     row.querySelector('.join').value=(rules[i]?.join||'AND');
@@ -184,7 +184,7 @@ function renderSearchRules(rules){
 }
 function syncSearchRules(){const rules=activeSearchRules();localStorage.setItem(SEARCH_RULES_KEY,JSON.stringify(rules));updateFilterCount()}
 function updateFilterCount(){const n=activeSearchRules().length;$('#filterCount').textContent=n+' rule'+(n===1?'':'s')}
-function addSearchRule(){const rules=activeSearchRules();rules.push({join:rules.length?'AND':'AND',field:'any',op:'contains',value:''});renderSearchRules(rules);$('#advancedSearch').open=true;setTimeout(()=>$('#searchRules .svalue').at(-1)?.focus(),0)}
+function addSearchRule(){const rules=activeSearchRules();rules.push({join:rules.length?'AND':'AND',field:'any',op:'contains',value:''});renderSearchRules(rules);$('#advancedSearch').open=true;setTimeout(()=>$$('#searchRules .svalue').at(-1)?.focus(),0)}
 
 function renderMailbox(rows){const a=filteredMail(rows);$('#messageList').innerHTML=a.map(m=>'<article class="msg '+(m.id===selectedId?'active':'')+'" data-id="'+esc(m.id)+'"><div class="msgTop"><span class="msgTitle">'+(m.direction==='in'?'← ':'→ ')+esc(displayContact(m))+'</span><span class="muted small">'+fmtDate(m.timestamp)+'</span></div><div class="subj">'+esc(m.subject)+'</div><div class="preview">'+esc(m.bodyText)+'</div><div class="chips"><span class="chip '+norm(m.source)+'">'+esc(m.source)+'</span>'+(m.excluded?'<span class="chip excluded">Excluded</span>':'')+'</div></article>').join('')||'<div class="empty">No matching messages.</div>';$$('#messageList .msg').forEach(e=>e.onclick=()=>openMessage(e.dataset.id,rows))}
 function openMessage(id,rows){selectedId=id;const m=rows.find(x=>x.id===id);if(!m)return;$('#reader').innerHTML='<div class="muted">'+esc(m.source)+' · '+esc(m.direction==='in'?'Incoming':'Outgoing')+' · '+fmtFull(m.timestamp)+'</div><h2>'+esc(m.subject)+'</h2><div><b>From:</b> '+esc((m.fromName?m.fromName+' ':'')+(m.fromAddress?'<'+m.fromAddress+'>':''))+'</div><div><b>To:</b> '+esc((m.toName?m.toName+' ':'')+(m.toAddress?'<'+m.toAddress+'>':''))+'</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><div class="body">'+esc(m.bodyText)+'</div><div class="row" style="margin-top:14px"><button id="toggleExclude" class="btn">'+(m.excluded?'Include in stats':'Exclude from stats')+'</button></div>';$('#toggleExclude').onclick=async()=>{m.excluded=!m.excluded;m.exclusionReason=m.excluded?'Manual':'';await putMsg(m);await renderAll();openMessage(id,await allMsgs())};renderMailbox(rows)}
