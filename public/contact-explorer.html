@@ -23,7 +23,7 @@ dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);co
 <header><a href="/" aria-label="Back">‹</a><h1>👥 Contact Explorer</h1><span class="privacy">● Local-first</span></header>
 <main>
 <section class="hero" id="intro">
-<div class="card"><div class="drop" id="drop"><div><div style="font-size:38px">📇</div><b>Drop your contact file here</b><small>VCF / vCard or CSV · processed in this browser</small><br><br><button class="primary" id="choose">Choose File</button><input id="file" type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden></div></div></div>
+<div class="card"><div class="drop" id="drop"><div><div style="font-size:38px">📇</div><b>Drop your contact file here</b><small>VCF / vCard or CSV · processed in this browser</small><br><br><label class="primary" id="choose" for="file" role="button" tabindex="0">Choose File</label><input id="file" type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></div></div></div>
 <div class="card guide"><h2>How to get your contacts</h2><div class="tabs"><button class="secondary active" data-guide="iphone"> iPhone</button><button class="secondary" data-guide="android">Android</button><button class="secondary" data-guide="google">Google</button></div>
 <div class="steps" id="iphone"><ol><li>Open <b>Contacts</b>.</li><li>Tap <b>Lists</b> at top left.</li><li>Touch and hold the list you want.</li><li>Tap <b>Export</b>.</li><li>Select the fields to include, then tap <b>Done</b>.</li><li>Save/share the resulting <b>.vcf</b>, then upload it here.</li></ol></div>
 <div class="steps" id="android" hidden><ol><li>Open the <b>Contacts</b> app.</li><li>Open <b>Fix & manage</b> or Settings.</li><li>Choose <b>Export to file</b>.</li><li>Select the account/contact source.</li><li>Save the <b>.vcf</b>, then upload it here.</li></ol><p class="note">Menu names vary by Android manufacturer.</p></div>
@@ -44,7 +44,7 @@ dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);co
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)]; let contacts=[], filtered=[], dupSet=new Set(), map, markers;
 $$('[data-guide]').forEach(b=>b.onclick=()=>{$$('[data-guide]').forEach(x=>x.classList.toggle('active',x===b));['iphone','android','google'].forEach(id=>$('#'+id).hidden=id!==b.dataset.guide)});
-$('#choose').onclick=e=>{e.stopPropagation();$('#file').click()}; $('#drop').onclick=()=>$('#file').click(); $('#file').onchange=e=>loadFile(e.target.files[0]);
+$('#choose').onclick=e=>e.stopPropagation(); $('#choose').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#file').click()}}; $('#drop').onclick=e=>{if(e.target.closest('#choose'))return;$('#file').click()}; $('#file').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)loadFile(f)};
 ['dragenter','dragover'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.add('drag')})); ['dragleave','drop'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.remove('drag')})); $('#drop').addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
 function unfold(s){return s.replace(/\r?\n[ \t]/g,'')}
 function dec(s){try{return decodeURIComponent(s.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';'))}catch{return s}}
