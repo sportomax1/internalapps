@@ -20,10 +20,10 @@ dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);co
 @media(max-width:750px){main{padding:10px}.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.analysis{grid-template-columns:1fr}.privacy{display:none}header{padding-top:max(12px,env(safe-area-inset-top))}.drop{min-height:150px}}
 </style></head>
 <body>
-<header><a href="/" aria-label="Back">‹</a><h1>👥 Contact Explorer <span style="font-size:10px;padding:3px 7px;border-radius:99px;background:#a855f733;color:#d8b4fe;vertical-align:2px">PURPLE v2</span></h1><span class="privacy">● Local-first</span></header>
+<header><a href="/" aria-label="Back">‹</a><h1>👥 Contact Explorer <span style="font-size:10px;padding:3px 7px;border-radius:99px;background:#a855f733;color:#d8b4fe;vertical-align:2px">PURPLE v3 · NATIVE UPLOAD</span></h1><span class="privacy">● Local-first</span></header>
 <main>
 <section class="hero" id="intro">
-<div class="card"><div class="drop" id="drop"><div><div style="font-size:38px">📇</div><b>Drop your contact file here</b><small>VCF / vCard or CSV · processed in this browser</small><br><br><label class="primary" id="choose" for="file" role="button" tabindex="0">Choose File</label><input id="file" type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></div></div><div class="progressbox" id="loadProgress"><div class="progressmeta"><span id="loadLabel">Loading contacts…</span><span id="loadPct">0%</span></div><div class="progress"><i id="loadBar"></i></div></div><div class="saved" id="savedStatus">Ready for a VCF or CSV file.</div><div class="note" id="processDetail"></div></div>
+<div class="card"><div class="drop" id="drop"><div style="width:100%"><div style="font-size:38px">📇</div><b>Import contacts</b><small>VCF / vCard or CSV · processed in this browser</small><div style="margin:16px auto 8px;max-width:420px"><input id="file" type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" style="display:block;width:100%;padding:14px;background:#251432;border:1px solid #70428c;border-radius:12px;color:#fff;font-size:16px"></div><small>Tap the file control above, choose a file, then return here.</small></div></div><div class="progressbox" id="loadProgress"><div class="progressmeta"><span id="loadLabel">Waiting for file…</span><span id="loadPct">0%</span></div><div class="progress"><i id="loadBar"></i></div></div><div class="saved" id="savedStatus">WAITING · No file selected yet.</div><div class="note" id="processDetail">The selected filename will appear here immediately.</div></div>
 <div class="card guide"><h2>How to get your contacts</h2><div class="tabs"><button class="secondary active" data-guide="iphone"> iPhone</button><button class="secondary" data-guide="android">Android</button><button class="secondary" data-guide="google">Google</button></div>
 <div class="steps" id="iphone"><ol><li>Open <b>Contacts</b>.</li><li>Tap <b>Lists</b> at top left.</li><li>Touch and hold the list you want.</li><li>Tap <b>Export</b>.</li><li>Select the fields to include, then tap <b>Done</b>.</li><li>Save/share the resulting <b>.vcf</b>, then upload it here.</li></ol></div>
 <div class="steps" id="android" hidden><ol><li>Open the <b>Contacts</b> app.</li><li>Open <b>Fix & manage</b> or Settings.</li><li>Choose <b>Export to file</b>.</li><li>Select the account/contact source.</li><li>Save the <b>.vcf</b>, then upload it here.</li></ol><p class="note">Menu names vary by Android manufacturer.</p></div>
@@ -52,10 +52,23 @@ function progress(kind,pct,label){pct=Math.max(0,Math.min(100,Math.round(pct)));
 function hideProgress(kind,delay=700){setTimeout(()=>{let b=$('#'+kind+'Progress');if(b)b.classList.remove('show');let g=$('#globalProgress');if(g)g.classList.remove('show')},delay)}
 $$('[data-guide]').forEach(b=>b.onclick=()=>{$$('[data-guide]').forEach(x=>x.classList.toggle('active',x===b));['iphone','android','google'].forEach(id=>$('#'+id).hidden=id!==b.dataset.guide)});
 let activeFileKey='';
-function receivedFile(f){if(!f)return;let key=[f.name,f.size,f.lastModified].join('|');if(key===activeFileKey)return;activeFileKey=key;let size=f.size<1048576?(f.size/1024).toFixed(1)+' KB':(f.size/1048576).toFixed(1)+' MB';$('#savedStatus').textContent='✓ GOT IT: '+f.name+' · '+size;$('#processDetail').textContent='Starting local processing now…';progress('load',1,'✓ File received · '+f.name);setTimeout(()=>loadFile(f),30)}
-function filePicked(e){let f=e.target?.files?.[0];if(f)receivedFile(f)}
-$('#choose').onclick=e=>e.stopPropagation(); $('#choose').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#file').click()}}; $('#drop').onclick=e=>{if(e.target.closest('#choose'))return;$('#file').click()}; $('#file').addEventListener('change',filePicked);$('#file').addEventListener('input',filePicked);
-['dragenter','dragover'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.add('drag')})); ['dragleave','drop'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.remove('drag')})); $('#drop').addEventListener('drop',e=>receivedFile(e.dataTransfer.files[0]));
+function beginImport(f,source='picker'){
+  if(!f){$('#savedStatus').textContent='WAITING · No file selected yet.';return}
+  const key=[f.name,f.size,f.lastModified].join('|');
+  if(key===activeFileKey)return;
+  activeFileKey=key;
+  const size=formatBytes(f.size);
+  $('#savedStatus').textContent='✓ RECEIVED · '+f.name+' · '+size;
+  $('#processDetail').textContent='Selected via '+source+'. Preparing to read the file…';
+  progress('load',1,'✓ RECEIVED · '+f.name);
+  setTimeout(()=>loadFile(f),50);
+}
+const fileInput=$('#file');
+fileInput.addEventListener('change',function(){
+  const f=this.files && this.files.length ? this.files[0] : null;
+  beginImport(f,'file picker');
+});
+['dragenter','dragover'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.add('drag')})); ['dragleave','drop'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.remove('drag')})); $('#drop').addEventListener('drop',e=>beginImport(e.dataTransfer.files[0],'drag & drop'));
 function unfold(s){return s.replace(/\r?\n[ \t]/g,'')}
 function dec(s){try{return decodeURIComponent(s.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';'))}catch{return s}}
 function vals(card,key){return card.split(/\r?\n/).filter(l=>l.toUpperCase().startsWith(key)||l.toUpperCase().startsWith(key+';')).map(l=>dec(l.slice(l.indexOf(':')+1).trim()))}
