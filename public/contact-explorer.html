@@ -20,7 +20,7 @@ dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);co
 @media(max-width:750px){main{padding:10px}.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.analysis{grid-template-columns:1fr}.privacy{display:none}header{padding-top:max(12px,env(safe-area-inset-top))}.drop{min-height:150px}}
 </style></head>
 <body>
-<header><a href="/" aria-label="Back">‹</a><h1>👥 Contact Explorer <span style="font-size:10px;padding:3px 7px;border-radius:99px;background:#a855f733;color:#d8b4fe;vertical-align:2px">PURPLE v3 · NATIVE UPLOAD</span></h1><span class="privacy">● Local-first</span></header>
+<header><a href="/" aria-label="Back">‹</a><h1>👥 Contact Explorer <span style="font-size:10px;padding:3px 7px;border-radius:99px;background:#a855f733;color:#d8b4fe;vertical-align:2px">PURPLE v4 · SAFARI FIX</span></h1><span class="privacy">● Local-first</span></header>
 <main>
 <section class="hero" id="intro">
 <div class="card"><div class="drop" id="drop"><div style="width:100%"><div style="font-size:38px">📇</div><b>Import contacts</b><small>VCF / vCard or CSV · processed in this browser</small><div style="margin:16px auto 8px;max-width:420px"><input id="file" type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" style="display:block;width:100%;padding:14px;background:#251432;border:1px solid #70428c;border-radius:12px;color:#fff;font-size:16px"></div><small>Tap the file control above, choose a file, then return here.</small></div></div><div class="progressbox" id="loadProgress"><div class="progressmeta"><span id="loadLabel">Waiting for file…</span><span id="loadPct">0%</span></div><div class="progress"><i id="loadBar"></i></div></div><div class="saved" id="savedStatus">WAITING · No file selected yet.</div><div class="note" id="processDetail">The selected filename will appear here immediately.</div></div>
@@ -58,16 +58,22 @@ function beginImport(f,source='picker'){
   if(key===activeFileKey)return;
   activeFileKey=key;
   const size=formatBytes(f.size);
-  $('#savedStatus').textContent='✓ RECEIVED · '+f.name+' · '+size;
+  $('#savedStatus').textContent='✓ RECEIVED · '+f.name+' · '+size;$('#savedStatus').style.color='#f0abfc';
   $('#processDetail').textContent='Selected via '+source+'. Preparing to read the file…';
   progress('load',1,'✓ RECEIVED · '+f.name);
   setTimeout(()=>loadFile(f),50);
 }
 const fileInput=$('#file');
-fileInput.addEventListener('change',function(){
-  const f=this.files && this.files.length ? this.files[0] : null;
-  beginImport(f,'file picker');
-});
+function inspectNativeFile(source){
+  const f=fileInput && fileInput.files && fileInput.files.length ? fileInput.files[0] : null;
+  if(f) beginImport(f,source);
+}
+fileInput.addEventListener('change',()=>inspectNativeFile('change event'));
+fileInput.addEventListener('input',()=>inspectNativeFile('input event'));
+fileInput.addEventListener('blur',()=>setTimeout(()=>inspectNativeFile('picker return'),0));
+window.addEventListener('focus',()=>{setTimeout(()=>inspectNativeFile('Safari return'),120);setTimeout(()=>inspectNativeFile('Safari return'),600)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>inspectNativeFile('visibility return'),100)});
+setInterval(()=>{if(fileInput?.files?.length)inspectNativeFile('file detected')},500);
 ['dragenter','dragover'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.add('drag')})); ['dragleave','drop'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.remove('drag')})); $('#drop').addEventListener('drop',e=>beginImport(e.dataTransfer.files[0],'drag & drop'));
 function unfold(s){return s.replace(/\r?\n[ \t]/g,'')}
 function dec(s){try{return decodeURIComponent(s.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';'))}catch{return s}}
