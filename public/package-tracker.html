@@ -74,7 +74,7 @@ textarea::placeholder{color:#71849c}
 <body>
 <main class="app">
   <header class="topbar">
-    <div class="brand"><div class="logo">📦</div><div><h1>Package Tracker</h1><div class="sub">Live UPS · FedEx · USPS tracking inside Internal Apps</div></div></div>
+    <div class="brand"><div class="logo">📦</div><div><h1>Package Tracker</h1><div class="sub">Direct UPS · FedEx · USPS tracking inside Internal Apps</div></div></div>
     <a class="home" href="/">← Apps</a>
   </header>
 
@@ -109,7 +109,7 @@ textarea::placeholder{color:#71849c}
   </div>
 
   <section id="grid" class="grid" aria-live="polite"></section>
-  <div class="note">Package numbers and last results are stored only in this browser. Live carrier data is requested through the Internal Apps server.</div>
+  <div class="note">Package numbers and last results are stored only in this browser. Live data comes directly from USPS, FedEx, and UPS APIs through the Internal Apps server.</div>
 </main>
 
 <script>
@@ -344,7 +344,7 @@ textarea::placeholder{color:#71849c}
         :"";
       return `<article class="card pkg">
         <div class="pkg-head"><div class="pkg-main"><div class="carrier">${esc(carrierNames[pkg.carrier]||"AUTO DETECT")}</div><div class="pkg-code">${esc(pkg.trackingCode)}</div><div class="status">Tracking unavailable</div></div><button class="remove" data-remove="${esc(pkg.trackingCode)}">×</button></div>
-        <div class="error"><strong>${esc(r.error||"Could not retrieve this package.")}</strong><p>${r.errorCode==="TRACKING_NOT_CONFIGURED"?"The Internal Apps server needs its tracking API credential configured.":"Try again or choose a carrier if the number is ambiguous."}</p>${choices}</div>
+        <div class="error"><strong>${esc(r.error||"Could not retrieve this package.")}</strong><p>${r.errorCode==="CARRIER_NOT_CONFIGURED"?"This carrier's free developer credentials still need to be added to Vercel.":"Try again or choose a carrier if the number is ambiguous."}</p>${choices}</div>
       </article>`;
     }
 
