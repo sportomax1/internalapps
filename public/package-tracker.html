@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>Package Tracker | Internal Apps</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#08111f;--panel:#0e1a2b;--panel2:#122238;--line:#26374e;
+  --text:#f5f8fc;--muted:#9fb0c5;--blue:#4ea1ff;--blue2:#6d7cff;
+  --green:#43d17d;--amber:#ffbf47;--red:#ff6b6b;--shadow:0 24px 65px rgba(0,0,0,.30)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:15px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{background:radial-gradient(circle at 10% -10%,rgba(78,161,255,.18),transparent 34rem),radial-gradient(circle at 100% 0,rgba(109,124,255,.13),transparent 30rem),var(--bg)}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{width:min(920px,calc(100% - 24px));margin:auto;padding:22px 0 56px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,var(--blue),var(--blue2));box-shadow:0 12px 30px rgba(78,161,255,.24);font-size:22px}
+h1{font-size:21px;margin:0;letter-spacing:-.03em}
+.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.home{color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.035);font-weight:750}
+.home:hover{color:var(--text);border-color:#46627f}
+.card{background:rgba(14,26,43,.92);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.hero{padding:clamp(18px,4vw,30px)}
+.kicker{color:#8fc5ff;font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.hero h2{font-size:clamp(29px,6vw,46px);line-height:1.02;letter-spacing:-.055em;margin:8px 0 9px}
+.hero p{color:var(--muted);margin:0;max-width:690px}
+.search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin-top:22px}
+.input-wrap{display:flex;align-items:center;gap:8px;min-height:58px;padding:0 9px 0 15px;background:#091524;border:1px solid var(--line);border-radius:15px}
+.input-wrap:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(78,161,255,.12)}
+input{min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:16px}
+input::placeholder{color:#71839a}
+.paste{border:0;background:transparent;color:#8fc5ff;padding:8px 9px;border-radius:9px;font-weight:800}
+.paste:hover{background:rgba(78,161,255,.1)}
+.track{border:0;border-radius:15px;padding:0 22px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:850;min-height:58px}
+.track:hover{filter:brightness(1.06)}
+.mode-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.hint{font-size:12px;color:var(--muted);margin-right:auto}
+.mode{border:1px solid var(--line);background:#0a1626;color:var(--muted);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+.mode.active{color:#ddecff;border-color:#4b82bc;background:#102b48}
+.result{margin-top:14px}
+.result-card{padding:18px}
+.result-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.result-title{font-size:20px;font-weight:850;letter-spacing:-.025em}
+.code{color:var(--muted);font:12px ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:3px;word-break:break-all}
+.badge{display:inline-flex;align-items:center;border:1px solid var(--line);background:#0b1727;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:850;color:#b8c7d9}
+.confidence{margin-top:14px;padding:13px;border-radius:13px;background:#0a1625;border:1px solid var(--line);color:var(--muted);font-size:13px}
+.confidence strong{color:var(--text)}
+.carriers{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:13px}
+.carrier{display:flex;align-items:center;gap:11px;text-align:left;border:1px solid var(--line);background:#0b1727;color:var(--text);padding:13px;border-radius:14px}
+.carrier:hover{border-color:#4b82bc;background:#10233a}
+.carrier.best{border-color:#4b82bc;background:#102844}
+.mark{width:40px;height:40px;border-radius:11px;background:#162840;display:grid;place-items:center;font-size:11px;font-weight:900;flex:0 0 auto}
+.carrier b{display:block}
+.carrier span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.notice{margin-top:13px;padding:13px 14px;border:1px solid rgba(255,191,71,.26);background:rgba(255,191,71,.065);border-radius:13px;color:#d7c397;font-size:12px}
+.recent{margin-top:18px;padding:18px}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:11px}
+.section-title h3{margin:0;font-size:14px}
+.clear{border:0;background:transparent;color:var(--muted);font-size:12px;padding:5px 0}
+.clear:hover{color:var(--text)}
+.list{display:grid;gap:8px}
+.item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:#0a1625;border:1px solid var(--line);border-radius:13px;padding:10px 12px}
+.item-icon{width:33px;height:33px;border-radius:9px;background:#162840;display:grid;place-items:center;font-size:10px;font-weight:900}
+.item-code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:750}
+.item-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.item-open,.item-delete{border:0;background:transparent;color:var(--muted);padding:6px;border-radius:8px}
+.item-open:hover,.item-delete:hover{background:#15253a;color:var(--text)}
+.empty{color:var(--muted);text-align:center;border:1px dashed var(--line);border-radius:13px;padding:16px}
+.privacy{font-size:11px;color:#71839a;text-align:center;margin-top:18px}
+@media(max-width:650px){
+  .app{width:min(100% - 16px,920px);padding-top:12px}
+  .sub{display:none}.home{font-size:12px}
+  .hero{padding:18px 14px}
+  .search{grid-template-columns:1fr}
+  .track{min-height:50px}
+  .carriers{grid-template-columns:1fr}
+  .hint{width:100%;order:2}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">📦</div><div><h1>Package Tracker</h1><div class="sub">UPS · FedEx · USPS smart routing</div></div></div>
+    <a class="home" href="/">← Apps</a>
+  </header>
+
+  <section class="card hero">
+    <div class="kicker">One-file tracker</div>
+    <h2>Paste it. Detect it.<br>Open the right carrier.</h2>
+    <p>This app identifies likely UPS, FedEx, or USPS tracking numbers locally. No API key, backend, or account is required.</p>
+
+    <form id="form">
+      <div class="search">
+        <div class="input-wrap">
+          <input id="tracking" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="1Z999AA10123456784 or paste a shipping message">
+          <button class="paste" type="button" id="paste">Paste</button>
+        </div>
+        <button class="track" type="submit">Track package</button>
+      </div>
+      <div class="mode-row">
+        <span class="hint" id="hint">Auto detects the carrier. Numeric IDs may match more than one carrier.</span>
+        <button class="mode active" type="button" data-mode="auto">Auto</button>
+        <button class="mode" type="button" data-mode="ups">UPS</button>
+        <button class="mode" type="button" data-mode="fedex">FedEx</button>
+        <button class="mode" type="button" data-mode="usps">USPS</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="result" class="result" aria-live="polite"></section>
+
+  <section class="card recent">
+    <div class="section-title"><h3>Recent tracking numbers</h3><button class="clear" id="clearHistory" type="button">Clear</button></div>
+    <div class="list" id="history"></div>
+  </section>
+
+  <div class="privacy">Tracking numbers stay in this browser's local storage. Live status is displayed on the carrier's official tracking page.</div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const KEY="internalapps-package-tracker-v1";
+  const input=document.getElementById("tracking");
+  const form=document.getElementById("form");
+  const result=document.getElementById("result");
+  const hint=document.getElementById("hint");
+  const paste=document.getElementById("paste");
+  const historyEl=document.getElementById("history");
+  const clearHistory=document.getElementById("clearHistory");
+  const modes=[...document.querySelectorAll("[data-mode]")];
+  let forced="auto";
+
+  const carriers={
+    ups:{
+      name:"UPS",mark:"UPS",
+      url:c=>`https://www.ups.com/track?tracknum=${encodeURIComponent(c)}`
+    },
+    fedex:{
+      name:"FedEx",mark:"FDX",
+      url:c=>`https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(c)}`
+    },
+    usps:{
+      name:"USPS",mark:"USPS",
+      url:c=>`https://tools.usps.com/go/TrackConfirmAction?tLabels=${encodeURIComponent(c)}`
+    }
+  };
+
+  const esc=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
+  const clean=v=>String(v||"").trim().replace(/[‐‑‒–—−]/g,"-").replace(/\s+/g,"").toUpperCase();
+
+  function extract(raw){
+    const text=String(raw||"").toUpperCase();
+    const patterns=[
+      [/\b1Z[0-9A-Z]{16}\b/g,100],
+      [/\b[A-Z]{2}\d{9}US\b/g,98],
+      [/\b\d{20,34}\b/g,88],
+      [/\b\d{15}\b/g,78],
+      [/\b\d{12}\b/g,76]
+    ];
+    let best=null;
+    for(const [re,score] of patterns){
+      for(const match of text.match(re)||[]){
+        if(!best||score>best.score||(score===best.score&&match.length>best.value.length)) best={value:clean(match),score};
+      }
+    }
+    return best?.value||clean(raw);
+  }
+
+  function score(code){
+    const c=clean(code), s={ups:0,fedex:0,usps:0};
+    if(/^1Z[0-9A-Z]{16}$/.test(c)) s.ups=100;
+    if(/^[A-Z]{2}\d{9}US$/.test(c)) s.usps=100;
+
+    if(/^\d+$/.test(c)){
+      if([20,22,26,30,34].includes(c.length)) s.usps+=58;
+      if(/^(92|93|94|95|96|97|98|99)/.test(c)&&c.length>=20) s.usps+=30;
+      if(/^420\d{5}/.test(c)&&c.length>=26) s.usps+=28;
+
+      if([12,15,20,22].includes(c.length)) s.fedex+=54;
+      if([12,15].includes(c.length)) s.fedex+=31;
+      if(/^(61|77|78|79)/.test(c)&&[20,22].includes(c.length)) s.fedex+=10;
+    }
+
+    return Object.entries(s)
+      .filter(([,value])=>value>0)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([carrier,value])=>({carrier,score:value}));
+  }
+
+  function setMode(mode){
+    forced=mode;
+    modes.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+    updateHint();
+  }
+
+  modes.forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+
+  function updateHint(){
+    const raw=input.value.trim();
+    if(!raw){
+      hint.textContent="Auto detects the carrier. Numeric IDs may match more than one carrier.";
+      return;
+    }
+    const code=extract(raw);
+    if(forced!=="auto"){
+      hint.textContent=`Using ${carriers[forced].name} for ${code}`;
+      return;
+    }
+    const ranked=score(code);
+    if(!ranked.length) hint.textContent="No confident format match yet. You can still choose a carrier manually.";
+    else if(ranked.length>1&&Math.abs(ranked[0].score-ranked[1].score)<16) hint.textContent=`Ambiguous: likely ${carriers[ranked[0].carrier].name} or ${carriers[ranked[1].carrier].name}.`;
+    else hint.textContent=`Looks like ${carriers[ranked[0].carrier].name}.`;
+  }
+
+  input.addEventListener("input",updateHint);
+
+  paste.addEventListener("click",async()=>{
+    try{
+      input.value=await navigator.clipboard.readText();
+      updateHint();
+    }catch{
+      input.focus();
+    }
+  });
+
+  function getHistory(){
+    try{
+      const v=JSON.parse(localStorage.getItem(KEY)||"[]");
+      return Array.isArray(v)?v:[];
+    }catch{return[]}
+  }
+
+  function save(code,carrier){
+    const list=getHistory().filter(x=>x.code!==code);
+    list.unshift({code,carrier,ts:Date.now()});
+    localStorage.setItem(KEY,JSON.stringify(list.slice(0,10)));
+    renderHistory();
+  }
+
+  function remove(code){
+    localStorage.setItem(KEY,JSON.stringify(getHistory().filter(x=>x.code!==code)));
+    renderHistory();
+  }
+
+  function formatTime(ts){
+    return new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(ts));
+  }
+
+  function openCarrier(code,key){
+    save(code,key);
+    window.open(carriers[key].url(code),"_blank","noopener,noreferrer");
+  }
+
+  function show(code){
+    const ranked=forced==="auto"?score(code):[{carrier:forced,score:100}];
+    const best=ranked[0]?.carrier||null;
+    const confidence=!best
+      ?"Carrier format is not obvious."
+      : forced!=="auto"
+        ?`Manual carrier selection: ${carriers[best].name}.`
+        : ranked.length>1&&Math.abs(ranked[0].score-ranked[1].score)<16
+          ?`This number is ambiguous. ${carriers[ranked[0].carrier].name} and ${carriers[ranked[1].carrier].name} both use similar numeric formats.`
+          :`Best match: ${carriers[best].name}.`;
+
+    const order=forced!=="auto"
+      ?[forced]
+      :[...new Set([...ranked.map(x=>x.carrier),"ups","fedex","usps"])];
+
+    result.innerHTML=`
+      <div class="card result-card">
+        <div class="result-top">
+          <div><div class="result-title">${best?`Likely ${esc(carriers[best].name)}`:"Choose a carrier"}</div><div class="code">${esc(code)}</div></div>
+          <span class="badge">${forced==="auto"?"SMART DETECT":"MANUAL"}</span>
+        </div>
+        <div class="confidence"><strong>Detection:</strong> ${esc(confidence)}</div>
+        <div class="carriers">
+          ${order.map(key=>`
+            <button class="carrier ${key===best?"best":""}" type="button" data-open="${key}">
+              <span class="mark">${carriers[key].mark}</span>
+              <span><b>${carriers[key].name}</b><span>${key===best?"Best match · ":""}Open official tracker</span></span>
+            </button>`).join("")}
+        </div>
+        <div class="notice">This one-file app does not claim to fetch live shipment status itself. The official carrier page provides the live scans, ETA, delivery exceptions, and proof of delivery.</div>
+      </div>`;
+
+    result.querySelectorAll("[data-open]").forEach(btn=>btn.addEventListener("click",()=>openCarrier(code,btn.dataset.open)));
+
+    if(best && (forced!=="auto" || ranked.length===1 || !ranked[1] || ranked[0].score-ranked[1].score>=16)){
+      openCarrier(code,best);
+    }
+  }
+
+  form.addEventListener("submit",e=>{
+    e.preventDefault();
+    const code=extract(input.value);
+    if(code.length<4){
+      result.innerHTML='<div class="card result-card"><div class="result-title">Enter a tracking number</div><div class="code">Paste a UPS, FedEx, or USPS tracking number or a shipping message containing one.</div></div>';
+      return;
+    }
+    input.value=code;
+    updateHint();
+    show(code);
+  });
+
+  function renderHistory(){
+    const list=getHistory();
+    clearHistory.style.visibility=list.length?"visible":"hidden";
+    if(!list.length){
+      historyEl.innerHTML='<div class="empty">Tracked packages will appear here on this device.</div>';
+      return;
+    }
+    historyEl.innerHTML=list.map(item=>{
+      const c=carriers[item.carrier]||{mark:"?",name:"Carrier"};
+      return `<div class="item">
+        <div class="item-icon">${esc(c.mark)}</div>
+        <div><div class="item-code">${esc(item.code)}</div><div class="item-meta">${esc(c.name)} · ${esc(formatTime(item.ts))}</div></div>
+        <div><button class="item-open" data-history-open="${esc(item.code)}" data-history-carrier="${esc(item.carrier)}" aria-label="Track again">↗</button><button class="item-delete" data-delete="${esc(item.code)}" aria-label="Remove">×</button></div>
+      </div>`;
+    }).join("");
+
+    historyEl.querySelectorAll("[data-history-open]").forEach(btn=>btn.addEventListener("click",()=>{
+      input.value=btn.dataset.historyOpen;
+      setMode(btn.dataset.historyCarrier||"auto");
+      openCarrier(btn.dataset.historyOpen,btn.dataset.historyCarrier);
+    }));
+    historyEl.querySelectorAll("[data-delete]").forEach(btn=>btn.addEventListener("click",()=>remove(btn.dataset.delete)));
+  }
+
+  clearHistory.addEventListener("click",()=>{localStorage.removeItem(KEY);renderHistory()});
+  renderHistory();
+})();
+</script>
+</body>
+</html>
