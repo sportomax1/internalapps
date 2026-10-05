@@ -145,25 +145,56 @@ textarea::placeholder{color:#71849c}
       if(c.length>=4 && c.length<=40 && /^[A-Z0-9-]+$/.test(c) && !found.includes(c)) found.push(c);
     };
 
-    const patterns=[
-      /\b1Z[0-9A-Z]{16}\b/g,
-      /\b[A-Z]{2}\d{9}US\b/g,
-      /\b\d{34}\b/g,
-      /\b\d{30}\b/g,
-      /\b\d{26}\b/g,
-      /\b\d{22}\b/g,
-      /\b\d{20}\b/g,
-      /\b\d{15}\b/g,
-      /\b\d{12}\b/g
-    ];
-    patterns.forEach(re=>(text.match(re)||[]).forEach(add));
+    // Strong alphanumeric formats first.
+    (text.match(/\b1Z[0-9A-Z]{16}\b/g)||[]).forEach(add);
+    (text.match(/\b[A-Z]{2}\d{9}US\b/g)||[]).forEach(add);
 
+    // Numeric carrier formats. Handle both normal separated numbers and
+    // accidentally concatenated values such as two 22-digit USPS IDs pasted together.
+    const numericRuns=text.match(/\d{12,}/g)||[];
+    const knownLengths=[22,20,15,12,26,30,34];
+
+    const splitNumericRun=run=>{
+      if(run.length<=34){
+        if(knownLengths.includes(run.length)) add(run);
+        return;
+      }
+
+      // Prefer an exact repeated chunk, which is common with double-paste.
+      if(run.length%2===0){
+        const half=run.length/2;
+        if(knownLengths.includes(half) && run.slice(0,half)===run.slice(half)){
+          add(run.slice(0,half));
+          return;
+        }
+      }
+
+      // Otherwise split only when the whole run cleanly divides into a
+      // recognized tracking-number length. Prefer common USPS/FedEx lengths.
+      const candidates=knownLengths
+        .filter(len=>run.length%len===0 && run.length/len<=25)
+        .sort((a,b)=>{
+          const priority={22:100,20:90,12:80,15:75,26:60,30:50,34:40};
+          return (priority[b]||0)-(priority[a]||0);
+        });
+
+      if(candidates.length){
+        const len=candidates[0];
+        for(let i=0;i<run.length;i+=len) add(run.slice(i,i+len));
+      }
+    };
+
+    numericRuns.forEach(splitNumericRun);
+
+    // Last-resort line/comma parsing for manually selected carriers or uncommon formats.
     if(!found.length){
       text.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).forEach(line=>{
         const token=line.replace(/^(UPS|FEDEX|USPS)\s*[:#-]?\s*/i,"");
-        add(token);
+        if(/^\d{12,}$/.test(token)) splitNumericRun(token);
+        else add(token);
       });
     }
+
     return found.slice(0,25);
   }
 
