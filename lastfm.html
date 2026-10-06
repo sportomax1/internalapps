@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Last.fm Listening Lab</title>
+<style>
+:root{color-scheme:light dark;--bg:#0d1117;--panel:#161b22;--soft:#21262d;--text:#e6edf3;--muted:#8b949e;--accent:#e31b23;--line:#30363d;--good:#3fb950}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}button,input,select{font:inherit}
+.wrap{max-width:1200px;margin:auto;padding:18px}.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.top h1{font-size:24px;margin:0}.badge{background:#e31b23;color:white;border-radius:99px;padding:3px 9px;font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}.setup{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}input,select{width:100%;background:var(--soft);border:1px solid var(--line);color:var(--text);padding:10px;border-radius:9px}
+button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;background:#e31b23;color:#fff}button.secondary{background:var(--soft);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:not-allowed}
+.help{color:var(--muted);margin:9px 0 0}.help a{color:#58a6ff}.status{margin-top:10px;padding:9px 11px;border-radius:9px;background:var(--soft)}.ok{border-left:3px solid var(--good)}.err{border-left:3px solid #f85149}
+.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px}.stat b{font-size:22px;display:block}.stat span{color:var(--muted)}
+.tabs{display:flex;gap:7px;overflow:auto;margin-top:14px}.tabs button{white-space:nowrap;background:var(--soft);border:1px solid var(--line)}.tabs button.on{background:#e31b23}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.list{display:grid;gap:7px}.row{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;padding:8px;border-bottom:1px solid var(--line)}.rank{color:var(--muted);text-align:center}.sub{font-size:12px;color:var(--muted)}.count{font-weight:800}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{color:var(--muted);position:sticky;top:0;background:var(--panel)}
+.tablewrap{max-height:600px;overflow:auto}.barrow{display:grid;grid-template-columns:90px 1fr 60px;gap:8px;align-items:center;margin:8px 0}.bar{height:9px;background:var(--soft);border-radius:99px;overflow:hidden}.fill{height:100%;background:#e31b23}
+.progress{height:7px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:10px}.progress div{height:100%;background:#e31b23;width:0}
+.hidden{display:none!important}
+@media(max-width:760px){.wrap{padding:11px}.setup,.controls,.stats,.grid2{grid-template-columns:1fr 1fr}.setup button{grid-column:1/-1}.stats .stat:last-child{grid-column:1/-1}.controls{grid-template-columns:1fr 1fr}.card{padding:12px}.top h1{font-size:20px}}
+</style></head>
+<body><main class="wrap">
+<div class="top"><span class="badge">Last.fm</span><h1>Listening Lab</h1><span class="help">Browser-only listening analytics</span></div>
+<section class="card">
+<div class="setup"><div><label>Last.fm username</label><input id="user" autocomplete="username" placeholder="Your Last.fm username"></div><div><label>API key</label><input id="key" autocomplete="off" placeholder="32-character Last.fm API key"></div><button id="test">Test & Load</button></div>
+<p class="help">No shared secret or Last.fm password is needed. Get an API account at <a href="https://www.last.fm/api/account/create" target="_blank">Last.fm API account creation</a>. Your key stays in this browser unless you choose not to save it.</p>
+<div style="margin-top:9px"><label><input id="remember" type="checkbox" style="width:auto" checked> Remember username + API key on this device</label></div>
+<div id="status" class="status">Enter your username and API key, then test the connection.</div>
+</section>
+<section id="app" class="hidden">
+<div class="card controls">
+<div><label>History range</label><select id="range"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="365">1 year</option><option value="all">All available</option></select></div>
+<div><label>Max pages</label><select id="pages"><option>5</option><option selected>25</option><option>50</option><option>100</option><option>250</option></select></div>
+<div><label>Per page</label><select id="limit"><option>50</option><option>100</option><option selected>200</option></select></div>
+<div><label>Actions</label><button id="sync" style="width:100%">Sync History</button></div>
+<div><label>Data</label><button id="csv" class="secondary" style="width:100%">Export CSV</button></div>
+</div>
+<div class="progress"><div id="prog"></div></div><div id="syncmsg" class="help"></div>
+<div class="stats"><div class="stat"><b id="plays">0</b><span>plays loaded</span></div><div class="stat"><b id="artists">0</b><span>artists</span></div><div class="stat"><b id="tracks">0</b><span>tracks</span></div><div class="stat"><b id="days">0</b><span>active days</span></div><div class="stat"><b id="repeat">0%</b><span>repeat rate</span></div></div>
+<div class="tabs"><button class="on" data-tab="overview">Overview</button><button data-tab="recent">Recent plays</button><button data-tab="artists">Artists</button><button data-tab="tracks">Tracks</button><button data-tab="time">Time patterns</button></div>
+<section id="overview" class="tab card"><div class="grid2"><div><h3>Top artists</h3><div id="topArtists" class="list"></div></div><div><h3>Top tracks</h3><div id="topTracks" class="list"></div></div></div></section>
+<section id="recent" class="tab card hidden"><h3>Recent plays</h3><div class="tablewrap"><table><thead><tr><th>When</th><th>Track</th><th>Artist</th><th>Album</th></tr></thead><tbody id="recentBody"></tbody></table></div></section>
+<section id="artists" class="tab card hidden"><h3>Artists</h3><div id="artistList" class="list"></div></section>
+<section id="tracks" class="tab card hidden"><h3>Tracks</h3><div id="trackList" class="list"></div></section>
+<section id="time" class="tab card hidden"><div class="grid2"><div><h3>Day of week</h3><div id="dow"></div></div><div><h3>Hour of day</h3><div id="hours"></div></div></div></section>
+</section></main>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+let data=[], busy=false;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function jsonp(params){return new Promise((resolve,reject)=>{const cb='lfm_'+Date.now()+'_'+Math.random().toString(36).slice(2);const q=new URLSearchParams({...params,format:'json',callback:cb});const s=document.createElement('script');const timer=setTimeout(()=>done(new Error('Last.fm request timed out')),15000);function done(e,v){clearTimeout(timer);delete window[cb];s.remove();e?reject(e):resolve(v)}window[cb]=v=>done(null,v);s.onerror=()=>done(new Error('Network/API request failed'));s.src='https://ws.audioscrobbler.com/2.0/?'+q;document.head.appendChild(s)})}
+function creds(){return {method:'user.getrecenttracks',user:$('#user').value.trim(),api_key:$('#key').value.trim()}}
+function setStatus(msg,kind=''){const x=$('#status');x.textContent=msg;x.className='status '+kind}
+async function test(){const c=creds();if(!c.user||!c.api_key)return setStatus('Username and API key are required.','err');$('#test').disabled=true;setStatus('Testing Last.fm…');try{const r=await jsonp({...c,limit:1,page:1});if(r.error)throw Error(r.message||('Last.fm error '+r.error));setStatus('Connected. API key and username are valid.','ok');$('#app').classList.remove('hidden');if($('#remember').checked){localStorage.setItem('lfm_user',c.user);localStorage.setItem('lfm_key',c.api_key)}else{localStorage.removeItem('lfm_user');localStorage.removeItem('lfm_key')}await sync()}catch(e){setStatus(e.message,'err')}finally{$('#test').disabled=false}}
+function fromTs(){const v=$('#range').value;if(v==='all')return null;return Math.floor((Date.now()-Number(v)*86400000)/1000)}
+async function sync(){if(busy)return;busy=true;$('#sync').disabled=true;data=[];const c=creds(),lim=+$('#limit').value,max=+$('#pages').value,from=fromTs();let totalPages=max;try{for(let p=1;p<=Math.min(max,totalPages);p++){const r=await jsonp({...c,limit:lim,page:p,extended:1,...(from?{from}: {})});if(r.error)throw Error(r.message);const rt=r.recenttracks, arr=rt?.track||[];totalPages=Math.min(max,+rt?.['@attr']?.totalPages||max);data.push(...arr.filter(t=>t.date?.uts));$('#prog').style.width=(p/Math.min(max,totalPages)*100)+'%';$('#syncmsg').textContent='Loaded page '+p+' of '+Math.min(max,totalPages)+' • '+data.length.toLocaleString()+' scrobbles';render();if(!arr.length)break;await new Promise(r=>setTimeout(r,140))}$('#syncmsg').textContent='Sync complete • '+data.length.toLocaleString()+' scrobbles loaded';}catch(e){$('#syncmsg').textContent='Stopped: '+e.message}finally{busy=false;$('#sync').disabled=false;render()}}
+function counts(fn){const m=new Map;data.forEach(x=>{const k=fn(x);if(k)m.set(k,(m.get(k)||0)+1)});return [...m].sort((a,b)=>b[1]-a[1])}
+function list(el,arr,n=50){const max=arr[0]?.[1]||1;$(el).innerHTML=arr.slice(0,n).map((x,i)=>'<div class="row"><span class="rank">'+(i+1)+'</span><div><b>'+esc(x[0])+'</b><div class="bar"><div class="fill" style="width:'+(x[1]/max*100)+'%"></div></div></div><span class="count">'+x[1].toLocaleString()+'</span></div>').join('')}
+function bars(el,arr){const max=Math.max(...arr.map(x=>x[1]),1);$(el).innerHTML=arr.map(x=>'<div class="barrow"><span>'+esc(x[0])+'</span><div class="bar"><div class="fill" style="width:'+(x[1]/max*100)+'%"></div></div><b>'+x[1]+'</b></div>').join('')}
+function render(){const ac=counts(x=>x.artist?.name||x.artist?.['#text']),tc=counts(x=>(x.artist?.name||x.artist?.['#text'])+' — '+x.name),days=new Set(data.map(x=>new Date(+x.date.uts*1000).toDateString())).size;
+$('#plays').textContent=data.length.toLocaleString();$('#artists').textContent=ac.length.toLocaleString();$('#tracks').textContent=tc.length.toLocaleString();$('#days').textContent=days;$('#repeat').textContent=data.length?Math.round((1-tc.length/data.length)*100)+'%':'0%';
+list('#topArtists',ac,15);list('#topTracks',tc,15);list('#artistList',ac,100);list('#trackList',tc,100);
+$('#recentBody').innerHTML=data.slice(0,1000).map(x=>'<tr><td>'+new Date(+x.date.uts*1000).toLocaleString()+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.artist?.name||x.artist?.['#text'])+'</td><td>'+esc(x.album?.['#text'])+'</td></tr>').join('');
+const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],dc=Array(7).fill(0),hc=Array(24).fill(0);data.forEach(x=>{const d=new Date(+x.date.uts*1000);dc[d.getDay()]++;hc[d.getHours()]++});bars('#dow',dn.map((x,i)=>[x,dc[i]]));bars('#hours',hc.map((x,i)=>[(i%12||12)+(i<12?' AM':' PM'),x]))}
+function csv(){const rows=[['played_at','artist','track','album'],...data.map(x=>[new Date(+x.date.uts*1000).toISOString(),x.artist?.name||x.artist?.['#text'],x.name,x.album?.['#text']])];const q=v=>'"'+String(v??'').replaceAll('"','""')+'"';const blob=new Blob([rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lastfm-scrobbles.csv';a.click();URL.revokeObjectURL(a.href)}
+$('#test').onclick=test;$('#sync').onclick=sync;$('#csv').onclick=csv;$$('.tabs button').forEach(b=>b.onclick=()=>{$$('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$$('.tab').forEach(x=>x.classList.add('hidden'));$('#'+b.dataset.tab).classList.remove('hidden')});
+$('#user').value=localStorage.getItem('lfm_user')||'';$('#key').value=localStorage.getItem('lfm_key')||'';
+</script></body></html>
