@@ -1,1 +1,277 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>STL Plate Builder</title><style>:root{color-scheme:dark;--b:#090d13;--p:#111823;--p2:#172130;--l:#2b3749;--t:#f6f8fb;--m:#9ba9bd;--a:#55d6be}*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--b);color:var(--t);font:14px system-ui;overflow:hidden}button,input{font:inherit}.app{height:100%;display:grid;grid-template-columns:350px 1fr}.side{display:flex;flex-direction:column;min-height:0;background:var(--p);border-right:1px solid var(--l)}.brand,.sec,.actions{padding:12px;border-bottom:1px solid var(--l)}h1{font-size:20px;margin:0}.muted{color:var(--m);font-size:12px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn,.file{border:1px solid var(--l);background:var(--p2);color:var(--t);border-radius:10px;padding:10px;font-weight:750;text-align:center}.primary,.chip.on{background:var(--a);color:#06110f;border-color:transparent}.wide{grid-column:1/-1}.filein{position:absolute;width:1px;height:1px;opacity:.01}.tabs{display:none}.panel{min-height:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.field label{display:block;color:var(--m);font-size:11px;margin-bottom:3px}.field input{width:100%;background:#080d14;color:var(--t);border:1px solid var(--l);border-radius:8px;padding:8px}.row{display:flex;gap:7px;margin-top:8px}.row>*{flex:1}.models,.edit{overflow:auto;padding:9px;flex:1}.card,.empty{border:1px solid var(--l);background:var(--p2);border-radius:10px;padding:9px;margin-bottom:7px}.card.active{border-color:var(--a)}.cardtop{display:flex;gap:7px}.name{flex:1;overflow:hidden;text-overflow:ellipsis}.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.mini button{background:#111823;color:var(--t);border:1px solid var(--l);border-radius:7px;padding:7px}.viewer{position:relative;min-width:0;min-height:0;touch-action:none}.canvas{position:absolute;inset:0}.tools{position:absolute;top:10px;left:10px;right:10px;z-index:4;display:flex;gap:6px;overflow-x:auto}.chip{flex:none;border:1px solid #ffffff24;background:#101722dd;color:var(--t);border-radius:999px;padding:9px 11px;font-weight:750}.status{position:absolute;left:10px;bottom:9px;color:var(--m);font-size:11px}.toast{position:absolute;top:58px;left:10px;right:10px;background:#182334;border:1px solid var(--l);padding:10px;border-radius:9px;opacity:0;pointer-events:none}.toast.show{opacity:1}.fab{display:none}.hidden{display:none!important}@media(max-width:760px){.app{height:100svh;display:flex;flex-direction:column}.viewer{order:1;height:58svh;min-height:350px}.side{order:2;height:42svh;border:0}.brand,.actions{display:none}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px}.tabs button{min-height:42px;border:1px solid var(--l);background:var(--p2);color:var(--m);border-radius:9px;font-weight:800}.tabs button.on{background:var(--a);color:#06110f}.panel{display:none;overflow:auto}.panel.active{display:block}.field input{min-height:42px;font-size:16px}.fab{display:block;position:absolute;right:12px;bottom:32px;width:52px;height:52px;border-radius:50%;z-index:5}.tools{scrollbar-width:none}.tools::-webkit-scrollbar{display:none}}</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script></head><body><div class="app"><aside class="side"><div class="brand"><h1>STL Plate Builder</h1><div class="muted">Pack tightly, inspect clearly, then fine-tune.</div></div><div class="actions"><label class="file primary wide" for="fi">＋ Add STL files</label><input id="fi" class="filein" type="file" accept=".stl,model/stl,application/octet-stream" multiple><button id="pack" class="btn primary">Compact pack</button><button id="center" class="btn">Center all</button><button id="clear" class="btn">Clear</button><button id="export" class="btn primary" disabled>Export STL</button></div><div class="tabs"><button class="on" data-p="plate">Plate</button><button data-p="models">Models</button><button data-p="edit">Edit</button></div><div id="plate" class="panel active"><div class="sec"><div class="grid"><div class="field"><label>Width</label><input id="pw" value="220" type="number"></div><div class="field"><label>Depth</label><input id="pd" value="220" type="number"></div><div class="field"><label>Grid</label><input id="gs" value="10" type="number"></div></div><div class="row"><div class="field"><label>Gap</label><input id="gap" value="3" step=".5" type="number"></div><button id="packm" class="btn primary">Compact pack</button></div><div class="row"><label class="file primary" for="fi">＋ Add STL</label><button id="fitm" class="btn">Fit plate</button></div></div></div><div id="models" class="panel models"><div class="empty">Tap Add STL to choose files.</div></div><div id="edit" class="panel edit"><div id="editEmpty" class="empty">Select a model.</div><div id="controls" class="hidden"><b id="selname"></b><div class="grid" style="margin-top:8px"><div class="field"><label>X</label><input id="x" type="number" step=".1"></div><div class="field"><label>Y</label><input id="y" type="number" step=".1"></div><div class="field"><label>Z</label><input id="z" type="number" step=".1"></div><div class="field"><label>Rotate X</label><input id="rx" type="number"></div><div class="field"><label>Rotate Y</label><input id="ry" type="number"></div><div class="field"><label>Rotate Z</label><input id="rz" type="number"></div><div class="field"><label>Scale X</label><input id="sx" type="number" step=".01"></div><div class="field"><label>Scale Y</label><input id="sy" type="number" step=".01"></div><div class="field"><label>Scale Z</label><input id="sz" type="number" step=".01"></div></div><div class="row"><button id="drop" class="btn">Drop</button><button id="focus" class="btn">Focus</button><button id="del" class="btn">Delete</button></div></div></div></aside><main id="viewer" class="viewer"><div id="canvas" class="canvas"></div><div class="tools"><button class="chip on" data-mode="translate">Move</button><button class="chip" data-mode="rotate">Rotate</button><button class="chip" data-mode="scale">Scale</button><button id="touch" class="chip">Touch: Rotate</button><button id="iso" class="chip">3D</button><button id="top" class="chip">Top</button><button id="front" class="chip">Front</button><button id="side" class="chip">Side</button><button id="fit" class="chip">Fit</button></div><label class="file primary fab" for="fi">＋</label><div class="status"><span id="count">0 models</span> · <span id="hint">1 finger rotates · pinch zooms</span></div><div id="toast" class="toast"></div></main></div><script type="module">import * as THREE from 'three';import{OrbitControls}from'three/addons/controls/OrbitControls.js';import{TransformControls}from'three/addons/controls/TransformControls.js';import{STLLoader}from'three/addons/loaders/STLLoader.js';import{STLExporter}from'three/addons/exporters/STLExporter.js';const $=i=>document.getElementById(i),scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,5000),ren=new THREE.WebGLRenderer({antialias:true}),host=$('canvas'),orbit=new OrbitControls(cam,ren.domElement),tc=new TransformControls(cam,ren.domElement),loader=new STLLoader(),exp=new STLExporter(),group=new THREE.Group(),mods=[];let plate,grid,sel,slide=false;scene.background=new THREE.Color(0x090d13);cam.position.set(240,190,240);ren.setPixelRatio(Math.min(devicePixelRatio,2));host.appendChild(ren.domElement);orbit.enableDamping=true;orbit.enablePan=true;orbit.touches.ONE=THREE.TOUCH.ROTATE;orbit.touches.TWO=THREE.TOUCH.DOLLY_PAN;scene.add(tc.getHelper(),group,new THREE.HemisphereLight(0xffffff,0x273142,2));function flash(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1800)}function plateUp(){if(plate)scene.remove(plate,grid);let w=+$('pw').value||220,d=+$('pd').value||220,g=+$('gs').value||10;plate=new THREE.Mesh(new THREE.BoxGeometry(w,d,2),new THREE.MeshStandardMaterial({color:0x243043}));plate.position.z=-1;grid=new THREE.GridHelper(Math.max(w,d),Math.round(Math.max(w,d)/g));grid.rotation.x=Math.PI/2;grid.scale.x=w/Math.max(w,d);grid.scale.z=d/Math.max(w,d);scene.add(plate,grid)}plateUp();['pw','pd','gs'].forEach(i=>$(i).onchange=plateUp);function sz(m){return new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3())}function floor(m){m.position.z-=new THREE.Box3().setFromObject(m).min.z}function select(m){sel=m;tc.attach(m);$('controls').classList.remove('hidden');$('editEmpty').classList.add('hidden');sync();cards()}function sync(){if(!sel)return;$('selname').textContent=sel.userData.name;let v={x:sel.position.x,y:sel.position.y,z:sel.position.z,rx:THREE.MathUtils.radToDeg(sel.rotation.x),ry:THREE.MathUtils.radToDeg(sel.rotation.y),rz:THREE.MathUtils.radToDeg(sel.rotation.z),sx:sel.scale.x,sy:sel.scale.y,sz:sel.scale.z};Object.entries(v).forEach(([k,n])=>$(k).value=n.toFixed(2))}['x','y','z','rx','ry','rz','sx','sy','sz'].forEach(i=>$(i).oninput=()=>{if(!sel)return;sel.position.set(+$('x').value||0,+$('y').value||0,+$('z').value||0);sel.rotation.set(...['rx','ry','rz'].map(k=>THREE.MathUtils.degToRad(+$(k).value||0)));sel.scale.set(...['sx','sy','sz'].map(k=>+$(k).value||1));cards()});async function load(fs){for(const f of fs)if(f.name.toLowerCase().endsWith('.stl')){let g=loader.parse(await f.arrayBuffer());g.computeBoundingBox();let b=g.boundingBox,c=b.getCenter(new THREE.Vector3());g.translate(-c.x,-c.y,-b.min.z);let m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:Math.random()*0xffffff,side:THREE.DoubleSide}));m.userData.name=f.name.replace(/\.stl$/i,'');group.add(m);mods.push(m);floor(m);select(m)}cards();pack();$('fi').value=''}$('fi').onchange=e=>load(e.target.files);function cards(){$('models').innerHTML='';$('export').disabled=!mods.length;mods.forEach(m=>{let s=sz(m),d=document.createElement('div');d.className='card'+(m===sel?' active':'');d.innerHTML='<div class="cardtop"><span class="name">'+m.userData.name+'</span><button data-a="del">✕</button></div><div class="muted">'+s.x.toFixed(1)+' × '+s.y.toFixed(1)+' × '+s.z.toFixed(1)+' mm</div><div class="mini"><button data-a="edit">Edit</button><button data-a="view">View</button><button data-a="copy">Copy</button><button data-a="center">Center</button></div>';d.onclick=e=>{let a=e.target.dataset.a;if(a==='del')remove(m);else if(a==='view'){select(m);target(new THREE.Box3().setFromObject(m))}else if(a==='copy'){let c=m.clone();c.geometry=m.geometry.clone();c.material=m.material.clone();c.position.add(new THREE.Vector3(8,8,0));c.userData.name=m.userData.name+' copy';group.add(c);mods.push(c);select(c)}else if(a==='center'){m.position.x=m.position.y=0;floor(m)}else{select(m);if(a==='edit')panel('edit')}};$('models').appendChild(d)});$('count').textContent=mods.length+' models'}function remove(m){group.remove(m);mods.splice(mods.indexOf(m),1);cards()}function ov(a,b,g){return!(a.x+a.w+g<=b.x||b.x+b.w+g<=a.x||a.y+a.h+g<=b.y||b.y+b.h+g<=a.y)}function pack(){if(!mods.length)return;let W=+$('pw').value||220,D=+$('pd').value||220,G=+$('gap').value||0,p=[];for(const m of mods){let best;for(const r of[0,Math.PI/2]){m.rotation.z=r;let s=sz(m);for(let y=-D/2+G;y+s.y<=D/2-G;y+=Math.max(1,G||2)){for(let x=-W/2+G;x+s.x<=W/2-G;x+=Math.max(1,G||2)){let q={x,y,w:s.x,h:s.y};if(!p.some(z=>ov(q,z,G))){best={...q,r};break}}if(best)break}if(best)break}if(!best)best={x:-W/2+G,y:p.reduce((v,z)=>Math.max(v,z.y+z.h+G),-D/2+G),w:sz(m).x,h:sz(m).y,r:0};m.rotation.z=best.r;m.position.x=best.x+best.w/2;m.position.y=best.y+best.h/2;floor(m);p.push(best)}cards();fit()}function target(b){let s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),m=Math.max(s.x,s.y,s.z,30);orbit.target.copy(c);cam.position.copy(c).add(new THREE.Vector3(m,m*.8,m))}function fit(){let b=new THREE.Box3();mods.length?mods.forEach(m=>b.expandByObject(m)):b.setFromObject(plate);target(b)}function view(k){let b=new THREE.Box3();mods.length?mods.forEach(m=>b.expandByObject(m)):b.setFromObject(plate);let s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),d=Math.max(s.x,s.y,s.z,80)*1.45;orbit.target.copy(c);if(k==='top')cam.position.set(c.x,c.y,c.z+d);if(k==='front')cam.position.set(c.x,c.y-d,c.z);if(k==='side')cam.position.set(c.x+d,c.y,c.z);if(k==='iso')cam.position.set(c.x+d*.8,c.y+d*.65,c.z+d*.8);cam.lookAt(c)}function panel(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===id))}document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>panel(b.dataset.p));$('touch').onclick=()=>{slide=!slide;orbit.touches.ONE=slide?THREE.TOUCH.PAN:THREE.TOUCH.ROTATE;orbit.touches.TWO=THREE.TOUCH.DOLLY_PAN;$('touch').textContent=slide?'Touch: Slide':'Touch: Rotate';$('touch').classList.toggle('on',slide);$('hint').textContent=slide?'1 finger slides · pinch zooms':'1 finger rotates · pinch zooms';flash(slide?'Slide mode on':'Rotate mode on')};$('pack').onclick=$('packm').onclick=pack;$('fit').onclick=$('fitm').onclick=fit;$('center').onclick=()=>{let b=new THREE.Box3();mods.forEach(m=>b.expandByObject(m));let c=b.getCenter(new THREE.Vector3());mods.forEach(m=>{m.position.x-=c.x;m.position.y-=c.y});fit()};$('clear').onclick=()=>[...mods].forEach(remove);$('drop').onclick=()=>sel&&floor(sel);$('focus').onclick=()=>sel&&target(new THREE.Box3().setFromObject(sel));$('del').onclick=()=>sel&&remove(sel);$('iso').onclick=()=>view('iso');$('top').onclick=()=>view('top');$('front').onclick=()=>view('front');$('side').onclick=()=>view('side');document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{tc.setMode(b.dataset.mode);document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b))});$('export').onclick=()=>{let r=new THREE.Group();mods.forEach(m=>{m.updateMatrixWorld();let g=m.geometry.clone();g.applyMatrix4(m.matrixWorld);r.add(new THREE.Mesh(g))});let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([exp.parse(r,{binary:true})],{type:'model/stl'}));a.download='combined-plate.stl';a.click()};function resize(){let r=host.getBoundingClientRect();ren.setSize(r.width||1,r.height||1,false);cam.aspect=(r.width||1)/(r.height||1);cam.updateProjectionMatrix()}new ResizeObserver(resize).observe(host);function loop(){requestAnimationFrame(loop);orbit.update();ren.render(scene,cam)}resize();fit();loop();</script></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>STL Plate Builder</title><style>:root{color-scheme:dark;--b:#090d13;--p:#111823;--p2:#172130;--l:#2b3749;--t:#f6f8fb;--m:#9ba9bd;--a:#55d6be}*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--b);color:var(--t);font:14px system-ui;overflow:hidden}button,input{font:inherit}.app{height:100%;display:grid;grid-template-columns:350px 1fr}.side{display:flex;flex-direction:column;min-height:0;background:var(--p);border-right:1px solid var(--l)}.brand,.sec,.actions{padding:12px;border-bottom:1px solid var(--l)}h1{font-size:20px;margin:0}.muted{color:var(--m);font-size:12px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn,.file{border:1px solid var(--l);background:var(--p2);color:var(--t);border-radius:10px;padding:10px;font-weight:750;text-align:center}.primary,.chip.on{background:var(--a);color:#06110f;border-color:transparent}.wide{grid-column:1/-1}.filein{position:absolute;width:1px;height:1px;opacity:.01}.tabs{display:none}.panel{min-height:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.field label{display:block;color:var(--m);font-size:11px;margin-bottom:3px}.field input{width:100%;background:#080d14;color:var(--t);border:1px solid var(--l);border-radius:8px;padding:8px}.row{display:flex;gap:7px;margin-top:8px}.row>*{flex:1}.models,.edit{overflow:auto;padding:9px;flex:1}.card,.empty{border:1px solid var(--l);background:var(--p2);border-radius:10px;padding:9px;margin-bottom:7px}.card.active{border-color:var(--a)}.cardtop{display:flex;gap:7px}.name{flex:1;overflow:hidden;text-overflow:ellipsis}.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.mini button{background:#111823;color:var(--t);border:1px solid var(--l);border-radius:7px;padding:7px}.viewer{position:relative;min-width:0;min-height:0;touch-action:none}.canvas{position:absolute;inset:0}.tools{position:absolute;top:10px;left:10px;right:10px;z-index:4;display:flex;gap:6px;overflow-x:auto}.chip{flex:none;border:1px solid #ffffff24;background:#101722dd;color:var(--t);border-radius:999px;padding:9px 11px;font-weight:750}.status{position:absolute;left:10px;bottom:9px;color:var(--m);font-size:11px}.toast{position:absolute;top:58px;left:10px;right:10px;background:#182334;border:1px solid var(--l);padding:10px;border-radius:9px;opacity:0;pointer-events:none}.toast.show{opacity:1}.fab{display:none}.hidden{display:none!important}@media(max-width:760px){.app{height:100svh;display:flex;flex-direction:column}.viewer{order:1;height:58svh;min-height:350px}.side{order:2;height:42svh;border:0}.brand,.actions{display:none}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px}.tabs button{min-height:42px;border:1px solid var(--l);background:var(--p2);color:var(--m);border-radius:9px;font-weight:800}.tabs button.on{background:var(--a);color:#06110f}.panel{display:none;overflow:auto}.panel.active{display:block}.field input{min-height:42px;font-size:16px}.fab{display:block;position:absolute;right:12px;bottom:32px;width:52px;height:52px;border-radius:50%;z-index:5}.tools{scrollbar-width:none}.tools::-webkit-scrollbar{display:none}}
+/* Phone layout keeps the canvas and every primary action reachable. */
+button, .file { cursor:pointer; touch-action:manipulation; }
+button:focus-visible, .file:focus-within, input:focus-visible { outline:2px solid var(--a); outline-offset:2px; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+.field input { min-width:0; }
+.cardtop button { background:#111823;color:var(--t);border:1px solid var(--l);border-radius:7px;min-width:38px;min-height:38px; }
+.name { min-width:0; overflow-wrap:anywhere; }
+.status { right:10px; pointer-events:none; text-shadow:0 1px 3px #000; }
+.mobile-actions { display:none; }
+@media(max-width:760px){
+ html,body { height:100%; overflow:hidden; }
+ .app { height:100dvh; min-height:0; padding-bottom:env(safe-area-inset-bottom); }
+ .viewer { flex:0 0 48%; height:auto; min-height:0; }
+ .side { flex:1 1 0; height:auto; min-height:0; overflow:hidden; border-top:1px solid var(--l); }
+ .tabs { flex:none; padding:7px 10px; gap:7px; }
+ .tabs button { min-height:44px; font-size:14px; }
+ .panel.active { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+ .sec { padding:12px; }
+ .mobile-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin-top:8px; }
+ .mobile-actions .btn { min-width:0; padding:10px 4px; min-height:44px; font-size:12px; }
+ .row .btn,.row .file { min-width:0; min-height:44px; display:flex; align-items:center; justify-content:center; }
+ .tools { top:8px; left:8px; right:8px; padding-bottom:6px; }
+ .chip { min-height:42px; padding:9px 12px; }
+ .fab { bottom:34px; display:flex; align-items:center; justify-content:center; font-size:24px; padding:0; box-shadow:0 3px 14px #0008; }
+ .status { bottom:8px; max-width:calc(100% - 85px); font-size:11px; }
+ .grid { gap:8px; }
+ .models,.edit { padding:10px; }
+ .card { padding:11px; }
+ .mini button { min-height:40px; }
+}
+@media(max-width:760px) and (max-height:650px){ .viewer { flex-basis:42%; } }
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script></head><body><div class="app"><aside class="side"><div class="brand"><h1>STL Plate Builder</h1><div class="muted">Pack tightly, inspect clearly, then fine-tune.</div></div><div class="actions"><label class="file primary wide" for="fi">＋ Add STL files</label><input id="fi" class="filein" type="file" accept=".stl,model/stl,application/octet-stream" multiple><button id="pack" class="btn primary">Compact pack</button><button id="center" class="btn">Center all</button><button id="clear" class="btn">Clear</button><button id="export" class="btn primary" disabled>Export STL</button></div><div class="tabs"><button class="on" data-p="plate">Plate</button><button data-p="models">Models</button><button data-p="edit">Edit</button></div><div id="plate" class="panel active"><div class="sec"><div class="grid"><div class="field"><label for="pw">Width (mm)</label><input id="pw" value="220" type="number" min="1"></div><div class="field"><label for="pd">Depth (mm)</label><input id="pd" value="220" type="number" min="1"></div><div class="field"><label for="gs">Grid (mm)</label><input id="gs" value="10" type="number" min="1"></div></div><div class="row"><div class="field"><label for="gap">Gap (mm)</label><input id="gap" value="3" step=".5" type="number" min="0"></div><button id="packm" class="btn primary">Compact pack</button></div><div class="row"><label class="file primary" for="fi">＋ Add STL</label><button id="fitm" class="btn">Fit plate</button></div><div class="mobile-actions"><button id="centerm" class="btn">Center all</button><button id="clearm" class="btn">Clear</button><button id="exportm" class="btn primary" disabled>Export STL</button></div></div></div><div id="models" class="panel models"><div class="empty">Tap Add STL to choose files.</div></div><div id="edit" class="panel edit"><div id="editEmpty" class="empty">Select a model.</div><div id="controls" class="hidden"><b id="selname"></b><div class="grid" style="margin-top:8px"><div class="field"><label>X</label><input id="x" type="number" step=".1"></div><div class="field"><label>Y</label><input id="y" type="number" step=".1"></div><div class="field"><label>Z</label><input id="z" type="number" step=".1"></div><div class="field"><label>Rotate X</label><input id="rx" type="number"></div><div class="field"><label>Rotate Y</label><input id="ry" type="number"></div><div class="field"><label>Rotate Z</label><input id="rz" type="number"></div><div class="field"><label>Scale X</label><input id="sx" type="number" step=".01"></div><div class="field"><label>Scale Y</label><input id="sy" type="number" step=".01"></div><div class="field"><label>Scale Z</label><input id="sz" type="number" step=".01"></div></div><div class="row"><button id="drop" class="btn">Drop</button><button id="focus" class="btn">Focus</button><button id="del" class="btn">Delete</button></div></div></div></aside><main id="viewer" class="viewer"><div id="canvas" class="canvas"></div><div class="tools"><button class="chip on" data-mode="translate">Move</button><button class="chip" data-mode="rotate">Rotate</button><button class="chip" data-mode="scale">Scale</button><button id="touch" class="chip">Touch: Rotate</button><button id="iso" class="chip">3D</button><button id="top" class="chip">Top</button><button id="front" class="chip">Front</button><button id="side" class="chip">Side</button><button id="fit" class="chip">Fit</button></div><label class="file primary fab" for="fi">＋</label><div class="status" aria-live="polite"><span id="count">0 models</span> · <span id="hint">1 finger rotates · pinch zooms</span></div><div id="toast" class="toast"></div></main></div><script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+
+const $ = id => document.getElementById(id);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, .1, 5000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+const host = $('canvas');
+const orbit = new OrbitControls(camera, renderer.domElement);
+const transform = new TransformControls(camera, renderer.domElement);
+const loader = new STLLoader();
+const exporter = new STLExporter();
+const group = new THREE.Group();
+const models = [];
+let plate, grid, selected = null, slide = false, toastTimer, pointerStart;
+scene.background = new THREE.Color(0x090d13);
+camera.position.set(240, 190, 240);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+orbit.enableDamping = true;
+orbit.enablePan = true;
+orbit.touches.ONE = THREE.TOUCH.ROTATE;
+orbit.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+transform.addEventListener('dragging-changed', event => { orbit.enabled = !event.value; });
+transform.addEventListener('objectChange', () => { sync(); cards(); });
+scene.add(transform.getHelper(), group, new THREE.HemisphereLight(0xffffff, 0x273142, 2));
+
+function flash(message) {
+  $('toast').textContent = message;
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').classList.remove('show'), 3000);
+}
+function positive(id, fallback) {
+  const n = Number($(id).value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+function plateUp() {
+  if (plate) {
+    scene.remove(plate, grid);
+    plate.geometry.dispose(); plate.material.dispose(); grid.geometry.dispose(); grid.material.dispose();
+  }
+  const w = positive('pw', 220), d = positive('pd', 220), g = positive('gs', 10);
+  plate = new THREE.Mesh(new THREE.BoxGeometry(w, d, 2), new THREE.MeshStandardMaterial({ color: 0x243043 }));
+  plate.position.z = -1;
+  grid = new THREE.GridHelper(Math.max(w, d), Math.max(1, Math.round(Math.max(w, d) / g)));
+  grid.rotation.x = Math.PI / 2;
+  grid.scale.x = w / Math.max(w, d);
+  grid.scale.z = d / Math.max(w, d);
+  scene.add(plate, grid);
+  if (models.length) validatePlate();
+}
+function bounds(model) { return new THREE.Box3().setFromObject(model); }
+function size(model) { return bounds(model).getSize(new THREE.Vector3()); }
+function floor(model) { model.position.z -= bounds(model).min.z; }
+function deselect() {
+  selected = null;
+  transform.detach();
+  $('controls').classList.add('hidden');
+  $('editEmpty').classList.remove('hidden');
+  cards();
+}
+function select(model) {
+  selected = model;
+  transform.attach(model);
+  $('controls').classList.remove('hidden');
+  $('editEmpty').classList.add('hidden');
+  sync(); cards();
+}
+function sync() {
+  if (!selected) return;
+  $('selname').textContent = selected.userData.name;
+  const values = { x:selected.position.x, y:selected.position.y, z:selected.position.z,
+    rx:THREE.MathUtils.radToDeg(selected.rotation.x), ry:THREE.MathUtils.radToDeg(selected.rotation.y), rz:THREE.MathUtils.radToDeg(selected.rotation.z),
+    sx:selected.scale.x, sy:selected.scale.y, sz:selected.scale.z };
+  for (const [key, value] of Object.entries(values)) $(key).value = value.toFixed(2);
+}
+for (const id of ['x','y','z','rx','ry','rz','sx','sy','sz']) {
+  $(id).addEventListener('change', () => {
+    if (!selected) return;
+    selected.position.set(...['x','y','z'].map(k => Number($(k).value) || 0));
+    selected.rotation.set(...['rx','ry','rz'].map(k => THREE.MathUtils.degToRad(Number($(k).value) || 0)));
+    selected.scale.set(...['sx','sy','sz'].map(k => Math.max(.01, Number($(k).value) || 1)));
+    sync(); cards(); validatePlate();
+  });
+}
+async function load(files) {
+  let added = 0;
+  for (const file of files) {
+    if (!file.name.toLowerCase().endsWith('.stl')) continue;
+    try {
+      const geometry = loader.parse(await file.arrayBuffer());
+      geometry.computeBoundingBox();
+      if (!geometry.boundingBox || geometry.boundingBox.isEmpty()) throw Error('empty geometry');
+      const box = geometry.boundingBox, center = box.getCenter(new THREE.Vector3());
+      geometry.translate(-center.x, -center.y, -box.min.z);
+      const model = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(Math.random(), .48, .62), side:THREE.DoubleSide }));
+      model.userData.name = file.name.replace(/\.stl$/i, '');
+      group.add(model); models.push(model); select(model); added++;
+    } catch (error) { console.error('STL load failed:', file.name, error); flash(`Could not read ${file.name}`); }
+  }
+  $('fi').value = '';
+  if (added) { pack(); panel('models'); flash(`${added} model${added === 1 ? '' : 's'} added`); }
+}
+$('fi').addEventListener('change', event => load([...event.target.files]));
+function cards() {
+  const list = $('models');
+  list.replaceChildren();
+  $('export').disabled = $('exportm').disabled = !models.length;
+  if (!models.length) {
+    const empty = document.createElement('div'); empty.className='empty'; empty.textContent='Tap Add STL to choose files.'; list.append(empty);
+  }
+  for (const model of models) {
+    const s = size(model), card = document.createElement('div');
+    card.className = 'card' + (model === selected ? ' active' : '');
+    const top = document.createElement('div'); top.className = 'cardtop';
+    const name = document.createElement('span'); name.className = 'name'; name.textContent = model.userData.name;
+    const deleteButton = document.createElement('button'); deleteButton.type='button'; deleteButton.textContent='✕'; deleteButton.setAttribute('aria-label', `Delete ${model.userData.name}`);
+    deleteButton.onclick = () => remove(model);
+    top.append(name, deleteButton);
+    const dimensions = document.createElement('div'); dimensions.className = 'muted'; dimensions.textContent = `${s.x.toFixed(1)} × ${s.y.toFixed(1)} × ${s.z.toFixed(1)} mm`;
+    const buttons = document.createElement('div'); buttons.className = 'mini';
+    for (const [label, action] of [
+      ['Edit', () => { select(model); panel('edit'); }],
+      ['View', () => { select(model); target(bounds(model)); }],
+      ['Copy', () => { const copy=model.clone(); copy.geometry=model.geometry.clone(); copy.material=model.material.clone(); copy.position.add(new THREE.Vector3(8,8,0)); copy.userData.name=model.userData.name+' copy'; group.add(copy); models.push(copy); select(copy); validatePlate(); }],
+      ['Center', () => { select(model); const b=bounds(model), c=b.getCenter(new THREE.Vector3()); model.position.x-=c.x; model.position.y-=c.y; sync(); cards(); validatePlate(); }]
+    ]) { const button=document.createElement('button'); button.type='button'; button.textContent=label; button.onclick=action; buttons.append(button); }
+    card.append(top, dimensions, buttons);
+    list.append(card);
+  }
+  $('count').textContent = `${models.length} model${models.length === 1 ? '' : 's'}`;
+}
+function remove(model) {
+  if (selected === model) deselect();
+  const index = models.indexOf(model);
+  if (index < 0) return;
+  models.splice(index, 1); group.remove(model);
+  model.geometry.dispose(); model.material.dispose();
+  cards();
+}
+function overlap(a,b,gap) { return !(a.x+a.w+gap<=b.x || b.x+b.w+gap<=a.x || a.y+a.h+gap<=b.y || b.y+b.h+gap<=a.y); }
+function pack() {
+  if (!models.length) return;
+  const width=positive('pw',220), depth=positive('pd',220), gap=Math.max(0,Number($('gap').value)||0), placed=[];
+  let failed=0;
+  for (const model of models) {
+    const originalZ=model.rotation.z;
+    let choice=null;
+    for (const angle of [originalZ, originalZ+Math.PI/2]) {
+      model.rotation.z=angle; model.position.set(0,0,0);
+      const b=bounds(model), s=b.getSize(new THREE.Vector3());
+      if (s.x>width-2*gap || s.y>depth-2*gap) continue;
+      const step=Math.max(1,Math.min(gap||2,5));
+      for(let y=-depth/2+gap; y+s.y<=depth/2-gap+.001 && !choice; y+=step) {
+        for(let x=-width/2+gap; x+s.x<=width/2-gap+.001; x+=step) {
+          const candidate={x,y,w:s.x,h:s.y};
+          if (!placed.some(other=>overlap(candidate,other,gap))) { choice={...candidate,angle,min:b.min.clone()}; break; }
+        }
+      }
+      if (choice) break;
+    }
+    if (!choice) { model.rotation.z=originalZ; failed++; model.position.set(width/2+gap+size(model).x/2,0,0); floor(model); continue; }
+    model.rotation.z=choice.angle;
+    model.position.set(choice.x-choice.min.x, choice.y-choice.min.y, -choice.min.z);
+    placed.push(choice);
+  }
+  sync(); cards(); fit();
+  if (failed) flash(`${failed} model${failed===1?'':'s'} could not fit on the plate`);
+}
+function validatePlate() {
+  const w=positive('pw',220)/2,d=positive('pd',220)/2;
+  const outside=models.filter(model=>{ const b=bounds(model); return b.min.x < -w-.01 || b.max.x > w+.01 || b.min.y < -d-.01 || b.max.y > d+.01 || b.min.z < -.01; });
+  if (outside.length) flash(`${outside.length} model${outside.length===1?' is':'s are'} outside the plate`);
+}
+function target(box) {
+  const s=box.getSize(new THREE.Vector3()), c=box.getCenter(new THREE.Vector3());
+  const radius=Math.max(s.x,s.y,s.z,30), aspect=Math.max(camera.aspect,.1);
+  const distance=radius / (2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))) / Math.min(1,aspect) * 1.45;
+  orbit.target.copy(c);
+  camera.position.copy(c).add(new THREE.Vector3(distance*.65,distance*.5,distance*.65));
+  orbit.update();
+}
+function fit() {
+  const b=new THREE.Box3().setFromObject(plate);
+  models.forEach(model=>b.expandByObject(model));
+  target(b);
+}
+function view(direction) {
+  const b=new THREE.Box3().setFromObject(plate);
+  models.forEach(model=>b.expandByObject(model));
+  const c=b.getCenter(new THREE.Vector3()), s=b.getSize(new THREE.Vector3());
+  const distance=Math.max(s.x,s.y,s.z,80)/Math.min(1,Math.max(camera.aspect,.1))*1.6;
+  orbit.target.copy(c);
+  if(direction==='top') camera.position.set(c.x,c.y,c.z+distance);
+  if(direction==='front') camera.position.set(c.x,c.y-distance,c.z);
+  if(direction==='side') camera.position.set(c.x+distance,c.y,c.z);
+  if(direction==='iso') camera.position.set(c.x+distance*.8,c.y+distance*.65,c.z+distance*.8);
+  camera.lookAt(c); orbit.update();
+}
+function panel(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+  document.querySelectorAll('.tabs button').forEach(button=>{ button.classList.toggle('on',button.dataset.p===id); button.setAttribute('aria-selected',button.dataset.p===id); });
+}
+document.querySelectorAll('.tabs button').forEach(button=>button.onclick=()=>panel(button.dataset.p));
+$('touch').onclick=()=>{ slide=!slide; orbit.touches.ONE=slide?THREE.TOUCH.PAN:THREE.TOUCH.ROTATE; $('touch').textContent=slide?'Touch: Slide':'Touch: Rotate'; $('touch').classList.toggle('on',slide); $('hint').textContent=slide?'1 finger slides · pinch zooms':'1 finger rotates · pinch zooms'; };
+$('pack').onclick=$('packm').onclick=pack;
+$('fit').onclick=$('fitm').onclick=fit;
+function centerAll() { if (!models.length) return; const b=new THREE.Box3(); models.forEach(m=>b.expandByObject(m)); const c=b.getCenter(new THREE.Vector3()); models.forEach(m=>{m.position.x-=c.x;m.position.y-=c.y;}); sync(); cards(); fit(); validatePlate(); }
+$('center').onclick=$('centerm').onclick=centerAll;
+$('clear').onclick=$('clearm').onclick=()=>{ for(const m of [...models]) remove(m); fit(); };
+$('drop').onclick=()=>{ if(selected){floor(selected);sync();cards();validatePlate();} };
+$('focus').onclick=()=>selected&&target(bounds(selected));
+$('del').onclick=()=>selected&&remove(selected);
+for(const [id,direction] of [['iso','iso'],['top','top'],['front','front'],['side','side']]) $(id).onclick=()=>view(direction);
+document.querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{transform.setMode(button.dataset.mode);document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b===button));});
+function exportSTL() {
+  if(!models.length)return;
+  const output=new THREE.Group();
+  for(const model of models){model.updateMatrixWorld(true);const geometry=model.geometry.clone();geometry.applyMatrix4(model.matrixWorld);output.add(new THREE.Mesh(geometry));}
+  const url=URL.createObjectURL(new Blob([exporter.parse(output,{binary:true})],{type:'model/stl'}));
+  const link=document.createElement('a');link.href=url;link.download='combined-plate.stl';document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  output.traverse(object=>object.geometry?.dispose());
+}
+$('export').onclick=$('exportm').onclick=exportSTL;
+const raycaster=new THREE.Raycaster(), point=new THREE.Vector2();
+renderer.domElement.addEventListener('pointerdown',event=>{pointerStart={x:event.clientX,y:event.clientY};});
+renderer.domElement.addEventListener('pointerup',event=>{
+  if(!pointerStart || Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>8 || !models.length || transform.dragging) return;
+  const rect=renderer.domElement.getBoundingClientRect();
+  point.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
+  raycaster.setFromCamera(point,camera);
+  const hit=raycaster.intersectObjects(models,false)[0];
+  if(hit){select(hit.object);if(matchMedia('(max-width:760px)').matches)panel('edit');}
+});
+function resize() {const r=host.getBoundingClientRect();renderer.setSize(r.width||1,r.height||1,false);camera.aspect=(r.width||1)/(r.height||1);camera.updateProjectionMatrix();}
+plateUp(); cards(); resize(); fit();
+new ResizeObserver(resize).observe(host);
+function loop(){requestAnimationFrame(loop);orbit.update();renderer.render(scene,camera);} loop();
+</script></body></html>
