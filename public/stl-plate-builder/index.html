@@ -271,6 +271,7 @@ renderer.domElement.addEventListener('pointerup',event=>{
   if(hit){select(hit.object);if(matchMedia('(max-width:760px)').matches)panel('edit');}
 });
 function resize() {const r=host.getBoundingClientRect();renderer.setSize(r.width||1,r.height||1,false);camera.aspect=(r.width||1)/(r.height||1);camera.updateProjectionMatrix();}
+for (const id of ['pw','pd','gs']) $(id).addEventListener('change', () => { plateUp(); fit(); });
 plateUp(); cards(); resize(); fit();
 new ResizeObserver(resize).observe(host);
 function loop(){requestAnimationFrame(loop);orbit.update();renderer.render(scene,camera);} loop();
