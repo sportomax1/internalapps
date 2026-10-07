@@ -29,7 +29,22 @@ button:disabled { opacity:.45; cursor:not-allowed; }
  .card { padding:11px; }
  .mini button { min-height:40px; }
 }
-@media(max-width:760px) and (max-height:650px){ .viewer { flex-basis:42%; } }
+@media(max-width:760px) and (max-height:650px){ .viewer { flex-basis:44%; } }
+@media(max-width:760px){
+  html,body{width:100%;max-width:100%;overscroll-behavior:none}
+  body{position:fixed;inset:0}
+  .app{position:fixed;inset:0;width:100%;height:100%;height:100dvh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .viewer{flex:0 0 54%;width:100%;overflow:hidden}
+  .side{flex:1 1 46%;width:100%}
+  .tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;gap:5px;right:8px}
+  .chip{width:100%;min-width:0;min-height:38px;padding:7px 4px;font-size:11px;white-space:nowrap}
+  .status{bottom:7px;left:8px;font-size:10px}
+  .fab{width:48px;height:48px;right:10px;bottom:26px}
+}
+@media(max-width:390px){
+  .chip{font-size:10px;padding-inline:2px}
+  .tools{gap:4px}
+}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script></head><body><div class="app"><aside class="side"><div class="brand"><h1>STL Plate Builder</h1><div class="muted">Pack tightly, inspect clearly, then fine-tune.</div></div><div class="actions"><label class="file primary wide" for="fi">＋ Add STL files</label><input id="fi" class="filein" type="file" accept=".stl,model/stl,application/octet-stream" multiple><button id="pack" class="btn primary">Compact pack</button><button id="center" class="btn">Center all</button><button id="clear" class="btn">Clear</button><button id="export" class="btn primary" disabled>Export STL</button></div><div class="tabs"><button class="on" data-p="plate">Plate</button><button data-p="models">Models</button><button data-p="edit">Edit</button></div><div id="plate" class="panel active"><div class="sec"><div class="grid"><div class="field"><label for="pw">Width (mm)</label><input id="pw" value="220" type="number" min="1"></div><div class="field"><label for="pd">Depth (mm)</label><input id="pd" value="220" type="number" min="1"></div><div class="field"><label for="gs">Grid (mm)</label><input id="gs" value="10" type="number" min="1"></div></div><div class="row"><div class="field"><label for="gap">Gap (mm)</label><input id="gap" value="3" step=".5" type="number" min="0"></div><button id="packm" class="btn primary">Compact pack</button></div><div class="row"><label class="file primary" for="fi">＋ Add STL</label><button id="fitm" class="btn">Fit plate</button></div><div class="mobile-actions"><button id="centerm" class="btn">Center all</button><button id="clearm" class="btn">Clear</button><button id="exportm" class="btn primary" disabled>Export STL</button></div></div></div><div id="models" class="panel models"><div class="empty">Tap Add STL to choose files.</div></div><div id="edit" class="panel edit"><div id="editEmpty" class="empty">Select a model.</div><div id="controls" class="hidden"><b id="selname"></b><div class="grid" style="margin-top:8px"><div class="field"><label>X</label><input id="x" type="number" step=".1"></div><div class="field"><label>Y</label><input id="y" type="number" step=".1"></div><div class="field"><label>Z</label><input id="z" type="number" step=".1"></div><div class="field"><label>Rotate X</label><input id="rx" type="number"></div><div class="field"><label>Rotate Y</label><input id="ry" type="number"></div><div class="field"><label>Rotate Z</label><input id="rz" type="number"></div><div class="field"><label>Scale X</label><input id="sx" type="number" step=".01"></div><div class="field"><label>Scale Y</label><input id="sy" type="number" step=".01"></div><div class="field"><label>Scale Z</label><input id="sz" type="number" step=".01"></div></div><div class="row"><button id="drop" class="btn">Drop</button><button id="focus" class="btn">Focus</button><button id="del" class="btn">Delete</button></div></div></div></aside><main id="viewer" class="viewer"><div id="canvas" class="canvas"></div><div class="tools"><button class="chip on" data-mode="translate">Move</button><button class="chip" data-mode="rotate">Rotate</button><button class="chip" data-mode="scale">Scale</button><button id="touch" class="chip">Touch: Rotate</button><button id="iso" class="chip">3D</button><button id="top" class="chip">Top</button><button id="front" class="chip">Front</button><button id="side" class="chip">Side</button><button id="fit" class="chip">Fit</button></div><label class="file primary fab" for="fi">＋</label><div class="status" aria-live="polite"><span id="count">0 models</span> · <span id="hint">1 finger rotates · pinch zooms</span></div><div id="toast" class="toast"></div></main></div><script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -48,7 +63,7 @@ const loader = new STLLoader();
 const exporter = new STLExporter();
 const group = new THREE.Group();
 const models = [];
-let plate, grid, selected = null, slide = false, toastTimer, pointerStart;
+let plate, grid, selected = null, slide = false, toastTimer, pointerStart, transformGesture = false;
 scene.background = new THREE.Color(0x090d13);
 camera.position.set(240, 190, 240);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -57,7 +72,14 @@ orbit.enableDamping = true;
 orbit.enablePan = true;
 orbit.touches.ONE = THREE.TOUCH.ROTATE;
 orbit.touches.TWO = THREE.TOUCH.DOLLY_PAN;
-transform.addEventListener('dragging-changed', event => { orbit.enabled = !event.value; });
+function setTransformGesture(active) {
+  transformGesture = active;
+  orbit.enabled = !active;
+}
+transform.addEventListener('mouseDown', () => setTransformGesture(true));
+transform.addEventListener('mouseUp', () => setTransformGesture(false));
+transform.addEventListener('dragging-changed', event => setTransformGesture(event.value));
+transform.setSize(matchMedia('(max-width:760px)').matches ? .72 : 1);
 transform.addEventListener('objectChange', () => { sync(); cards(); });
 scene.add(transform.getHelper(), group, new THREE.HemisphereLight(0xffffff, 0x273142, 2));
 
@@ -249,7 +271,11 @@ $('drop').onclick=()=>{ if(selected){floor(selected);sync();cards();validatePlat
 $('focus').onclick=()=>selected&&target(bounds(selected));
 $('del').onclick=()=>selected&&remove(selected);
 for(const [id,direction] of [['iso','iso'],['top','top'],['front','front'],['side','side']]) $(id).onclick=()=>view(direction);
-document.querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{transform.setMode(button.dataset.mode);document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b===button));});
+document.querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{
+  transform.setMode(button.dataset.mode);
+  transform.setSpace(button.dataset.mode === 'rotate' ? 'local' : 'world');
+  document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b===button));
+});
 function exportSTL() {
   if(!models.length)return;
   const output=new THREE.Group();
@@ -261,18 +287,31 @@ function exportSTL() {
 }
 $('export').onclick=$('exportm').onclick=exportSTL;
 const raycaster=new THREE.Raycaster(), point=new THREE.Vector2();
-renderer.domElement.addEventListener('pointerdown',event=>{pointerStart={x:event.clientX,y:event.clientY};});
+renderer.domElement.addEventListener('pointerdown',event=>{
+  pointerStart={x:event.clientX,y:event.clientY};
+  if (transform.axis) setTransformGesture(true);
+},{capture:true});
 renderer.domElement.addEventListener('pointerup',event=>{
-  if(!pointerStart || Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>8 || !models.length || transform.dragging) return;
+  const wasTransforming = transformGesture || transform.dragging;
+  if (!transform.dragging) setTransformGesture(false);
+  if(!pointerStart || Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>8 || !models.length || wasTransforming) return;
   const rect=renderer.domElement.getBoundingClientRect();
   point.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
   raycaster.setFromCamera(point,camera);
   const hit=raycaster.intersectObjects(models,false)[0];
   if(hit){select(hit.object);if(matchMedia('(max-width:760px)').matches)panel('edit');}
 });
-function resize() {const r=host.getBoundingClientRect();renderer.setSize(r.width||1,r.height||1,false);camera.aspect=(r.width||1)/(r.height||1);camera.updateProjectionMatrix();}
+function resize() {
+  const r=host.getBoundingClientRect();
+  renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);
+  camera.aspect=Math.max(.1,r.width/Math.max(1,r.height));
+  camera.updateProjectionMatrix();
+  transform.setSize(matchMedia('(max-width:760px)').matches ? .72 : 1);
+}
 for (const id of ['pw','pd','gs']) $(id).addEventListener('change', () => { plateUp(); fit(); });
 plateUp(); cards(); resize(); fit();
 new ResizeObserver(resize).observe(host);
+window.visualViewport?.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(() => { resize(); fit(); }, 120));
 function loop(){requestAnimationFrame(loop);orbit.update();renderer.render(scene,camera);} loop();
 </script></body></html>
