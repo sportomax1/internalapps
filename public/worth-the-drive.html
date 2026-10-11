@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f7fb">
+<meta name="description" content="Compare online delivery, Facebook Marketplace pickup, and local merchant purchases with fuel cost estimates.">
+<title>Worth the Drive?</title>
+<style>
+:root{
+  --bg:#f5f7fb;--card:#fff;--ink:#17253b;--muted:#6f7d95;--line:#e4eaf3;--blue:#3468e8;
+  --green:#177d61;--green-bg:#ecfbf5;--fb:#6f4dc7;--fb-bg:#f5f1ff;--orange:#c96e24;--orange-bg:#fff3e8;
+  --shadow:0 10px 30px rgba(26,43,71,.07);--radius:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input,select{font:inherit}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+button{cursor:pointer}
+button:disabled{opacity:.55;cursor:not-allowed}
+input,select{width:100%;min-width:0;height:44px;border:1px solid #d8e1ed;border-radius:12px;background:#fff;padding:0 12px;color:var(--ink)}
+input::placeholder{color:#97a3b8}
+input:focus,select:focus,button:focus,summary:focus{outline:2px solid #9db9ff;outline-offset:1px}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue)}
+.wrap{width:min(1220px,calc(100% - 28px));margin:0 auto}
+header{padding:22px 0 12px}
+.hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.hero h1{margin:0;font-size:30px;line-height:1.05;letter-spacing:-.9px}
+.hero p{margin:8px 0 0;color:var(--muted);max-width:720px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.pill{padding:8px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12px;color:#4b5a72}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.shared{padding:16px;margin:10px 0 16px}
+.shared-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;align-items:end}
+.topline{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+.topline h2{margin:0;font-size:16px}
+.sub{color:var(--muted);font-size:12px}
+.lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.lane{padding:16px;position:relative}
+.lane h3{margin:0;font-size:18px;letter-spacing:-.3px}
+.lane .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;padding:7px 10px;border-radius:999px;margin-bottom:12px}
+.lane.online .kicker{background:var(--green-bg);color:var(--green)}
+.lane.fb .kicker{background:var(--fb-bg);color:var(--fb)}
+.lane.local .kicker{background:var(--orange-bg);color:var(--orange)}
+.stack{display:grid;gap:11px}
+.label{display:block;font-size:12px;font-weight:700;color:#4b5a72;margin-bottom:5px}
+.inline{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rowcheck{display:flex;align-items:center;gap:8px;padding-top:2px;color:#42526b;font-size:13px}
+.totalbox{margin-top:12px;padding:14px;border-radius:16px;background:#f7f9fd;border:1px solid var(--line)}
+.totalbox .mini{font-size:12px;color:var(--muted);margin-bottom:4px}
+.total{font-size:30px;font-weight:800;letter-spacing:-.9px;line-height:1}
+.breakdown{margin-top:8px;font-size:12px;color:#56657d}
+.breakdown div{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.note{font-size:12px;color:var(--muted)}
+.summary{padding:16px;margin:16px 0 24px}
+.summary-grid{display:grid;grid-template-columns:1.25fr .95fr;gap:14px}
+.best{padding:16px;border:1px solid var(--line);border-radius:16px;background:#f7fbff}
+.best .eyebrow{font-size:12px;font-weight:700;color:#45618c;text-transform:uppercase;letter-spacing:.08em}
+.best .winner{font-size:28px;font-weight:800;letter-spacing:-.8px;margin-top:3px}
+.best .save{font-size:14px;color:#43607e;margin-top:4px}
+.ranklist{display:grid;gap:10px}
+.rank{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.rank b{font-size:15px}
+.rank small{display:block;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{height:42px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:650}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.advanced{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.advanced summary{cursor:pointer;font-weight:700;color:#3f5576}
+.advanced-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
+.status{margin-top:12px;font-size:12px;color:#4d607a;min-height:18px}.status.bad{color:#a33f2f}.status.good{color:#186348}
+.autowrap{position:relative;min-width:0}
+.suggest{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 15px 32px rgba(26,43,71,.16);overflow:hidden;z-index:30;display:none;max-height:290px;overflow-y:auto}
+.autowrap:focus-within{z-index:40}
+.search-hint{font-size:11px;color:var(--muted);margin-top:4px}
+.search-note{padding:12px;color:#596985;font-size:12px;background:#fafcff;border-bottom:1px solid var(--line)}
+.suggest .action{font-size:12px;color:#2e5bba;border-top:1px solid var(--line);font-weight:700;display:flex;align-items:center}
+.suggest .action:hover{background:#eff5ff}
+.suggest button .suggest-main{flex:1;min-width:0}
+.suggest button b{font-weight:700;font-size:13px}
+.suggest button .mi{white-space:nowrap;color:var(--muted);font-size:11px}
+.suggest .loading{text-align:center;padding:13px;color:var(--muted)}
+.miles-note{color:var(--muted);font-size:11px;margin-top:4px;min-height:14px}
+.suggest.show{display:block}.suggest button{display:flex;gap:10px;width:100%;border:0;background:#fff;padding:11px 12px;text-align:left}.suggest button:hover,.suggest button.active{background:#f4f7fd}.suggest .pin{font-size:14px;line-height:1.2}.suggest small{display:block;color:var(--muted);line-height:1.4;overflow-wrap:anywhere;margin-top:2px}
+.route-row{display:flex;gap:8px;align-items:center}.route-row .btn{flex:0 0 auto;height:44px}.route-link{display:block;margin-top:5px;font-size:12px}
+.footer{padding:0 0 22px;color:var(--muted);font-size:12px}
+.hide{display:none!important}
+@media (max-width:1080px){.shared-grid,.advanced-grid,.summary-grid,.lanes{grid-template-columns:1fr}.hero{flex-direction:column}.pills{justify-content:flex-start}.inline{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.wrap{width:min(100% - 18px,1220px)}header{padding-top:18px}.hero h1{font-size:27px}.lane,.shared,.summary{padding:14px}.inline{grid-template-columns:1fr}.total{font-size:28px}.actions .btn{width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="hero">
+      <div>
+        <h1>Worth the Drive?</h1>
+        <p>Simple side-by-side comparison for <b>Online</b>, <b>Facebook Marketplace</b>, and <b>Local Merchant</b>. Type prices and locations, then see the cheapest option instantly.</p>
+      </div>
+      <div class="pills">
+        <span class="pill">2016 4Runner Trail Premium · 18 mpg combined</span>
+        <span class="pill">2024 Venza Limited · 39 mpg combined</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="card shared">
+    <div class="topline">
+      <div>
+        <h2>Shared settings</h2>
+        <div class="sub">Used by driving-based options only.</div>
+      </div>
+      <button class="btn" id="exampleBtn" type="button">Load example</button>
+    </div>
+    <div class="shared-grid">
+      <div class="autowrap">
+        <label class="label" for="origin">Your starting address</label>
+        <input id="origin" type="text" placeholder="Address, city, or ZIP" autocomplete="off" aria-autocomplete="list" aria-controls="originSuggestions">
+        <div class="suggest" id="originSuggestions" role="listbox"></div>
+      </div>
+      <div>
+        <label class="label" for="vehicle">Vehicle</label>
+        <select id="vehicle">
+          <option value="4runner">2016 Toyota 4Runner Trail Premium</option>
+          <option value="venza">2024 Toyota Venza Limited</option>
+          <option value="custom">Custom MPG</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="gasPrice">Gas price ($/gal)</label>
+        <input id="gasPrice" inputmode="decimal" type="number" min="0" step="0.01" value="3.49">
+      </div>
+      <div>
+        <label class="label" for="mpg">Effective MPG</label>
+        <input id="mpg" inputmode="decimal" type="number" min="1" step="0.1" value="18">
+      </div>
+    </div>
+
+    <details class="advanced">
+      <summary>More settings</summary>
+      <div class="advanced-grid">
+        <div>
+          <label class="label" for="taxRate">Sales tax (%)</label>
+          <input id="taxRate" inputmode="decimal" type="number" min="0" step="0.01" value="8.0">
+        </div>
+        <div>
+          <label class="label" for="wearPerMile">Wear cost ($/mile)</label>
+          <input id="wearPerMile" inputmode="decimal" type="number" min="0" step="0.01" value="0.00">
+        </div>
+        <div>
+          <label class="label" for="timePerHour">Your time ($/hr)</label>
+          <input id="timePerHour" inputmode="decimal" type="number" min="0" step="1" value="0">
+        </div>
+        <div>
+          <label class="label" for="avgSpeed">Avg speed (mph)</label>
+          <input id="avgSpeed" inputmode="decimal" type="number" min="1" step="1" value="40">
+        </div>
+      </div>
+    </details>
+    <div id="status" class="status">Tip: pick an address suggestion to auto-fill driving miles.</div>
+  </section>
+
+  <section class="lanes">
+    <article class="card lane online" id="laneOnline">
+      <div class="kicker">🛒 Online</div>
+      <h3>Buy online</h3>
+      <div class="stack" style="margin-top:12px">
+        <div>
+          <label class="label" for="onlinePrice">Item price</label>
+          <input id="onlinePrice" inputmode="decimal" type="number" min="0" step="0.01" value="0">
+        </div>
+        <div class="inline">
+          <div>
+            <label class="label" for="onlineShipping">Shipping</label>
+            <input id="onlineShipping" inputmode="decimal" type="number" min="0" step="0.01" value="0">
+          </div>
+          <div>
+            <label class="label" for="onlineDiscount">Discount</label>
+            <input id="onlineDiscount" inputmode="decimal" type="number" min="0" step="0.01" value="0">
+          </div>
+        </div>
+        <label class="rowcheck"><input id="onlineTaxed" type="checkbox" checked> Apply sales tax</label>
+      </div>
+      <div class="totalbox">
+        <div class="mini">Estimated total</div>
+        <div class="total" id="onlineTotal">$0.00</div>
+        <div class="breakdown" id="onlineBreakdown"></div>
+      </div>
+    </article>
+
+    <article class="card lane fb" id="laneFb">
+      <div class="kicker">📦 Facebook Marketplace</div>
+      <h3>Meet seller</h3>
+      <div class="stack" style="margin-top:12px">
+        <div>
+          <label class="label" for="fbPrice">Item price</label>
+          <input id="fbPrice" inputmode="decimal" type="number" min="0" step="0.01" value="0">
+        </div>
+        <div class="autowrap">
+          <label class="label" for="fbAddress">Seller / meetup address</label>
+          <input id="fbAddress" type="text" placeholder="Address or meetup place" autocomplete="off" aria-autocomplete="list" aria-controls="fbAddressSuggestions">
+          <div class="suggest" id="fbAddressSuggestions" role="listbox"></div>
+        </div>
+        <div class="inline">
+          <div>
+            <label class="label" for="fbMiles">Driving miles</label>
+            <input id="fbMiles" inputmode="decimal" type="number" min="0" step="0.1" value="0">
+            <div class="miles-note" id="fbMilesNote" aria-live="polite">One-way mileage · enter manually or auto-route</div>
+          </div>
+          <div class="route-row" style="align-self:end">
+            <button class="btn" id="fbRoute" type="button">Auto route</button>
+          </div>
+        </div>
+        <label class="rowcheck"><input id="fbRoundTrip" type="checkbox" checked> Round trip</label>
+        <a id="fbMapLink" class="route-link hide" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+      <div class="totalbox">
+        <div class="mini">Estimated total</div>
+        <div class="total" id="fbTotal">$0.00</div>
+        <div class="breakdown" id="fbBreakdown"></div>
+      </div>
+    </article>
+
+    <article class="card lane local" id="laneLocal">
+      <div class="kicker">🏪 Local Merchant</div>
+      <h3>Buy in person</h3>
+      <div class="stack" style="margin-top:12px">
+        <div>
+          <label class="label" for="localPrice">Item price</label>
+          <input id="localPrice" inputmode="decimal" type="number" min="0" step="0.01" value="0">
+        </div>
+        <div class="autowrap">
+          <label class="label" for="localAddress">Store address</label>
+          <input id="localAddress" type="text" placeholder="e.g. IKEA, Englewood, CO" autocomplete="off" aria-autocomplete="list" aria-controls="localAddressSuggestions">
+          <div class="suggest" id="localAddressSuggestions" role="listbox"></div>
+          <div class="search-hint">Search store names or street addresses</div>
+        </div>
+        <div class="inline">
+          <div>
+            <label class="label" for="localMiles">Driving miles</label>
+            <input id="localMiles" inputmode="decimal" type="number" min="0" step="0.1" value="0">
+            <div class="miles-note" id="localMilesNote" aria-live="polite">One-way mileage · enter manually or auto-route</div>
+          </div>
+          <div class="route-row" style="align-self:end">
+            <button class="btn" id="localRoute" type="button">Auto route</button>
+          </div>
+        </div>
+        <label class="rowcheck"><input id="localRoundTrip" type="checkbox" checked> Round trip</label>
+        <label class="rowcheck"><input id="localTaxed" type="checkbox" checked> Apply sales tax</label>
+        <a id="localMapLink" class="route-link hide" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+      <div class="totalbox">
+        <div class="mini">Estimated total</div>
+        <div class="total" id="localTotal">$0.00</div>
+        <div class="breakdown" id="localBreakdown"></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="card summary">
+    <div class="topline" style="margin-bottom:14px">
+      <div>
+        <h2>Summary</h2>
+        <div class="sub">Fast answer: which option costs least?</div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="calcBtn" type="button">Recalculate</button>
+        <button class="btn" id="resetBtn" type="button">Reset</button>
+      </div>
+    </div>
+    <div class="summary-grid">
+      <div class="best">
+        <div class="eyebrow">Cheapest option</div>
+        <div class="winner" id="winnerName">—</div>
+        <div class="save" id="winnerText">Enter a few values to compare.</div>
+      </div>
+      <div class="ranklist" id="rankList"></div>
+    </div>
+  </section>
+
+  <div class="footer">Place search: <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. Public search/routing services may be rate-limited or unavailable; manual miles and Google Maps links remain available.</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const CARS={
+  '4runner':{name:'2016 Toyota 4Runner Trail Premium',city:17,hwy:21,combined:18},
+  'venza':{name:'2024 Toyota Venza Limited',city:40,hwy:37,combined:39},
+  'custom':{name:'Custom',city:null,hwy:null,combined:null}
+};
+const autocompleteIds=['origin','fbAddress','localAddress'];
+const lookupState={};
+const searchCache=new Map();
+const selectedPlaces={origin:null,fbAddress:null,localAddress:null};
+const routeState={fb:null,local:null};
+const routeCache=new Map();
+const routeVersions={fb:0,local:0};
+const SEARCH_DELAY_MS=620;
+const SEARCH_MIN_GAP_MS=950;
+const CACHE_TTL_MS=30*60*1000;
+const CACHE_MAX=85;
+let lastSearchAt=0;
+let searchQueue=Promise.resolve();
+let statusTimer=null;
+
+function num(id){const v=parseFloat($(id).value);return Number.isFinite(v)?v:0}
+function money(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number.isFinite(n)?n:0)}
+function fmt(n,d=1){return Number(n).toFixed(d).replace(/\.0$/,'')}
+function mapsLink(origin,dest){return 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(dest)+'&travelmode=driving'}
+function setStatus(msg,type=''){const el=$('status');el.textContent=msg;el.className='status'+(type?' '+type:'');if(statusTimer)clearTimeout(statusTimer);if(type==='good'){statusTimer=setTimeout(()=>{el.textContent='Tip: pick an address suggestion to auto-fill driving miles.';el.className='status'},3400)}}
+function usePreset(){
+  const v=$('vehicle').value;
+  const car=CARS[v];
+  $('mpg').value=car.combined || $('mpg').value;
+  $('mpg').disabled=v!=='custom';
+  calc();
+}
+function taxAmount(base){return base*(num('taxRate')/100)}
+function driveExtras(totalMiles){
+  const fuel=(totalMiles/Math.max(num('mpg'),1))*num('gasPrice');
+  const wear=totalMiles*num('wearPerMile');
+  const time=(totalMiles/Math.max(num('avgSpeed'),1))*num('timePerHour');
+  return {fuel,wear,time,total:fuel+wear+time};
+}
+function setBreakdown(id,rows){
+  $(id).innerHTML=rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
+}
+function compareItem(name,total,details){return{name,total,details}}
+function calc(){
+  const onlineBase=num('onlinePrice')+num('onlineShipping')-num('onlineDiscount');
+  const onlineTax=$('onlineTaxed').checked?taxAmount(Math.max(onlineBase,0)):0;
+  const onlineTotal=Math.max(0,onlineBase)+onlineTax;
+  $('onlineTotal').textContent=money(onlineTotal);
+  setBreakdown('onlineBreakdown',[
+    ['Item + shipping',money(num('onlinePrice')+num('onlineShipping'))],
+    ['Discount',money(-num('onlineDiscount'))],
+    ['Tax',money(onlineTax)]
+  ]);
+
+  const fbMiles=num('fbMiles')*($('fbRoundTrip').checked?2:1);
+  const fbDrive=driveExtras(fbMiles);
+  const fbTotal=num('fbPrice')+fbDrive.total;
+  $('fbTotal').textContent=money(fbTotal);
+  setBreakdown('fbBreakdown',[
+    ['Item price',money(num('fbPrice'))],
+    ['Fuel',money(fbDrive.fuel)],
+    ['Wear',money(fbDrive.wear)],
+    ['Time',money(fbDrive.time)]
+  ]);
+
+  const localTax=$('localTaxed').checked?taxAmount(num('localPrice')):0;
+  const localMiles=num('localMiles')*($('localRoundTrip').checked?2:1);
+  const localDrive=driveExtras(localMiles);
+  const localTotal=num('localPrice')+localTax+localDrive.total;
+  $('localTotal').textContent=money(localTotal);
+  setBreakdown('localBreakdown',[
+    ['Item price',money(num('localPrice'))],
+    ['Tax',money(localTax)],
+    ['Fuel',money(localDrive.fuel)],
+    ['Wear',money(localDrive.wear)],
+    ['Time',money(localDrive.time)]
+  ]);
+
+  const items=[
+    ...(num('onlinePrice')>0||num('onlineShipping')>0 ? [compareItem('Online',onlineTotal,'Delivery to your door')] : []),
+    ...(num('fbPrice')>0 || (num('fbMiles')>0&&$('fbAddress').value.trim()) ? [compareItem('Facebook Marketplace',fbTotal,(fbMiles?fmt(fbMiles,1)+' total driving mi':'Mileage not set'))] : []),
+    ...(num('localPrice')>0 || (num('localMiles')>0&&$('localAddress').value.trim()) ? [compareItem('Local Merchant',localTotal,(localMiles?fmt(localMiles,1)+' total driving mi':'Mileage not set'))] : [])
+  ].sort((a,b)=>a.total-b.total);
+  $('winnerName').textContent=items.length?items[0].name:'—';
+  $('winnerText').textContent=items.length>1
+    ? (items[1].total-items[0].total>0.004 ? money(items[1].total-items[0].total)+' cheaper than '+items[1].name+'.' : 'Currently tied or nearly tied with the next option.')
+    : items.length===1 ? 'Enter another purchase price to compare.' : 'Enter purchase prices to compare your options.';
+  $('rankList').innerHTML=items.map((it,i)=>'<div class="rank"><div><b>'+(i+1)+'. '+it.name+'</b><small>'+it.details+'</small></div><div><b>'+money(it.total)+'</b></div></div>').join('');
+  persist();
+}
+function persist(){
+  const ids=['origin','vehicle','gasPrice','mpg','taxRate','wearPerMile','timePerHour','avgSpeed','onlinePrice','onlineShipping','onlineDiscount','onlineTaxed','fbPrice','fbAddress','fbMiles','fbRoundTrip','localPrice','localAddress','localMiles','localRoundTrip','localTaxed'];
+  const data={};
+  ids.forEach(id=>{const el=$(id);data[id]=el.type==='checkbox'?el.checked:el.value});
+  try {
+    data._places=selectedPlaces;
+    data._routes=Object.fromEntries(['fb','local'].map(type=>[type,routeState[type]?.source==='route' ? {originValue:routeState[type].originValue,destValue:routeState[type].destValue} : null]));
+    localStorage.setItem('worthDriveSimpleV1',JSON.stringify(data));
+  } catch(e) { /* e.g. private browsing storage restrictions */ }
+}
+function restore(){
+  let data=null;
+  try{
+    data=JSON.parse(localStorage.getItem('worthDriveSimpleV1')||'null');
+    if(data)for(const [id,val] of Object.entries(data)){
+      const el=$(id); if(!el) continue; if(el.type==='checkbox') el.checked=!!val; else el.value=val;
+    }
+  }catch(e){}
+  if(data?._places){
+    for(const id of autocompleteIds){
+      const place=data._places[id];
+      if(place && place.label===$(id).value && validPoint(place)) selectedPlaces[id]=place;
+    }
+  }
+  if(data?._routes){
+    for(const type of ['fb','local']){
+      const r=data._routes[type];
+      if(r && r.originValue===$('origin').value && r.destValue===$(type+'Address').value){
+        routeState[type]={source:'route',originValue:r.originValue,destValue:r.destValue};
+        $(type+'MilesNote').textContent='Saved road route · recheck if plans change';
+      }
+    }
+  }
+  usePreset();
+  updateMapLinks();
+  calc();
+}
+function validPoint(p){return p && Number.isFinite(p.lat) && Number.isFinite(p.lon) && Math.abs(p.lat)<=90 && Math.abs(p.lon)<=180}
+function norm(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase()}
+function clampText(s,n=140){return String(s||'').trim().slice(0,n)}
+function clearSuggest(id){
+  const state=lookupState[id];
+  if(state){state.active=-1;state.items=[]}
+  const box=$(id+'Suggestions');box.classList.remove('show');box.replaceChildren();
+  $(id).setAttribute('aria-expanded','false');$(id).removeAttribute('aria-activedescendant');
+}
+function updateMapLinks(){
+  [['fbAddress','fbMapLink'],['localAddress','localMapLink']].forEach(([aid,lid])=>{
+    const origin=$('origin').value.trim(),dest=$(aid).value.trim(),link=$(lid);
+    if(origin&&dest){link.href=mapsLink(origin,dest);link.classList.remove('hide')}
+    else link.classList.add('hide');
+  });
+}
+function distanceMiles(a,b){
+  const rad=Math.PI/180,dlat=(b.lat-a.lat)*rad,dlon=(b.lon-a.lon)*rad;
+  const h=Math.sin(dlat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dlon/2)**2;
+  return 3958.8*2*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));
+}
+function parseFeature(f){
+  const p=f?.properties||{};
+  const coords=f?.geometry?.coordinates;
+  if(!Array.isArray(coords)||coords.length<2)return null;
+  const lon=Number(coords[0]),lat=Number(coords[1]);
+  if(!validPoint({lat,lon}))return null;
+  const title=clampText(p.name||[p.housenumber,p.street].filter(Boolean).join(' ')||p.city||p.district||p.state||'Location');
+  const street=clampText([p.housenumber,p.street].filter(Boolean).join(' '));
+  const town=clampText(p.city||p.locality||p.district||p.county||'');
+  const region=clampText(p.state||'');
+  const zip=clampText(p.postcode||'');
+  const address=[street, town,region,zip].filter(Boolean).join(', ');
+  const label=[title,...[street,town,region,zip].filter(x=>x && norm(x)!==norm(title))].join(', ');
+  return {title,address,street,town,region,zip,label:label||title,lat,lon,kind:clampText(p.osm_key||'')};
+}
+function bestFocus(id){
+  if(id==='origin')return null;
+  const origin=selectedPlaces.origin;
+  if(validPoint(origin))return origin;
+  const hinted=lookupState[id]?.focus;
+  return validPoint(hinted)?hinted:null;
+}
+function contextualFocus(query){
+  // Colorado-area locality hints help matching a nearby store before an origin is selected.
+  // No guessed coordinates are displayed or used for routing.
+  if(!/(?:,\s*CO\b|\bColorado\b)/i.test(query))return null;
+  const q=query.toLowerCase();
+  if(/englewood/.test(q))return {lat:39.647,lon:-104.988};
+  if(/centennial/.test(q))return {lat:39.58,lon:-104.88};
+  if(/parker/.test(q))return {lat:39.52,lon:-104.76};
+  if(/castle rock/.test(q))return {lat:39.37,lon:-104.86};
+  if(/aurora/.test(q))return {lat:39.73,lon:-104.83};
+  if(/littleton/.test(q))return {lat:39.61,lon:-105.02};
+  return {lat:39.71,lon:-104.96};
+}
+function cacheKey(q,focus){
+  // Quantize bias to reduce cache misses while maintaining neighborhood-level relevance.
+  const bias=focus?`${focus.lat.toFixed(2)},${focus.lon.toFixed(2)}`:'none';
+  return `${norm(q)}|${bias}`;
+}
+function getCached(key){
+  const value=searchCache.get(key);
+  if(!value)return null;
+  if(Date.now()-value.at>CACHE_TTL_MS){searchCache.delete(key);return null}
+  searchCache.delete(key);searchCache.set(key,value);
+  return value.items;
+}
+function putCached(key,items){
+  searchCache.delete(key);searchCache.set(key,{at:Date.now(),items});
+  if(searchCache.size>CACHE_MAX)searchCache.delete(searchCache.keys().next().value);
+}
+function sleep(ms,signal){return new Promise((resolve,reject)=>{
+  if(signal?.aborted)return reject(new DOMException('Aborted','AbortError'));
+  const timer=setTimeout(()=>{signal?.removeEventListener('abort',onAbort);resolve()},ms);
+  function onAbort(){clearTimeout(timer);reject(new DOMException('Aborted','AbortError'))}
+  signal?.addEventListener('abort',onAbort,{once:true});
+})}
+async function fetchSuggestions(q,{focus=null,signal=null}={}){
+  const key=cacheKey(q,focus),cached=getCached(key);
+  if(cached!==null)return cached;
+  // Single serialized queue, under one search request/second even when switching fields.
+  const task=searchQueue.catch(()=>{}).then(async()=>{
+    if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+    const elapsed=Date.now()-lastSearchAt;
+    if(elapsed<SEARCH_MIN_GAP_MS)await sleep(SEARCH_MIN_GAP_MS-elapsed,signal);
+    if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+    lastSearchAt=Date.now();
+    const params=new URLSearchParams({q,limit:'8',lang:'en',countrycode:'US'});
+    if(validPoint(focus)){
+      params.set('lat',String(focus.lat));params.set('lon',String(focus.lon));
+      params.set('zoom','11');params.set('location_bias_scale','0.16');
+    }
+    const res=await fetch('https://photon.komoot.io/api/?'+params.toString(),{signal,headers:{Accept:'application/json'}});
+    if(!res.ok)throw new Error('Place search unavailable (HTTP '+res.status+')');
+    const data=await res.json();
+    if(!Array.isArray(data?.features))throw new Error('Invalid geocoder response');
+    const seen=new Set();
+    const items=data.features.map(parseFeature).filter(p=>{
+      if(!p)return false;
+      const key=`${p.title.toLowerCase()}|${p.lat.toFixed(4)}|${p.lon.toFixed(4)}`;
+      if(seen.has(key))return false;
+      seen.add(key);return true;
+    });
+    putCached(key,items);return items;
+  });
+  searchQueue=task.catch(()=>{});
+  return task;
+}
+function sortSuggestions(items,focus,query){
+  const part=norm(query.split(',')[0]).replace(/[^a-z0-9 ]/g,'');
+  const words=part.split(' ').filter(Boolean);
+  return items.map((item,i)=>{
+    const title=norm(item.title);
+    const exact=title===part?5: title.startsWith(part)&&part?3: words.length&&words.every(w=>title.includes(w))?2:0;
+    const distance=validPoint(focus)?distanceMiles(focus,item):null;
+    const penalty=distance===null?0:Math.min(6,distance/35);
+    return {...item,distance,score:exact*3-penalty-i*.06};
+  }).sort((a,b)=>b.score-a.score);
+}
+function isPlaceQuery(q){return !/^\s*\d/.test(q) && q.includes(',') && q.split(',')[0].trim().length>=3}
+function broadTerm(q){return clampText(q.split(',')[0].trim(),100)}
+function mapsSearchUrl(q){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)}
+function showDropdown(id){$(id+'Suggestions').classList.add('show');$(id).setAttribute('aria-expanded','true')}
+function addSuggestionMessage(box,title,detail){
+  const div=document.createElement('div');div.className='search-note';
+  const b=document.createElement('b');b.textContent=title;div.append(b);
+  if(detail){const small=document.createElement('div');small.textContent=detail;small.style.marginTop='3px';div.append(small)}
+  box.append(div);
+}
+function addSuggestionAction(box,label,callback){
+  const btn=document.createElement('button');btn.type='button';btn.className='action';btn.textContent=label;
+  btn.addEventListener('pointerdown',e=>e.preventDefault());
+  btn.addEventListener('click',callback);box.append(btn);
+}
+function showSearching(id){
+  const box=$(id+'Suggestions');box.replaceChildren();
+  const div=document.createElement('div');div.className='loading';div.textContent='Searching places…';box.append(div);showDropdown(id);
+}
+function renderSuggestions(id,items,q,{broader=false}={}){
+  const state=lookupState[id],box=$(id+'Suggestions'),focus=bestFocus(id);
+  const ordered=sortSuggestions(items,focus,q).slice(0,7);
+  state.items=ordered;state.active=-1;box.replaceChildren();
+  if(!ordered.length){addSuggestionMessage(box,'No place matches yet','Try a simpler name or a nearby city. Manual mileage always works.');}
+  else{
+    ordered.forEach((place,i)=>{
+      const btn=document.createElement('button');btn.id=id+'Option'+i;btn.type='button';btn.setAttribute('role','option');btn.setAttribute('aria-selected','false');
+      const pin=document.createElement('span');pin.className='pin';pin.textContent=place.kind==='shop'?'▣':'⌖';
+      const info=document.createElement('span');info.className='suggest-main';
+      const name=document.createElement('b');name.textContent=place.title;
+      const addr=document.createElement('small');addr.textContent=place.address||'Location pin';
+      info.append(name,addr);btn.append(pin,info);
+      if(place.distance!==null){const dist=document.createElement('span');dist.className='mi';dist.textContent='~'+Math.round(place.distance)+' mi';dist.title='Approximate straight-line distance, not driving distance';btn.append(dist)}
+      btn.addEventListener('pointerdown',e=>e.preventDefault());
+      btn.addEventListener('click',()=>selectSuggestion(id,place));
+      box.append(btn);
+    });
+  }
+  const term=broadTerm(q);
+  if(isPlaceQuery(q) && norm(term)!==norm(q) && !broader){
+    addSuggestionAction(box,'Search “'+term+'” nearby',()=>startSearch(id,true));
+  }
+  addSuggestionAction(box,'Search Google Maps ↗',()=>window.open(mapsSearchUrl($(id).value),'_blank','noopener'));
+  showDropdown(id);
+}
+function moveActive(id,delta){
+  const state=lookupState[id];
+  if(!state.items.length)return;
+  state.active=(state.active+delta+state.items.length)%state.items.length;
+  $(id+'Suggestions').querySelectorAll('[role=option]').forEach((btn,i)=>{
+    const active=i===state.active;btn.classList.toggle('active',active);btn.setAttribute('aria-selected',String(active));
+  });
+  $(id).setAttribute('aria-activedescendant',id+'Option'+state.active);
+}
+async function startSearch(id,broader=false){
+  const state=lookupState[id];
+  clearTimeout(state.timer);
+  state.ctrl?.abort();
+  const q=$(id).value.trim();
+  if(q.length<3){clearSuggest(id);return}
+  const token=++state.seq,ctrl=new AbortController();state.ctrl=ctrl;
+  showSearching(id);
+  try{
+    const focus=bestFocus(id)||contextualFocus(q);
+    state.focus=focus;
+    // For explicit 'store, city, state' queries, start with the store name and bias
+    // around the typed locality. It avoids insisting the store's official city matches.
+    const directBrand=isPlaceQuery(q)&&validPoint(focus);
+    const searchQ=(broader||directBrand)?broadTerm(q):q;
+    let items=await fetchSuggestions(searchQ,{focus,signal:ctrl.signal});
+    if(token!==state.seq || norm($(id).value)!==norm(q) || ctrl.signal.aborted)return;
+    if(!items.length && !broader && isPlaceQuery(q)){
+      items=await fetchSuggestions(broadTerm(q),{focus,signal:ctrl.signal});
+    }
+    if(token!==state.seq || norm($(id).value)!==norm(q) || ctrl.signal.aborted)return;
+    renderSuggestions(id,items,q,{broader:broader||directBrand});
+  }catch(err){
+    if(ctrl.signal.aborted||token!==state.seq)return;
+    const box=$(id+'Suggestions');box.replaceChildren();
+    addSuggestionMessage(box,'Search temporarily unavailable','Try again or enter miles manually.');
+    addSuggestionAction(box,'Try again',()=>startSearch(id));
+    addSuggestionAction(box,'Search Google Maps ↗',()=>window.open(mapsSearchUrl(q),'_blank','noopener'));
+    showDropdown(id);
+  }
+}
+function invalidateRoute(type,clearAutoMileage=false){
+  routeVersions[type]++;
+  const old=routeState[type];routeState[type]=null;
+  if(clearAutoMileage&&old?.source==='route'){
+    $(type+'Miles').value='';
+    $(type+'MilesNote').textContent='Location changed · calculate route or enter miles';
+  }
+}
+function setupAutocomplete(id){
+  const state=lookupState[id]={timer:null,ctrl:null,seq:0,items:[],active:-1,focus:null};
+  const input=$(id);
+  input.addEventListener('input',()=>{
+    const q=input.value.trim();
+    clearTimeout(state.timer);state.ctrl?.abort();state.seq++;
+    if(selectedPlaces[id]?.label!==q){selectedPlaces[id]=null;
+      if(id==='origin'){invalidateRoute('fb',true);invalidateRoute('local',true)}
+      else{state.focus=null;invalidateRoute(id==='fbAddress'?'fb':'local',true)}
+    }
+    updateMapLinks();calc();
+    if(q.length<3){clearSuggest(id);return}
+    state.timer=setTimeout(()=>startSearch(id),SEARCH_DELAY_MS);
+  });
+  input.addEventListener('focus',()=>{
+    if(state.items.length)renderSuggestions(id,state.items,input.value.trim());
+  });
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){clearSuggest(id);return}
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      if(!state.items.length)return;e.preventDefault();showDropdown(id);moveActive(id,e.key==='ArrowDown'?1:-1);
+    }else if(e.key==='Enter'){
+      e.preventDefault();
+      if($(id+'Suggestions').classList.contains('show')&&state.active>=0&&state.items[state.active]) selectSuggestion(id,state.items[state.active]);
+      else startSearch(id,!state.items.length && isPlaceQuery(input.value));
+    }
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>clearSuggest(id),165));
+}
+function selectSuggestion(id,place){
+  const state=lookupState[id];clearTimeout(state.timer);state.ctrl?.abort();state.seq++;
+  $(id).value=place.label;selectedPlaces[id]=place;clearSuggest(id);
+  updateMapLinks();calc();
+  if(id==='fbAddress'){invalidateRoute('fb',true);autoRoute('fb',place)}
+  else if(id==='localAddress'){invalidateRoute('local',true);autoRoute('local',place)}
+  else{
+    if($('fbAddress').value.trim() && (selectedPlaces.fbAddress || num('fbMiles')===0))autoRoute('fb');
+    if($('localAddress').value.trim() && (selectedPlaces.localAddress || num('localMiles')===0))autoRoute('local');
+  }
+}
+async function geocodeSingle(address,place=null){
+  if(validPoint(place))return place;
+  const results=await fetchSuggestions(address);
+  return results[0]||null;
+}
+async function routeMiles(start,end){
+  const key=[start.lon,start.lat,end.lon,end.lat].map(x=>Number(x).toFixed(5)).join(',');
+  const cached=routeCache.get(key);if(cached && Date.now()-cached.at<3600000)return cached.mi;
+  const url=`https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${end.lon},${end.lat}?overview=false`;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+    const res=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});
+    if(!res.ok)throw new Error('Routing unavailable');
+    const data=await res.json();
+    const meters=data?.routes?.[0]?.distance;
+    if(!Number.isFinite(meters)||meters<0)throw new Error('No road route available');
+    const mi=meters/1609.344;
+    routeCache.set(key,{at:Date.now(),mi});
+    if(routeCache.size>50)routeCache.delete(routeCache.keys().next().value);
+    return mi;
+  }finally{clearTimeout(timer)}
+}
+async function autoRoute(type,preResolvedDest=null){
+  const btn=$(type+'Route');
+  const destId=type+'Address',milesId=type+'Miles';
+  const originTxt=$('origin').value.trim(),destTxt=$(destId).value.trim();
+  if(!originTxt||!destTxt){setStatus('Add your starting location and destination, then calculate the route.','bad');return}
+  const version=++routeVersions[type];
+  btn.disabled=true;btn.textContent='Routing…';
+  $(type+'MilesNote').textContent='Calculating driving distance…';
+  try{
+    const start=await geocodeSingle(originTxt,selectedPlaces.origin);
+    if(version!==routeVersions[type])return;
+    const dest=await geocodeSingle(destTxt,preResolvedDest||selectedPlaces[destId]);
+    if(!start||!dest)throw new Error('Place not found');
+    const miles=await routeMiles(start,dest);
+    if(version!==routeVersions[type] || originTxt!==$('origin').value.trim() || destTxt!==$(destId).value.trim())return;
+    $(milesId).value=fmt(miles,1);
+    routeState[type]={source:'route',start,dest,miles,originValue:originTxt,destValue:destTxt};
+    $(type+'MilesNote').textContent='Road route · one-way estimate';
+    setStatus('Driving distance updated for '+(type==='fb'?'Facebook Marketplace':'Local Merchant')+'.','good');
+    calc();
+  }catch(err){
+    if(version!==routeVersions[type])return;
+    $(type+'MilesNote').textContent='Auto-route unavailable · enter one-way miles';
+    setStatus('Could not calculate that route. Enter mileage manually or open Google Maps.','bad');
+  }finally{
+    if(version===routeVersions[type]){btn.disabled=false;btn.textContent='Auto route'}
+    else{btn.disabled=false;btn.textContent='Auto route'}
+  }
+}
+function loadExample(){
+  const sample={
+    origin:'Parker, Colorado',vehicle:'venza',gasPrice:'3.49',taxRate:'8',wearPerMile:'0',timePerHour:'0',avgSpeed:'40',
+    onlinePrice:'230',onlineShipping:'18',onlineDiscount:'10',onlineTaxed:true,
+    fbPrice:'185',fbAddress:'Castle Rock, Colorado',fbMiles:'17',fbRoundTrip:true,
+    localPrice:'249',localAddress:'Centennial, Colorado',localMiles:'14',localRoundTrip:true,localTaxed:true
+  };
+  Object.entries(sample).forEach(([id,val])=>{const el=$(id); if(!el) return; if(el.type==='checkbox') el.checked=val; else el.value=val});
+  autocompleteIds.forEach(id=>{selectedPlaces[id]=null;lookupState[id]?.ctrl?.abort();clearSuggest(id)});
+  invalidateRoute('fb');invalidateRoute('local');
+  ['fb','local'].forEach(type=>$(type+'MilesNote').textContent='Example one-way miles · editable');
+  usePreset(); updateMapLinks(); calc(); setStatus('Example loaded. Swap in your own item and addresses anytime.','good');
+}
+function resetAll(){
+  try{localStorage.removeItem('worthDriveSimpleV1')}catch(e){}
+  autocompleteIds.forEach(id=>{selectedPlaces[id]=null;lookupState[id]?.ctrl?.abort();clearSuggest(id)});
+  invalidateRoute('fb');invalidateRoute('local');
+  ['origin','fbAddress','localAddress'].forEach(id=>$(id).value='');
+  ['onlinePrice','onlineShipping','onlineDiscount','fbPrice','fbMiles','localPrice','localMiles'].forEach(id=>$(id).value='0');
+  $('fbMilesNote').textContent='One-way mileage · enter manually or auto-route';$('localMilesNote').textContent='One-way mileage · enter manually or auto-route';
+  $('vehicle').value='4runner'; $('gasPrice').value='3.49'; $('taxRate').value='8.0'; $('wearPerMile').value='0.00'; $('timePerHour').value='0'; $('avgSpeed').value='40';
+  $('onlineTaxed').checked=true; $('fbRoundTrip').checked=true; $('localRoundTrip').checked=true; $('localTaxed').checked=true;
+  usePreset(); updateMapLinks(); calc(); setStatus('Reset complete.','good');
+}
+['onlinePrice','onlineShipping','onlineDiscount','fbPrice','localPrice','gasPrice','mpg','taxRate','wearPerMile','timePerHour','avgSpeed'].forEach(id=>$(id).addEventListener('input',calc));
+['fb','local'].forEach(type=>$(type+'Miles').addEventListener('input',()=>{
+  invalidateRoute(type);
+  $(type+'MilesNote').textContent='Manually entered · one-way miles';calc();
+}));
+['onlineTaxed','fbRoundTrip','localRoundTrip','localTaxed'].forEach(id=>$(id).addEventListener('change',calc));
+$('vehicle').addEventListener('change',usePreset);
+$('origin').addEventListener('change',()=>{updateMapLinks();calc()});
+$('fbAddress').addEventListener('change',()=>{updateMapLinks();calc()});
+$('localAddress').addEventListener('change',()=>{updateMapLinks();calc()});
+$('fbRoute').addEventListener('click',()=>autoRoute('fb'));
+$('localRoute').addEventListener('click',()=>autoRoute('local'));
+$('calcBtn').addEventListener('click',calc);
+$('exampleBtn').addEventListener('click',loadExample);
+$('resetBtn').addEventListener('click',resetAll);
+autocompleteIds.forEach(setupAutocomplete);
+restore();
+</script>
+</body>
+</html>
