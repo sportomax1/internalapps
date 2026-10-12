@@ -1,3 +1,7 @@
+import marketHandler from '../lib/consolidated/market.js';
+import overpassHandler from '../lib/consolidated/overpass.js';
+import googleSheetHandler from '../lib/consolidated/google-sheet.js';
+import photoAnalyzeHandler from '../lib/consolidated/photo-analyze.js';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
 function tokenFrom(text) {
@@ -53,6 +57,10 @@ function auth(req,res) {
 }
 export default async function handler(req,res) {
   switch(actionFrom(req)) {
+    case 'market': return marketHandler(req,res);
+    case 'overpass': return overpassHandler(req,res);
+    case 'google-sheet': return googleSheetHandler(req,res);
+    case 'photo-analyze': return photoAnalyzeHandler(req,res);
     case 'images': return images(req,res);
     case 'env': return env(req,res);
     case 'supabase-config': return supabaseConfig(req,res);
