@@ -4,6 +4,22 @@
   "installCommand": "npm install --omit=optional",
   "rewrites": [
     {
+      "source": "/api/market",
+      "destination": "/api/tools?action=market"
+    },
+    {
+      "source": "/api/overpass",
+      "destination": "/api/tools?action=overpass"
+    },
+    {
+      "source": "/api/google-sheet",
+      "destination": "/api/tools?action=google-sheet"
+    },
+    {
+      "source": "/api/photo-analyze",
+      "destination": "/api/tools?action=photo-analyze"
+    },
+    {
       "source": "/sunshadow",
       "destination": "/sunshadow.html"
     },
