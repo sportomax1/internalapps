@@ -1,10 +1,30 @@
 import * as THREE from "https://unpkg.com/three@0.164.1/build/three.module.js";
+import { newVehicleState, stepVehicle, wrapCoordinate, WORLD_HALF_LENGTH, MPS_TO_MPH, isOffroad } from "./drive-model.mjs";
 
 const canvas = document.querySelector("#scene");
 const speedEl = document.querySelector("#speed");
 const driveModeEl = document.querySelector("#driveMode");
 const terrainModeEl = document.querySelector("#terrainMode");
 const cameraBtn = document.querySelector("#cameraBtn");
+const pauseBtn = document.querySelector("#pauseBtn");
+const restartBtn = document.querySelector("#restartBtn");
+const playAgainBtn = document.querySelector("#playAgainBtn");
+const ringsEl = document.querySelector("#ringsCount");
+const runTimeEl = document.querySelector("#runTime");
+const bestTimeEl = document.querySelector("#bestTime");
+const distanceEl = document.querySelector("#distance");
+const progressEl = document.querySelector("#progressFill");
+const messageEl = document.querySelector("#gameMessage");
+const finishOverlay = document.querySelector("#finishOverlay");
+const finishSummary = document.querySelector("#finishSummary");
+const RING_GOAL = 10;
+const RING_STARTS = [[0,38], [12,77], [-18,116], [23,172], [-36,212], [-7,-42], [22,-97], [-45,-151], [60,26], [-65,87], [90,-20], [-100,205]];
+const pickups = [];
+const keyboard = new Set();
+const touch = {forward:false,backward:false,left:false,right:false};
+const run = { rings:0, elapsed:0, best:0, started:false, paused:false, finished:false, messageUntil:0 };
+try { run.best = Number(localStorage.getItem("4runner-trail-best")) || 0; } catch {}
+
 const demoMode = new URLSearchParams(window.location.search).has("demo");
 
 const renderer = new THREE.WebGLRenderer({
@@ -46,13 +66,14 @@ const car = {
     steer: 0,
     wheelSpin: 0,
     suspension: 0,
-    cameraMode: 0
+    cameraMode: 0,
+    model: newVehicleState()
 };
 
 const road = {
     width: 16,
     segmentLength: 28,
-    count: 34,
+    count: 18,
     stripeOffset: 0
 };
 
@@ -97,7 +118,8 @@ const mat = {
     scrub: new THREE.MeshStandardMaterial({ color: 0x5f7651, roughness: 1 }),
     scrubDark: new THREE.MeshStandardMaterial({ color: 0x3d5539, roughness: 1 }),
     sand: new THREE.MeshStandardMaterial({ color: 0xcfa071, roughness: 1 }),
-    stone: new THREE.MeshStandardMaterial({ color: 0xaa7652, roughness: 0.95 })
+    stone: new THREE.MeshStandardMaterial({ color: 0xaa7652, roughness: 0.95 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xffc65a, roughness: 0.27, metalness: 0.68, emissive: 0xe58e0a, emissiveIntensity: 0.35 })
 };
 
 function mesh(geometry, material, position, scale, parent = world, cast = true, receive = true) {
@@ -200,14 +222,14 @@ function createScrub(x, z, scale) {
 
 function createRoad() {
     for (let i = 0; i < road.count; i++) {
-        const z = i * road.segmentLength - (road.count * road.segmentLength) / 2;
+        const z = (i + 0.5) * road.segmentLength - (road.count * road.segmentLength) / 2;
         mesh(reusable.bodyBox, mat.road, { x: 0, y: 0.015, z }, { x: road.width, y: 0.04, z: road.segmentLength + 0.04 }, world, false, true);
         mesh(reusable.bodyBox, mat.roadSide, { x: -road.width * 0.62, y: 0.02, z }, { x: 1.8, y: 0.035, z: road.segmentLength + 0.04 }, world, false, true);
         mesh(reusable.bodyBox, mat.roadSide, { x: road.width * 0.62, y: 0.02, z }, { x: 1.8, y: 0.035, z: road.segmentLength + 0.04 }, world, false, true);
     }
 
-    for (let i = 0; i < 48; i++) {
-        const z = i * 18 - 430;
+    for (let i = 0; i < 28; i++) {
+        const z = i * 18 - 243;
         mesh(reusable.bodyBox, mat.stripe, { x: 0, y: 0.06, z }, { x: 0.34, y: 0.04, z: 8.5 }, world, false, true);
         mesh(reusable.bodyBox, mat.whiteStripe, { x: -road.width * 0.46, y: 0.065, z }, { x: 0.22, y: 0.04, z: 11 }, world, false, true);
         mesh(reusable.bodyBox, mat.whiteStripe, { x: road.width * 0.46, y: 0.065, z }, { x: 0.22, y: 0.04, z: 11 }, world, false, true);
