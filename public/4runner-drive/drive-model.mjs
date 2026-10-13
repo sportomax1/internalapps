@@ -3,6 +3,23 @@ export const ROAD_HALF_WIDTH = 8;
 export const WORLD_HALF_WIDTH = 190;
 export const WORLD_HALF_LENGTH = 242;
 export const MPS_TO_MPH = 2.2369362921;
+// Four-wheel mesh radius in world units; one positive rotation rolls the car toward +Z.
+export const WHEEL_RADIUS = 1.02;
+export const MAX_WHEEL_STEER_ANGLE = 0.48;
+
+// The 4Runner mesh points toward +Z. With an upright chase camera behind it,
+// the driver's right is world -X (not +X). Positive input steer means right.
+export function frontWheelYaw(steer) {
+    return -Math.max(-1, Math.min(1, steer)) * MAX_WHEEL_STEER_ANGLE;
+}
+export function wheelRotationDelta(speed, dt) {
+    return speed * dt / WHEEL_RADIUS;
+}
+// Positive values point toward the driver's right in a chase-camera view.
+export function relativeTargetBearing(heading, deltaX, deltaZ) {
+    return Math.atan2(Math.sin(heading - Math.atan2(deltaX, deltaZ)),
+                      Math.cos(heading - Math.atan2(deltaX, deltaZ)));
+}
 export const MAX_FORWARD_SPEED = 43;
 export const MAX_REVERSE_SPEED = 10;
 
@@ -21,7 +38,7 @@ export function wrapCoordinate(value, limit = WORLD_HALF_LENGTH) {
 }
 
 // The two pedals oppose each other. Braking must finish before direction reverses.
-// Steering is signed right-positive in a +Z-forward world.
+// Steering is signed right-positive from the driver's/chase-camera perspective.
 export function stepVehicle(state, controls, seconds) {
     const dt = Math.min(Math.max(Number.isFinite(seconds) ? seconds : 0, 0), 0.05);
     if (dt === 0) return state;
@@ -49,7 +66,7 @@ export function stepVehicle(state, controls, seconds) {
     state.steer += (requestedSteer - state.steer) * (1 - Math.exp(-9 * dt));
     const turnRate = Math.min(Math.abs(state.speed) / 17, 1.1);
     if (Math.abs(state.speed) > 0.05) {
-        state.heading += state.steer * turnRate * dt * Math.sign(state.speed) * 0.88;
+        state.heading -= state.steer * turnRate * dt * Math.sign(state.speed) * 0.88;
         state.heading = Math.atan2(Math.sin(state.heading), Math.cos(state.heading));
     }
 
