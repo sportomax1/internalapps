@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
     newVehicleState, stepVehicle, isOffroad, wrapCoordinate, WORLD_HALF_LENGTH,
-    WORLD_HALF_WIDTH, ROAD_HALF_WIDTH, MAX_FORWARD_SPEED, MAX_REVERSE_SPEED, MPS_TO_MPH
+    WORLD_HALF_WIDTH, ROAD_HALF_WIDTH, MAX_FORWARD_SPEED, MAX_REVERSE_SPEED, MPS_TO_MPH,
+    WHEEL_RADIUS, MAX_WHEEL_STEER_ANGLE, frontWheelYaw, wheelRotationDelta, relativeTargetBearing
 } from "./drive-model.mjs";
 
 const noInput = { forward: false, backward: false, left: false, right: false };
@@ -38,11 +39,11 @@ test("accelerating in reverse brakes before going forward", () => {
     drive(v, { forward: true }, 5);
     assert.ok(v.speed > 0);
 });
-test("left turns toward negative x, right toward positive x", () => {
+test("screen-left points +X, screen-right points -X for the chase camera", () => {
     const l = drive(newVehicleState(), { forward: true, left: true }, 1.5);
     const r = drive(newVehicleState(), { forward: true, right: true }, 1.5);
-    assert.ok(l.x < -0.2, `left x=${l.x}`);
-    assert.ok(r.x > 0.2, `right x=${r.x}`);
+    assert.ok(l.x > 0.2, `left x=${l.x}`);
+    assert.ok(r.x < -0.2, `right x=${r.x}`);
 });
 test("opposing steering inputs cancel and travel remains straight", () => {
     const v = drive(newVehicleState(), { forward: true, left: true, right: true }, 2);
@@ -90,4 +91,35 @@ test("no input and invalid deltas do not produce NaN", () => {
     stepVehicle(v, noInput, NaN);
     assert.equal(v.meters, 0);
     for (const n of Object.values(v)) assert.ok(Number.isFinite(n));
+});
+
+test("front wheel yaw points in the same screen direction as steering", () => {
+    assert.equal(frontWheelYaw(0), 0);
+    assert.equal(frontWheelYaw(1), -MAX_WHEEL_STEER_ANGLE);
+    assert.equal(frontWheelYaw(-1), MAX_WHEEL_STEER_ANGLE);
+    assert.equal(frontWheelYaw(99), -MAX_WHEEL_STEER_ANGLE);
+});
+test("wheel rotation sign matches forward and reverse motion", () => {
+    assert.equal(wheelRotationDelta(0, 1), 0);
+    assert.ok(wheelRotationDelta(12, 1 / 60) > 0);
+    assert.ok(wheelRotationDelta(-12, 1 / 60) < 0);
+    assert.ok(Math.abs(wheelRotationDelta(WHEEL_RADIUS, 1) - 1) < 1e-10);
+});
+test("target bearing matches actual screen-left and screen-right", () => {
+    assert.ok(relativeTargetBearing(0, -10, 10) > 0.1);
+    assert.ok(relativeTargetBearing(0, 10, 10) < -0.1);
+    assert.ok(Math.abs(relativeTargetBearing(0, 0, 10)) < 1e-10);
+    assert.ok(Math.abs(relativeTargetBearing(Math.PI / 2, 10, 0)) < 1e-10);
+});
+test("reverse with right steering swings nose left rather than right", () => {
+    const v = newVehicleState();
+    v.speed = -5;
+    drive(v, { right: true }, 0.6);
+    assert.ok(v.heading > 0, `reverse heading=${v.heading}`);
+});
+test("repeatable straight drive and neutral steering recenter smoothly", () => {
+    const v = drive(newVehicleState(), {forward: true, right:true}, 0.6);
+    assert.ok(v.steer > 0.9);
+    drive(v, {forward: true}, 1);
+    assert.ok(Math.abs(v.steer) < 0.01);
 });
