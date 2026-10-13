@@ -362,87 +362,197 @@ function createSkyDetails() {
 
 function updateInputVisuals() {
     document.querySelectorAll("[data-control]").forEach((button) => {
-        button.classList.toggle("is-active", input[button.dataset.control]);
+        button.classList.toggle("is-active", !!input[button.dataset.control]);
+        button.setAttribute("aria-pressed", String(!!input[button.dataset.control]));
     });
 }
 
+const keyMap = {
+    ArrowUp: "forward", KeyW: "forward",
+    ArrowDown: "backward", KeyS: "backward", Space: "backward",
+    ArrowLeft: "left", KeyA: "left",
+    ArrowRight: "right", KeyD: "right"
+};
+function syncInputs() {
+    for (const control of Object.keys(input)) {
+        input[control] = touch[control] || [...keyboard].some((code) => keyMap[code] === control);
+    }
+    updateInputVisuals();
+}
+function formatTime(seconds) {
+    if (!seconds) return "0:00";
+    const rounded = Math.floor(seconds);
+    return Math.floor(rounded / 60) + ":" + String(rounded % 60).padStart(2, "0");
+}
+function renderStats() {
+    ringsEl.textContent = run.rings + " / " + RING_GOAL;
+    runTimeEl.textContent = formatTime(run.elapsed);
+    bestTimeEl.textContent = run.best ? formatTime(run.best) : "--:--";
+    distanceEl.textContent = (car.model.meters / 1609.344).toFixed(1) + " MI";
+    progressEl.style.width = Math.min(100, run.rings * 100 / RING_GOAL) + "%";
+    pauseBtn.textContent = run.paused && !run.finished ? "▶" : "Ⅱ";
+    pauseBtn.setAttribute("aria-label", run.paused ? "Resume game (P)" : "Pause game (P)");
+    document.body.dataset.rings = String(run.rings);
+    document.body.dataset.paused = String(run.paused);
+    document.body.dataset.camera = String(car.cameraMode);
+    document.body.dataset.elapsed = run.elapsed.toFixed(1);
+}
+function showMessage(text, duration = 1.5) {
+    messageEl.textContent = text;
+    messageEl.hidden = false;
+    run.messageUntil = simTime + duration;
+}
+function togglePause() {
+    if (run.finished) return;
+    run.paused = !run.paused;
+    if (run.paused) showMessage("PAUSED · Press P or ▶ to resume", Number.POSITIVE_INFINITY);
+    else messageEl.hidden = true;
+    renderStats();
+}
+function cycleCamera() {
+    car.cameraMode = (car.cameraMode + 1) % 3;
+    const labels = ["Chase", "Orbit", "Hood"];
+    cameraBtn.setAttribute("aria-label", "Change camera (C), current: " + labels[car.cameraMode]);
+    cameraBtn.title = "Camera: " + labels[car.cameraMode] + " (C)";
+    renderStats();
+}
+function resetRun() {
+    Object.assign(car.model, newVehicleState());
+    car.speed = 0;
+    car.heading = 0;
+    car.steer = 0;
+    car.wheelSpin = 0;
+    car.cameraMode = 0;
+    car.root.position.set(0, 0.1, 0);
+    car.root.rotation.set(0, 0, 0);
+    camera.position.set(0, 5.6, -10.2);
+    run.rings = 0;
+    run.elapsed = 0;
+    run.started = false;
+    run.paused = false;
+    run.finished = false;
+    messageEl.hidden = true;
+    finishOverlay.hidden = true;
+    RING_STARTS.forEach(([x, z], index) => pickups[index].position.set(x, 3.2, z));
+    keyboard.clear();
+    for (const control of Object.keys(touch)) touch[control] = false;
+    syncInputs();
+    cycleCamera();
+    car.cameraMode = 0;
+    cameraBtn.setAttribute("aria-label", "Change camera (C), current: Chase");
+    renderStats();
+    updateVehicle(0);
+}
 function bindControls() {
-    const keyMap = {
-        ArrowUp: "forward",
-        KeyW: "forward",
-        ArrowDown: "backward",
-        KeyS: "backward",
-        ArrowLeft: "left",
-        KeyA: "left",
-        ArrowRight: "right",
-        KeyD: "right"
-    };
-
     window.addEventListener("keydown", (event) => {
-        const control = keyMap[event.code];
-        if (!control) return;
-        if (!input[control]) {
-            if (control === "forward") car.speed = Math.min(car.speed + 5, 48);
-            if (control === "backward") car.speed = Math.max(car.speed - 5, -16);
-            if (control === "left") car.steer = Math.min(car.steer + 0.25, 1);
-            if (control === "right") car.steer = Math.max(car.steer - 0.25, -1);
+        if (event.code === "KeyC" || event.code === "KeyP" || event.code === "KeyR") {
+            event.preventDefault();
+            if (event.repeat) return;
+            if (event.code === "KeyC") cycleCamera();
+            if (event.code === "KeyP") togglePause();
+            if (event.code === "KeyR") resetRun();
+            return;
         }
-        input[control] = true;
-        updateInputVisuals();
+        if (!keyMap[event.code]) return;
+        keyboard.add(event.code);
+        syncInputs();
         event.preventDefault();
     });
-
     window.addEventListener("keyup", (event) => {
-        const control = keyMap[event.code];
-        if (!control) return;
-        input[control] = false;
-        updateInputVisuals();
+        if (!keyMap[event.code]) return;
+        keyboard.delete(event.code);
+        syncInputs();
         event.preventDefault();
     });
-
+    const releaseAll = () => {
+        keyboard.clear();
+        for (const control of Object.keys(touch)) touch[control] = false;
+        syncInputs();
+    };
+    window.addEventListener("blur", releaseAll);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            releaseAll();
+            if (!run.paused && !run.finished) togglePause();
+        }
+        lastFrameTime = performance.now();
+    });
     document.querySelectorAll("[data-control]").forEach((button) => {
         const control = button.dataset.control;
         let pulseTimer = 0;
-        const activate = (event) => {
-            input[control] = true;
-            updateInputVisuals();
+        button.addEventListener("contextmenu", (event) => event.preventDefault());
+        button.addEventListener("pointerdown", (event) => {
+            if (run.finished) return;
+            window.clearTimeout(pulseTimer);
+            touch[control] = true;
             button.setPointerCapture?.(event.pointerId);
-        };
-        const release = () => {
-            input[control] = false;
-            updateInputVisuals();
-        };
-        button.addEventListener("pointerdown", activate);
+            syncInputs();
+            event.preventDefault();
+        });
+        const release = () => { touch[control] = false; syncInputs(); };
         button.addEventListener("pointerup", release);
         button.addEventListener("pointercancel", release);
-        button.addEventListener("pointerleave", release);
-        button.addEventListener("click", () => {
+        button.addEventListener("lostpointercapture", release);
+        button.addEventListener("click", (event) => {
+            // Native keyboard-activated button clicks have detail 0; pointers are handled above.
+            if (event.detail !== 0 || run.finished) return;
             window.clearTimeout(pulseTimer);
-            if (control === "forward") car.speed = Math.min(car.speed + 8, 48);
-            if (control === "backward") car.speed = Math.max(car.speed - 7, -16);
-            if (control === "left") car.steer = Math.min(car.steer + 0.35, 1);
-            if (control === "right") car.steer = Math.max(car.steer - 0.35, -1);
-            input[control] = true;
-            updateInputVisuals();
-            pulseTimer = window.setTimeout(() => {
-                input[control] = false;
-                updateInputVisuals();
-            }, 220);
+            touch[control] = true;
+            syncInputs();
+            pulseTimer = window.setTimeout(release, 250);
         });
     });
-
-    cameraBtn.addEventListener("click", () => {
-        car.cameraMode = (car.cameraMode + 1) % 3;
-    });
+    cameraBtn.addEventListener("click", cycleCamera);
+    pauseBtn.addEventListener("click", togglePause);
+    restartBtn.addEventListener("click", resetRun);
+    playAgainBtn.addEventListener("click", resetRun);
 }
 
-function wrapWorld() {
-    const limit = road.count * road.segmentLength * 0.48;
-    if (car.root.position.z > limit) {
-        car.root.position.z -= limit * 2;
+function createPickups() {
+    for (const [index, coords] of RING_STARTS.entries()) {
+        const ring = mesh(reusable.torus, mat.gold,
+            { x: coords[0], y: 3.2, z: coords[1] },
+            { x: 1.85, y: 1.85, z: 1.85 }, world, false, false);
+        ring.userData.phase = index * 0.67;
+        pickups.push(ring);
     }
-    if (car.root.position.z < -limit) {
-        car.root.position.z += limit * 2;
+}
+function finishRun() {
+    run.finished = true;
+    run.paused = true;
+    if (!run.best || run.elapsed < run.best) {
+        run.best = run.elapsed;
+        try { localStorage.setItem("4runner-trail-best", String(run.best)); } catch {}
+    }
+    finishSummary.textContent = "Your time: " + formatTime(run.elapsed) + " · Distance: " +
+        (car.model.meters / 1609.344).toFixed(2) + " miles. Best: " + formatTime(run.best) + ".";
+    finishOverlay.hidden = false;
+    renderStats();
+    playAgainBtn.focus();
+}
+function updatePickups(dt) {
+    for (const pickup of pickups) {
+        pickup.rotation.y += dt * 1.2;
+        pickup.position.y = 3.2 + Math.sin(simTime * 2.1 + pickup.userData.phase) * 0.32;
+        if (!run.started || run.finished) continue;
+        const dx = pickup.position.x - car.model.x;
+        const dz = pickup.position.z - car.model.z;
+        if (dx * dx + dz * dz > 19) continue;
+        run.rings += 1;
+        renderStats();
+        if (run.rings >= RING_GOAL) {
+            finishRun();
+            break;
+        }
+        showMessage("RING COLLECTED · " + run.rings + " / " + RING_GOAL);
+        // Respawn far from the car, but inside the explorable desert.
+        let x, z, attempts = 0;
+        do {
+            x = (Math.random() - 0.5) * 175;
+            z = (Math.random() - 0.5) * 425;
+            attempts++;
+        } while (attempts < 15 && Math.hypot(x - car.model.x, z - car.model.z) < 30);
+        pickup.position.set(x, 3.2, z);
     }
 }
 
@@ -452,57 +562,42 @@ function updateVehicle(dt) {
         input.backward = false;
         input.left = Math.sin(simTime * 0.55) > 0.35;
         input.right = Math.sin(simTime * 0.55) < -0.35;
-        updateInputVisuals();
     }
+    stepVehicle(car.model, input, dt);
+    const beforeWrap = car.model.z;
+    car.model.z = wrapCoordinate(car.model.z, WORLD_HALF_LENGTH);
+    if (car.model.z !== beforeWrap) camera.position.z += car.model.z - beforeWrap;
 
-    const accel = input.forward ? 19 : 0;
-    const brake = input.backward ? 24 : 0;
-    const drag = 3.1 + Math.abs(car.speed) * 0.045;
-    const direction = Math.sign(car.speed || 1);
+    car.speed = car.model.speed;
+    car.heading = car.model.heading;
+    car.steer = car.model.steer;
+    const shoulder = isOffroad(car.model.x);
+    if (Math.abs(car.speed) > 0.2) run.started = true;
+    if (run.started) run.elapsed += dt;
 
-    car.speed += accel * dt;
-    if (input.backward) car.speed -= brake * dt;
-    if (!input.forward && !input.backward) {
-        const drop = drag * dt;
-        if (Math.abs(car.speed) <= drop) car.speed = 0;
-        else car.speed -= direction * drop;
-    }
-
-    car.speed = THREE.MathUtils.clamp(car.speed, -16, 48);
-
-    const steerTarget = (input.left ? 1 : 0) + (input.right ? -1 : 0);
-    car.steer = THREE.MathUtils.lerp(car.steer, steerTarget, 1 - Math.pow(0.001, dt));
-    const steerStrength = THREE.MathUtils.clamp(Math.abs(car.speed) / 17, 0.18, 1.25);
-    car.heading += car.steer * steerStrength * dt * (car.speed >= 0 ? 1 : -1);
-
-    const forward = new THREE.Vector3(Math.sin(car.heading), 0, Math.cos(car.heading));
-    car.root.position.addScaledVector(forward, car.speed * dt);
-    car.root.position.x = THREE.MathUtils.clamp(car.root.position.x, -6.35, 6.35);
-
-    const shoulder = Math.abs(car.root.position.x) > 5.4;
-    const roughness = shoulder ? 1.65 : 0.42;
+    const roughness = shoulder ? 2.2 : 0.42;
     car.suspension += dt * (4.5 + Math.abs(car.speed) * 0.13);
     const bounce = Math.sin(car.suspension * 5.4) * roughness * Math.min(Math.abs(car.speed) / 32, 1) * 0.035;
-    car.root.position.y = 0.1 + bounce;
+    car.root.position.set(car.model.x, 0.1 + bounce, car.model.z);
     car.root.rotation.y = car.heading;
-    car.root.rotation.z = THREE.MathUtils.lerp(car.root.rotation.z, car.steer * Math.min(Math.abs(car.speed) / 32, 1) * 0.08, 0.11);
-    car.root.rotation.x = THREE.MathUtils.lerp(car.root.rotation.x, -Math.sign(car.speed) * Math.min(Math.abs(car.speed) / 45, 1) * 0.035, 0.06);
-
+    car.root.rotation.z = THREE.MathUtils.lerp(car.root.rotation.z,
+        -car.steer * Math.min(Math.abs(car.speed) / 32, 1) * 0.08, Math.min(1, dt * 9));
+    car.root.rotation.x = THREE.MathUtils.lerp(car.root.rotation.x,
+        -Math.sign(car.speed) * Math.min(Math.abs(car.speed) / 45, 1) * 0.035, Math.min(1, dt * 7));
     car.wheelSpin += car.speed * dt * 1.55;
     for (const wheel of car.wheels) {
         wheel.wheel.rotation.x = car.wheelSpin;
-        wheel.pivot.rotation.y = wheel.front ? -car.steer * 0.48 : 0;
+        wheel.pivot.rotation.y = wheel.front ? car.steer * 0.48 : 0;
     }
-
     terrainModeEl.textContent = shoulder ? "DIRT" : "ROAD";
-    speedEl.textContent = Math.round(Math.abs(car.speed) * 1.68);
-    driveModeEl.textContent = car.speed < -1 ? "R" : "D";
+    speedEl.textContent = Math.round(Math.abs(car.speed) * MPS_TO_MPH);
+    driveModeEl.textContent = car.speed < -0.2 ? "R" : (input.backward && car.speed > 0.2 ? "B" : "D");
     document.body.dataset.speed = speedEl.textContent;
     document.body.dataset.mode = terrainModeEl.textContent;
-    document.body.dataset.x = car.root.position.x.toFixed(2);
-    document.body.dataset.z = car.root.position.z.toFixed(2);
+    document.body.dataset.x = car.model.x.toFixed(2);
+    document.body.dataset.z = car.model.z.toFixed(2);
     document.body.dataset.heading = car.heading.toFixed(3);
-    wrapWorld();
+    renderStats();
 }
 
 function markRenderProbe() {
