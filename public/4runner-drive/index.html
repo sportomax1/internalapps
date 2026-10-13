@@ -2,49 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>4Runner Drive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#101c25">
+    <meta name="description" content="Drive a 4Runner through desert trails and collect golden checkpoints.">
+    <title>4Runner Trail Drive</title>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <main class="drive-shell" aria-label="4Runner driving simulator">
-        <canvas id="scene" aria-label="3D driving scene"></canvas>
+    <main class="drive-shell" aria-label="4Runner trail driving game">
+        <canvas id="scene" aria-label="3D off-road driving scene"></canvas>
+        <div class="vignette" aria-hidden="true"></div>
 
         <section class="hud" aria-label="Vehicle telemetry">
             <div class="gauge">
-                <span class="gauge-value" id="speed">0</span>
+                <span class="gauge-value" id="speed" aria-live="off">0</span>
                 <span class="gauge-label">MPH</span>
             </div>
             <div class="status-stack">
                 <span id="driveMode">D</span>
                 <span id="terrainMode">ROAD</span>
+                <span class="distance" id="distance">0.0 MI</span>
             </div>
         </section>
 
-        <section class="touch-controls" aria-label="Driving controls">
+        <section class="challenge" aria-label="Trail challenge progress">
+            <span class="challenge-heading">4RUNNER <strong>TRAIL CHALLENGE</strong></span>
+            <div class="challenge-stats">
+                <span>RINGS <strong id="ringsCount">0 / 10</strong></span>
+                <span>TIME <strong id="runTime">0:00</strong></span>
+                <span>BEST <strong id="bestTime">--:--</strong></span>
+            </div>
+            <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+        </section>
+
+        <nav class="top-actions" aria-label="Game actions">
+            <button class="action-btn" id="cameraBtn" type="button" aria-label="Change camera (C)" title="Change camera (C)">◉</button>
+            <button class="action-btn" id="pauseBtn" type="button" aria-label="Pause game (P)" title="Pause (P)">Ⅱ</button>
+            <button class="action-btn" id="restartBtn" type="button" aria-label="Restart run (R)" title="Restart (R)">↺</button>
+        </nav>
+
+        <div class="controls-hint" id="controlsHint">Collect 10 golden rings · WASD / arrow keys to drive · C camera · P pause · R restart</div>
+        <div class="game-message" id="gameMessage" role="status" aria-live="polite" hidden></div>
+
+        <section class="touch-controls" aria-label="Touch driving controls">
             <div class="steer-pad">
-                <button class="control-btn" type="button" data-control="left" aria-label="Steer left">
-                    <span aria-hidden="true">&#8592;</span>
-                </button>
-                <button class="control-btn" type="button" data-control="right" aria-label="Steer right">
-                    <span aria-hidden="true">&#8594;</span>
-                </button>
+                <button class="control-btn" type="button" data-control="left" aria-label="Steer left"><span aria-hidden="true">←</span></button>
+                <button class="control-btn" type="button" data-control="right" aria-label="Steer right"><span aria-hidden="true">→</span></button>
             </div>
             <div class="pedal-pad">
-                <button class="pedal pedal-go" type="button" data-control="forward" aria-label="Accelerate">
-                    <span aria-hidden="true">&#9650;</span>
-                </button>
-                <button class="pedal pedal-stop" type="button" data-control="backward" aria-label="Brake or reverse">
-                    <span aria-hidden="true">&#9660;</span>
-                </button>
+                <button class="pedal pedal-stop" type="button" data-control="backward" aria-label="Brake or reverse"><span aria-hidden="true">▼</span><small>BRAKE</small></button>
+                <button class="pedal pedal-go" type="button" data-control="forward" aria-label="Accelerate"><span aria-hidden="true">▲</span><small>GAS</small></button>
             </div>
         </section>
 
-        <button class="camera-btn" id="cameraBtn" type="button" aria-label="Change camera">
-            <span aria-hidden="true">&#9711;</span>
-        </button>
+        <div class="finish-overlay" id="finishOverlay" hidden>
+            <section class="finish-card" role="dialog" aria-modal="true" aria-labelledby="finishTitle">
+                <span class="finish-eyebrow">TRAIL COMPLETED</span>
+                <h1 id="finishTitle">10 rings collected!</h1>
+                <p id="finishSummary"></p>
+                <button id="playAgainBtn" class="play-again" type="button">DRIVE AGAIN</button>
+            </section>
+        </div>
     </main>
-
     <script type="module" src="./app.js"></script>
 </body>
 </html>
