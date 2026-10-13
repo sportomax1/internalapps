@@ -650,7 +650,7 @@ function resize() {
 }
 
 function animate(now = performance.now()) {
-    const dt = Math.min((now - lastFrameTime) / 1000, 0.033);
+    const dt = Math.min(Math.max((now - lastFrameTime) / 1000, 0), 0.05);
     lastFrameTime = now;
     tick(dt);
     requestAnimationFrame(animate);
@@ -658,7 +658,13 @@ function animate(now = performance.now()) {
 
 function tick(dt) {
     simTime += dt;
-    updateVehicle(dt);
+    if (!run.paused && !run.finished) {
+        updateVehicle(dt);
+        updatePickups(dt);
+    }
+    if (!run.paused && !messageEl.hidden && simTime >= run.messageUntil) {
+        messageEl.hidden = true;
+    }
     updateCamera(dt);
     renderer.render(scene, camera);
 }
@@ -668,18 +674,13 @@ createTerrain();
 createRoad();
 create4Runner();
 createSkyDetails();
+createPickups();
 bindControls();
 updateInputVisuals();
+updateVehicle(0);
 updateCamera(1);
 renderer.render(scene, camera);
 markRenderProbe();
 
 window.addEventListener("resize", resize);
-animate();
-window.setInterval(() => {
-    const now = performance.now();
-    if (now - lastFrameTime > 90) {
-        lastFrameTime = now;
-        tick(1 / 30);
-    }
-}, 80);
+requestAnimationFrame(animate);
