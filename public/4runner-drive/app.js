@@ -495,7 +495,16 @@ function resetRun() {
     updateVehicle(0);
 }
 function bindControls() {
+    const buttonReleases = new Set();
+    const clearHeldControls = () => {
+        keyboard.clear();
+        for (const control of Object.keys(touch)) touch[control] = false;
+        for (const release of buttonReleases) release();
+        syncInputs();
+    };
     window.addEventListener("keydown", (event) => {
+        // Let Space activate focused UI buttons rather than also applying the brake.
+        if (event.code === "Space" && event.target?.closest?.("button")) return;
         if (event.code === "KeyC" || event.code === "KeyP" || event.code === "KeyR") {
             event.preventDefault();
             if (event.repeat) return;
@@ -504,58 +513,78 @@ function bindControls() {
             if (event.code === "KeyR") resetRun();
             return;
         }
-        if (!keyMap[event.code]) return;
+        if (!Object.hasOwn(keyMap, event.code)) return;
         keyboard.add(event.code);
         syncInputs();
         event.preventDefault();
     });
     window.addEventListener("keyup", (event) => {
-        if (!keyMap[event.code]) return;
+        if (!Object.hasOwn(keyMap, event.code)) return;
         keyboard.delete(event.code);
         syncInputs();
-        event.preventDefault();
+        if (!(event.code === "Space" && event.target?.closest?.("button"))) event.preventDefault();
     });
-    const releaseAll = () => {
-        keyboard.clear();
-        for (const control of Object.keys(touch)) touch[control] = false;
-        syncInputs();
-    };
-    window.addEventListener("blur", releaseAll);
+    window.addEventListener("blur", clearHeldControls);
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
-            releaseAll();
+            clearHeldControls();
             if (!run.paused && !run.finished) togglePause();
         }
         lastFrameTime = performance.now();
     });
     document.querySelectorAll("[data-control]").forEach((button) => {
         const control = button.dataset.control;
-        let pulseTimer = 0;
+        const pointers = new Set();
+        let downAt = 0;
+        let releaseTimer = 0;
+        const MIN_TAP_MS = 170;
+        function release() {
+            clearTimeout(releaseTimer);
+            releaseTimer = 0;
+            pointers.clear();
+            touch[control] = false;
+            syncInputs();
+        }
+        buttonReleases.add(release);
         button.addEventListener("contextmenu", (event) => event.preventDefault());
         button.addEventListener("pointerdown", (event) => {
-            if (run.finished) return;
-            window.clearTimeout(pulseTimer);
+            if (run.finished || run.paused || (event.pointerType === "mouse" && event.button !== 0)) return;
+            clearTimeout(releaseTimer);
+            releaseTimer = 0;
+            downAt = performance.now();
+            pointers.add(event.pointerId);
             touch[control] = true;
-            button.setPointerCapture?.(event.pointerId);
+            try { button.setPointerCapture(event.pointerId); } catch {}
             syncInputs();
             event.preventDefault();
         });
-        const release = () => { touch[control] = false; syncInputs(); };
-        button.addEventListener("pointerup", release);
+        button.addEventListener("pointerup", (event) => {
+            if (!pointers.has(event.pointerId)) return;
+            pointers.delete(event.pointerId);
+            if (pointers.size) return;
+            // A short mouse click or screen tap should produce a useful nudge.
+            const remaining = Math.max(0, MIN_TAP_MS - (performance.now() - downAt));
+            releaseTimer = window.setTimeout(release, remaining);
+        });
         button.addEventListener("pointercancel", release);
-        button.addEventListener("lostpointercapture", release);
+        button.addEventListener("lostpointercapture", (event) => {
+            // pointerup triggers lostcapture too; don't cancel the brief tap nudge.
+            if (!pointers.has(event.pointerId)) return;
+            pointers.delete(event.pointerId);
+            if (!pointers.size) release();
+        });
         button.addEventListener("click", (event) => {
-            // Native keyboard-activated button clicks have detail 0; pointers are handled above.
-            if (event.detail !== 0 || run.finished) return;
-            window.clearTimeout(pulseTimer);
+            // Native keyboard button activation has detail 0.
+            if (event.detail !== 0 || run.finished || run.paused) return;
+            clearTimeout(releaseTimer);
             touch[control] = true;
             syncInputs();
-            pulseTimer = window.setTimeout(release, 250);
+            releaseTimer = window.setTimeout(release, MIN_TAP_MS);
         });
     });
     cameraBtn.addEventListener("click", cycleCamera);
-    pauseBtn.addEventListener("click", togglePause);
-    restartBtn.addEventListener("click", resetRun);
+    pauseBtn.addEventListener("click", () => { clearHeldControls(); togglePause(); });
+    restartBtn.addEventListener("click", () => { clearHeldControls(); resetRun(); });
     playAgainBtn.addEventListener("click", resetRun);
 }
 
