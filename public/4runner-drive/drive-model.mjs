@@ -10,7 +10,8 @@ export const MAX_WHEEL_STEER_ANGLE = 0.48;
 // The 4Runner mesh points toward +Z. With an upright chase camera behind it,
 // the driver's right is world -X (not +X). Positive input steer means right.
 export function frontWheelYaw(steer) {
-    return -Math.max(-1, Math.min(1, steer)) * MAX_WHEEL_STEER_ANGLE;
+    const amount = Math.max(-1, Math.min(1, steer));
+    return amount === 0 ? 0 : -amount * MAX_WHEEL_STEER_ANGLE;
 }
 export function wheelRotationDelta(speed, dt) {
     return speed * dt / WHEEL_RADIUS;
