@@ -312,3 +312,6 @@ button {
     .game-message { bottom: 33%; font-size: .74rem; }
 }
 @media (prefers-reduced-motion: reduce) { .progress-fill { transition: none; } }
+
+.ring-guide { color: #ffd592; font-size: .68rem; font-weight: 700; letter-spacing: .02em; }
+@media (max-width:520px) { .ring-guide { font-size: .63rem; } }
