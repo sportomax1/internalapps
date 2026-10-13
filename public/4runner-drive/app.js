@@ -1,5 +1,8 @@
 import * as THREE from "https://unpkg.com/three@0.164.1/build/three.module.js";
-import { newVehicleState, stepVehicle, wrapCoordinate, WORLD_HALF_LENGTH, MPS_TO_MPH, isOffroad } from "./drive-model.mjs";
+import {
+    newVehicleState, stepVehicle, wrapCoordinate, WORLD_HALF_LENGTH, MPS_TO_MPH,
+    isOffroad, WHEEL_RADIUS, frontWheelYaw, wheelRotationDelta, relativeTargetBearing
+} from "./drive-model.mjs";
 
 const canvas = document.querySelector("#scene");
 const speedEl = document.querySelector("#speed");
@@ -241,40 +244,68 @@ function createRoad() {
     }
 }
 
+// Explicit hierarchy: steering Y pivot -> rolling X axle -> fixed tire geometry.
+// Vehicle forward is +Z, wheel axle is X, and the rim is visible on the OUTSIDE.
 function createWheel(x, z, front = false) {
+    const side = Math.sign(x);
     const pivot = new THREE.Group();
-    pivot.position.set(x, 0.82, z);
+    pivot.position.set(x, WHEEL_RADIUS - 0.06, z);
     car.root.add(pivot);
 
-    const wheel = new THREE.Group();
-    wheel.rotation.z = Math.PI / 2;
-    pivot.add(wheel);
+    const rolling = new THREE.Group();
+    pivot.add(rolling);
 
-    const tire = new THREE.Mesh(reusable.tire, mat.rubber);
+    // Rubber sidewalls. Cylinders have Y axes by default; rotate into the X axle.
+    const rubberCore = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.8, 0.8, 0.65, 22),
+        mat.rubber
+    );
+    rubberCore.rotation.z = Math.PI / 2;
+    rubberCore.castShadow = true;
+    rubberCore.receiveShadow = true;
+    rolling.add(rubberCore);
+
+    // Rotate each torus from its original XY plane into the wheel's YZ plane.
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.27, 14, 30), mat.rubber);
+    tire.rotation.y = Math.PI / 2;
     tire.castShadow = true;
     tire.receiveShadow = true;
-    wheel.add(tire);
+    rolling.add(tire);
 
-    const rim = new THREE.Mesh(reusable.rim, mat.chrome);
-    rim.rotation.x = Math.PI / 2;
-    rim.scale.set(0.58, 0.58, 0.5);
+    // Put alloy rims on both sides instead of inside the body.
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.51, 0.51, 0.12, 20), mat.chrome);
+    rim.rotation.z = Math.PI / 2;
+    rim.position.x = side * 0.38;
     rim.castShadow = true;
-    wheel.add(rim);
+    rolling.add(rim);
 
+    // Spokes are radial in the YZ plane and rotate with their wheel.
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.16, 16), mat.darkChrome);
+    hub.rotation.z = Math.PI / 2;
+    hub.position.x = side * 0.46;
+    rolling.add(hub);
+    const spokeGeo = new THREE.BoxGeometry(0.12, 0.47, 0.12);
     for (let i = 0; i < 6; i++) {
-        const spoke = mesh(
-            reusable.bodyBox,
-            mat.chrome,
-            { x: 0, y: 0.02, z: 0 },
-            { x: 0.12, y: 0.09, z: 0.96 },
-            wheel,
-            true,
-            false
-        );
-        spoke.rotation.y = (i / 6) * Math.PI * 2;
+        const angle = i * Math.PI / 3;
+        const spoke = new THREE.Mesh(spokeGeo, mat.darkChrome);
+        spoke.position.set(side * 0.46, Math.cos(angle) * 0.28, Math.sin(angle) * 0.28);
+        spoke.rotation.x = angle;
+        spoke.castShadow = true;
+        rolling.add(spoke);
     }
 
-    return { pivot, wheel, front };
+    // Pronounced tread lugs make rolling direction visually apparent at low speed.
+    const lugGeometry = new THREE.BoxGeometry(0.56, 0.09, 0.22);
+    for (let i = 0; i < 14; i++) {
+        const angle = i * Math.PI * 2 / 14;
+        const lug = new THREE.Mesh(lugGeometry, mat.black);
+        lug.position.set(0, Math.cos(angle) * 1.01, Math.sin(angle) * 1.01);
+        lug.rotation.x = angle;
+        lug.castShadow = true;
+        rolling.add(lug);
+    }
+
+    return { pivot, rolling, front };
 }
 
 function create4Runner() {
@@ -403,8 +434,7 @@ function renderStats() {
             const dist = Math.hypot(dx, dz);
             if (!closest || dist < closest.dist) closest = {dx, dz, dist};
         }
-        const angle = Math.atan2(Math.sin(Math.atan2(closest.dx, closest.dz) - car.heading),
-            Math.cos(Math.atan2(closest.dx, closest.dz) - car.heading));
+        const angle = relativeTargetBearing(car.heading, closest.dx, closest.dz);
         const direction = Math.abs(angle) > 2.55 ? "↓" :
             angle > 0.6 ? "→" : angle < -0.6 ? "←" : "↑";
         ringGuideEl.textContent = direction + " Nearest ring: " + Math.round(closest.dist) + " m";
@@ -432,7 +462,7 @@ function togglePause() {
 }
 function cycleCamera() {
     car.cameraMode = (car.cameraMode + 1) % 3;
-    const labels = ["Chase", "Orbit", "Hood"];
+    const labels = ["Chase", "High chase", "Hood"];
     cameraBtn.setAttribute("aria-label", "Change camera (C), current: " + labels[car.cameraMode]);
     cameraBtn.title = "Camera: " + labels[car.cameraMode] + " (C)";
     renderStats();
@@ -608,10 +638,10 @@ function updateVehicle(dt) {
         -car.steer * Math.min(Math.abs(car.speed) / 32, 1) * 0.08, Math.min(1, dt * 9));
     car.root.rotation.x = THREE.MathUtils.lerp(car.root.rotation.x,
         -Math.sign(car.speed) * Math.min(Math.abs(car.speed) / 45, 1) * 0.035, Math.min(1, dt * 7));
-    car.wheelSpin += car.speed * dt * 1.55;
+    car.wheelSpin += wheelRotationDelta(car.speed, dt);
     for (const wheel of car.wheels) {
-        wheel.wheel.rotation.x = car.wheelSpin;
-        wheel.pivot.rotation.y = wheel.front ? car.steer * 0.48 : 0;
+        wheel.rolling.rotation.x = car.wheelSpin;
+        wheel.pivot.rotation.y = wheel.front ? frontWheelYaw(car.steer) : 0;
     }
     terrainModeEl.textContent = shoulder ? "DIRT" : "ROAD";
     speedEl.textContent = Math.round(Math.abs(car.speed) * MPS_TO_MPH);
@@ -639,29 +669,20 @@ function updateCamera(dt) {
     const carPos = car.root.position;
     const heading = car.heading;
     const forward = new THREE.Vector3(Math.sin(heading), 0, Math.cos(heading));
-    const right = new THREE.Vector3(Math.cos(heading), 0, -Math.sin(heading));
-
     let desired;
     let target;
     if (car.cameraMode === 1) {
-        desired = carPos.clone()
-            .addScaledVector(forward, 8.5)
-            .addScaledVector(right, 5.7)
-            .add(new THREE.Vector3(0, 4.1, 0));
-        target = carPos.clone().add(new THREE.Vector3(0, 1.6, 0));
+        // Always remain behind the car so left/right never invert between views.
+        desired = carPos.clone().addScaledVector(forward, -16).add(new THREE.Vector3(0, 12, 0));
+        target = carPos.clone().addScaledVector(forward, 15).add(new THREE.Vector3(0, 1.3, 0));
     } else if (car.cameraMode === 2) {
-        desired = carPos.clone()
-            .addScaledVector(forward, -2.3)
-            .add(new THREE.Vector3(0, 3.15, 0));
-        target = carPos.clone().addScaledVector(forward, 22).add(new THREE.Vector3(0, 1.7, 0));
+        desired = carPos.clone().addScaledVector(forward, 1.15).add(new THREE.Vector3(0, 3.5, 0));
+        target = carPos.clone().addScaledVector(forward, 27).add(new THREE.Vector3(0, 2.25, 0));
     } else {
-        desired = carPos.clone()
-            .addScaledVector(forward, -10.2)
-            .add(new THREE.Vector3(0, 5.6, 0));
-        target = carPos.clone().addScaledVector(forward, 8).add(new THREE.Vector3(0, 1.5, 0));
+        desired = carPos.clone().addScaledVector(forward, -11).add(new THREE.Vector3(0, 6.4, 0));
+        target = carPos.clone().addScaledVector(forward, 9).add(new THREE.Vector3(0, 1.4, 0));
     }
-
-    camera.position.lerp(desired, 1 - Math.pow(0.0006, dt));
+    camera.position.lerp(desired, 1 - Math.exp(-6 * Math.max(0, dt)));
     camera.lookAt(target);
 }
 
