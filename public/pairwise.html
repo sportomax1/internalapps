@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b101b">
+<title>Pairwise Ranker | Internal Apps</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:dark;--bg:#0b101b;--panel:#141e2e;--panel2:#1b2940;--stroke:#304056;--ink:#f4f7fc;--muted:#a5b3c8;--blue:#66a5ff;--green:#69d8aa;--focus:#a6c8ff}
+*{box-sizing:border-box}html{min-height:100%}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#172c4c 0%,var(--bg) 65%);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);line-height:1.45}button,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.5}button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.shell{width:min(880px,calc(100% - 32px));margin:0 auto;padding:22px 0 48px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}.save{font-size:12px;color:var(--muted)}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:800;color:var(--blue);margin:0 0 6px}.heading{font-size:clamp(28px,5vw,42px);letter-spacing:-.04em;line-height:1.1;margin:0 0 8px}.subtitle{color:var(--muted);margin:0 0 22px;font-size:14px;max-width:660px}
+.panel{border:1px solid var(--stroke);background:var(--panel);border-radius:20px;padding:24px;box-shadow:0 20px 50px #0002}h2{font-size:18px;letter-spacing:-.02em;margin:0 0 4px}.hint{margin:0;color:var(--muted);font-size:13px}.sectionhead{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+textarea{width:100%;min-height:220px;resize:vertical;border:1px solid var(--stroke);border-radius:12px;background:#0b1524;color:var(--ink);padding:15px;line-height:1.6;font-size:14px;outline:none}textarea:focus{border-color:var(--blue)}textarea::placeholder{color:#7e90a9}
+.btn{border:1px solid var(--stroke);border-radius:12px;background:var(--panel2);color:var(--ink);padding:10px 16px;font-weight:650;font-size:13px;min-height:42px}.btn:hover:not(:disabled){border-color:#6c87a9;background:#243550}.btn.primary{background:#3279e7;border-color:#4288fb;color:white}.btn.primary:hover:not(:disabled){background:#4086f3}.btn.quiet{background:transparent}.barrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}.barrow .push{margin-left:auto}.validation{font-size:12px;color:var(--muted);min-height:18px;margin:8px 0 0}.validation.error{color:#ffa1a1}
+.examples{margin-top:12px;color:var(--muted);font-size:12px}.examples code{font:inherit;color:#d4e6ff}
+.statusline{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12px;margin:0 0 9px}.statusline strong{color:var(--ink)}.track{height:8px;background:#0b1424;border-radius:50px;overflow:hidden;border:1px solid #2f4058}.track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#4289fa,#65d0bb);transition:width .18s}
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:23px 0 12px}.choice{min-width:0;width:100%;min-height:225px;border:1px solid #405779;border-radius:18px;padding:22px;background:linear-gradient(160deg,#243757,#15253c);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:15px;transition:transform .12s,border-color .12s,background .12s;overflow-wrap:anywhere}.choice:hover{transform:translateY(-2px);border-color:var(--blue);background:linear-gradient(160deg,#2d456d,#192d48)}.choice:active{transform:scale(.99)}.choice .tag{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#a6c5ed;font-weight:800}.choice .item{font-size:clamp(19px,3vw,27px);font-weight:750;line-height:1.28;letter-spacing:-.02em}.choice .key{font-size:12px;color:#9db3d4}.versus{font-size:12px;color:var(--muted);text-align:center;font-weight:600}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;flex-wrap:wrap}.smallnote{font-size:12px;color:var(--muted)}.smallnote b{color:var(--ink)}.foot{margin:16px 0 0;color:#8b9db7;text-align:center;font-size:12px}
+.resultsTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}.success{color:var(--green);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.09em}.resultList{list-style:none;padding:0;margin:18px 0;max-height:52vh;overflow:auto;border:1px solid var(--stroke);border-radius:13px}.resultList li{display:flex;align-items:center;gap:14px;min-height:46px;padding:9px 14px;border-bottom:1px solid #26364b;font-size:14px;overflow-wrap:anywhere}.resultList li:last-child{border-bottom:0}.rank{width:38px;flex:none;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:700}.resultList li:nth-child(-n+3){background:#192b40}.resultList li:first-child .rank{color:#ffdf81}
+[hidden]{display:none!important}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#304f72;border:1px solid #779ac1;color:white;border-radius:12px;padding:10px 16px;font-size:13px;box-shadow:0 10px 30px #0005;max-width:calc(100% - 32px);z-index:5}
+@media(max-width:580px){.shell{width:calc(100% - 20px);padding-top:16px}.top{margin-bottom:16px}.panel{padding:16px;border-radius:16px}.duel{gap:9px;margin-top:18px}.choice{min-height:200px;border-radius:13px;padding:12px 9px;gap:12px}.choice .item{font-size:18px}.choice .tag{font-size:9px}.controls{margin-top:19px}.btn{padding:9px 12px}.sectionhead{flex-direction:column;gap:7px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="top">
+    <a href="/" class="back" aria-label="Back to Internal Apps">← Internal Apps</a>
+    <span class="save" id="saveStatus">Private · stored in this browser</span>
+  </div>
+  <p class="eyebrow">Head-to-head preference sorting</p>
+  <h1 class="heading">Pairwise Ranker</h1>
+  <p class="subtitle">Paste a list, pick your favorite of each pair, and get a complete ranking. Smart comparisons mean you won't have to compare every possible pair.</p>
+
+  <section class="panel" id="setup">
+    <div class="sectionhead">
+      <div><h2>1. Paste your list</h2><p class="hint">One item per line, or CSV copied from Excel / Google Sheets.</p></div>
+    </div>
+    <label for="input" class="hint" style="display:block;margin-bottom:8px">Names to rank</label>
+    <textarea id="input" spellcheck="false" placeholder="Azul&#10;Catan&#10;Wingspan&#10;Ticket to Ride&#10;7 Wonders"></textarea>
+    <div class="validation" id="preview" role="status" aria-live="polite">Paste at least two items to begin.</div>
+    <div class="barrow"><button class="btn quiet" type="button" id="clearInput">Clear</button><button class="btn primary push" type="button" id="start" disabled>Start ranking →</button></div>
+    <p class="examples">Supports simple lists or CSV with a <code>Name</code>, <code>Game</code>, or <code>Title</code> column. Duplicate names are removed.</p>
+  </section>
+
+  <section class="panel" id="compare" hidden>
+    <div class="sectionhead">
+      <div><h2>2. Pick your favorite</h2><p class="hint">Select the item you prefer. There is no wrong answer.</p></div>
+      <button class="btn quiet" type="button" id="newFromCompare">New list</button>
+    </div>
+    <div class="statusline"><span id="rankedCount"></span><span id="comparisonCount"></span></div>
+    <div class="track" role="progressbar" aria-label="Items ranked" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><span id="progressFill"></span></div>
+    <div class="duel">
+      <button class="choice" type="button" id="leftChoice" aria-label="Choose left item"><span class="tag">Option A</span><span class="item" id="leftText"></span><span class="key">← Left arrow</span></button>
+      <button class="choice" type="button" id="rightChoice" aria-label="Choose right item"><span class="tag">Option B</span><span class="item" id="rightText"></span><span class="key">Right arrow →</span></button>
+    </div>
+    <div class="versus">Which do you prefer?</div>
+    <div class="controls"><button class="btn" type="button" id="undo">↶ Undo</button><span class="smallnote" id="remaining"></span></div>
+    <p class="foot">Autosaves every answer on this device. Use ← / → to select, or Ctrl/Cmd + Z to undo.</p>
+  </section>
+
+  <section class="panel" id="results" hidden>
+    <div class="resultsTop">
+      <div><div class="success">✓ Ranking complete</div><h2 style="margin-top:6px">Your results</h2><p class="hint" id="resultMeta"></p></div>
+      <button class="btn quiet" type="button" id="newFromResults">New list</button>
+    </div>
+    <ol class="resultList" id="resultList"></ol>
+    <div class="barrow">
+      <button class="btn primary" type="button" id="copy">Copy ranking</button>
+      <button class="btn" type="button" id="download">Download CSV</button>
+      <button class="btn quiet push" type="button" id="undoResult">↶ Undo last</button>
+    </div>
+    <p class="foot">Results reflect your pairwise choices. Rankings assume your preferences are reasonably consistent.</p>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+(function(){
+'use strict';
+var KEY='internalapps-pairwise-v1';
+var MAX_ITEMS=3000;
+var state=null,parsed=[];
+var $=function(id){return document.getElementById(id)};
+var els={
+  setup:$('setup'),compare:$('compare'),results:$('results'),input:$('input'),preview:$('preview'),
+  start:$('start'),save:$('saveStatus'),left:$('leftChoice'),right:$('rightChoice'),
+  leftText:$('leftText'),rightText:$('rightText'),ranked:$('rankedCount'),comparison:$('comparisonCount'),
+  progress:$('progress'),fill:$('progressFill'),remaining:$('remaining'),undo:$('undo'),
+  resultList:$('resultList'),resultMeta:$('resultMeta'),undoResult:$('undoResult'),toast:$('toast')
+};
+function tokenizeCSV(src,delimiter){
+  var rows=[],row=[],field='',quoted=false;
+  src=src.replace(/^\uFEFF/,'');
+  for(var i=0;i<src.length;i++){
+    var c=src[i];
+    if(c==='"'){
+      if(quoted && src[i+1]==='"'){field+='"';i++}
+      else if(quoted){quoted=false}
+      else if(field.trim()===''){quoted=true}
+      else{field+=c}
+    }else if(c===delimiter && !quoted){row.push(field);field=''}
+    else if((c==='\n'||c==='\r')&&!quoted){
+      if(c==='\r'&&src[i+1]==='\n')i++;
+      row.push(field);rows.push(row);row=[];field='';
+    }else{field+=c}
+  }
+  row.push(field);rows.push(row);
+  return rows.filter(function(r){return r.some(function(x){return x.trim()!==''})});
+}
+function detectDelimiter(src){
+  var lines=src.split(/\r?\n/).filter(function(x){return x.trim()!==''}).slice(0,8);
+  if(!lines.length)return ',';
+  var options=[',','\t',';'],best=',',bestScore=0;
+  options.forEach(function(d){
+    var counts=lines.map(function(line){
+      var q=false,n=0;
+      for(var i=0;i<line.length;i++){
+        if(line[i]==='"'){if(q&&line[i+1]==='"')i++;else q=!q}
+        else if(line[i]===d&&!q)n++;
+      }
+      return n;
+    });
+    var nonzero=counts.filter(function(n){return n>0}).length;
+    var score=(lines.length>1?nonzero/lines.length:1)*(counts.reduce(function(a,b){return a+b},0));
+    if(nonzero && score>bestScore){bestScore=score;best=d}
+  });
+  return best;
+}
+function parseList(src){
+  if(!src.trim())return [];
+  var rows=tokenizeCSV(src,detectDelimiter(src)),raw=[];
+  if(rows.length===1){
+    raw=rows[0];
+  }else{
+    var first=rows[0].map(function(x){return x.trim().toLowerCase().replace(/[\s_-]+/g,' ')});
+    var headerRx=/^(name|title|game|game name|board game|boardgame|item|item name|entry|favorite|choice)$/;
+    var nameCol=first.findIndex(function(x){return headerRx.test(x)});
+    var hasHeader=nameCol>=0;
+    if(!hasHeader){
+      nameCol=0;
+      if(rows.length>=3 && rows.slice(0,4).every(function(r){return /^\d+$/.test((r[0]||'').trim())&&r.length>1&&isNaN(Number(r[1]))}))nameCol=1;
+    }
+    raw=rows.slice(hasHeader?1:0).map(function(r){return r[nameCol]||''});
+  }
+  var seen=new Set(),out=[];
+  raw.forEach(function(v){
+    var name=v.trim().replace(/\s+/g,' ');
+    var key=name.toLocaleLowerCase();
+    if(name && !seen.has(key)){seen.add(key);out.push(name)}
+  });
+  return out;
+}
+function toast(msg){
+  els.toast.textContent=msg;els.toast.hidden=false;
+  clearTimeout(toast.timer);toast.timer=setTimeout(function(){els.toast.hidden=true},2500);
+}
+function write(){
+  try{
+    if(state)localStorage.setItem(KEY,JSON.stringify(state));
+    else localStorage.removeItem(KEY);
+    els.save.textContent='✓ Saved on this device';
+  }catch(err){
+    els.save.textContent='Browser storage unavailable';
+  }
+}
+function valid(s){
+  if(!s||s.version!==1||!Array.isArray(s.items)||s.items.length<2||s.items.length>MAX_ITEMS||
+      !s.items.every(function(x){return typeof x==='string'})||
+      !Array.isArray(s.order)||s.order.length<1||s.order.length>s.items.length||
+      !Number.isInteger(s.next)||s.next<1||s.next>s.items.length||
+      !Number.isInteger(s.low)||!Number.isInteger(s.high)||s.low<0||s.high<s.low||
+      !Number.isInteger(s.votes)||s.votes<0||!Array.isArray(s.history))return false;
+  if(s.order.length!==s.next)return false;
+  if(new Set(s.order).size!==s.order.length)return false;
+  if(s.order.some(function(n){return !Number.isInteger(n)||n<0||n>=s.next}))return false;
+  if(s.next===s.items.length)return s.low===0&&s.high===0;
+  return s.high<=s.order.length;
+}
+function currentSnapshot(){
+  return {order:state.order.slice(),next:state.next,low:state.low,high:state.high,votes:state.votes};
+}
+function restoreSnapshot(snap){
+  state.order=snap.order.slice();state.next=snap.next;state.low=snap.low;state.high=snap.high;state.votes=snap.votes;
+}
+function saveUndo(){
+  state.history.push(currentSnapshot());
+  if(state.history.length>40)state.history.shift();
+}
+function remainingMax(){
+  if(!state||state.next>=state.items.length)return 0;
+  var cur=Math.ceil(Math.log2(state.high-state.low+1));
+  for(var k=state.next+1;k<state.items.length;k++)cur+=Math.ceil(Math.log2(k+1));
+  return cur;
+}
+function updatePreview(){
+  parsed=parseList(els.input.value);
+  var msg=parsed.length===0?'Paste at least two items to begin.':
+    parsed.length===1?'Only one unique item found. Add at least one more.':
+    parsed.length>MAX_ITEMS?'Too many items. Maximum is '+MAX_ITEMS+'.':
+    parsed.length+' unique items ready'+(parsed.length>1?' · '+parsed.slice(0,3).join(' · '):'');
+  els.preview.textContent=msg;
+  els.preview.classList.toggle('error',parsed.length>MAX_ITEMS);
+  els.start.disabled=parsed.length<2||parsed.length>MAX_ITEMS;
+}
+function freshState(items){
+  return {version:1,items:items.slice(),order:[0],next:1,low:0,high:1,votes:0,history:[]};
+}
+function isFinished(){return !!state&&state.next>=state.items.length}
+function nextPair(){
+  var pivot=Math.floor((state.low+state.high)/2);
+  var newLeft=(state.votes%2===0);
+  var challenger=state.items[state.next],opponent=state.items[state.order[pivot]];
+  els.leftText.textContent=newLeft?challenger:opponent;
+  els.rightText.textContent=newLeft?opponent:challenger;
+  els.left.dataset.isNew=newLeft?'1':'0';
+  els.right.dataset.isNew=newLeft?'0':'1';
+  els.left.setAttribute('aria-label','Prefer '+els.leftText.textContent);
+  els.right.setAttribute('aria-label','Prefer '+els.rightText.textContent);
+}
+function renderResults(){
+  els.resultList.replaceChildren();
+  state.order.forEach(function(id,i){
+    var li=document.createElement('li'),rank=document.createElement('span'),name=document.createElement('span');
+    rank.className='rank';rank.textContent=String(i+1)+'.';name.textContent=state.items[id];
+    li.append(rank,name);els.resultList.append(li);
+  });
+  els.resultMeta.textContent=state.items.length+' ranked items · '+state.votes+' comparisons';
+  els.undoResult.disabled=!state.history.length;
+}
+function render(){
+  var setup=!state,complete=!!state&&isFinished();
+  els.setup.hidden=!setup;els.compare.hidden=setup||complete;els.results.hidden=!complete;
+  if(setup){updatePreview();return}
+  if(complete){renderResults();return}
+  els.ranked.textContent=state.next+' of '+state.items.length+' items placed';
+  els.comparison.textContent=state.votes+' comparisons';
+  var pct=Math.round(state.next/state.items.length*100);
+  els.fill.style.width=pct+'%';els.progress.setAttribute('aria-valuenow',String(pct));
+  els.remaining.textContent='At most '+remainingMax()+' choices remaining';
+  els.undo.disabled=!state.history.length;
+  nextPair();
+}
+function vote(isNew){
+  if(!state||isFinished())return;
+  saveUndo();
+  var mid=Math.floor((state.low+state.high)/2);
+  if(isNew)state.high=mid;
+  else state.low=mid+1;
+  state.votes++;
+  if(state.low===state.high){
+    state.order.splice(state.low,0,state.next);
+    state.next++;
+    state.low=0;state.high=isFinished()?0:state.order.length;
+  }
+  write();render();
+}
+function undo(){
+  if(!state||!state.history.length)return;
+  restoreSnapshot(state.history.pop());
+  write();render();
+}
+function start(){
+  updatePreview();
+  if(parsed.length<2||parsed.length>MAX_ITEMS)return;
+  state=freshState(parsed);
+  write();render();
+}
+function newList(){
+  if(state&&state.votes>0&&!confirm('Start a new ranking? Your current progress will be replaced.'))return;
+  if(state)els.input.value=state.items.join('\n');
+  state=null;write();render();els.input.focus();
+}
+function csvCell(value){
+  var x=String(value);
+  if(/^[=+\-@\t\r]/.test(x))x="'"+x;
+  return '"'+x.replace(/"/g,'""')+'"';
+}
+function csvResults(){
+  var lines=['Rank,Name'];
+  state.order.forEach(function(id,i){lines.push((i+1)+','+csvCell(state.items[id]))});
+  return '\uFEFF'+lines.join('\r\n')+'\r\n';
+}
+async function copyResults(){
+  var txt=state.order.map(function(id,i){return (i+1)+'. '+state.items[id]}).join('\n');
+  try{
+    if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(txt)}
+    else{
+      var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+      if(!document.execCommand('copy'))throw Error('Copy failed');
+      ta.remove();
+    }
+    toast('Ranking copied');
+  }catch(e){toast('Copy unavailable. Use Download CSV instead.')}
+}
+function download(){
+  var blob=new Blob([csvResults()],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='pairwise-ranking.csv';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url)},1000);
+  toast('CSV downloaded');
+}
+els.input.addEventListener('input',updatePreview);
+$('clearInput').addEventListener('click',function(){els.input.value='';updatePreview();els.input.focus()});
+els.start.addEventListener('click',start);
+els.left.addEventListener('click',function(){vote(els.left.dataset.isNew==='1')});
+els.right.addEventListener('click',function(){vote(els.right.dataset.isNew==='1')});
+els.undo.addEventListener('click',undo);
+els.undoResult.addEventListener('click',undo);
+$('newFromCompare').addEventListener('click',newList);
+$('newFromResults').addEventListener('click',newList);
+$('copy').addEventListener('click',copyResults);
+$('download').addEventListener('click',download);
+document.addEventListener('keydown',function(e){
+  var target=e.target,typing=target&&(/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)||target.isContentEditable);
+  if(typing||!state)return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return}
+  if(isFinished()||e.altKey||e.ctrlKey||e.metaKey)return;
+  if(e.key==='ArrowLeft'){e.preventDefault();els.left.click()}
+  else if(e.key==='ArrowRight'){e.preventDefault();els.right.click()}
+});
+try{
+  var stored=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(valid(stored)){state=stored;els.input.value=state.items.join('\n');els.save.textContent='✓ Progress restored'}
+}catch(e){}
+render();
+})();
+</script>
+</body>
+</html>
