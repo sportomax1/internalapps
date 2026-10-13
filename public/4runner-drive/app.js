@@ -14,6 +14,7 @@ const runTimeEl = document.querySelector("#runTime");
 const bestTimeEl = document.querySelector("#bestTime");
 const distanceEl = document.querySelector("#distance");
 const progressEl = document.querySelector("#progressFill");
+const ringGuideEl = document.querySelector("#ringGuide");
 const messageEl = document.querySelector("#gameMessage");
 const finishOverlay = document.querySelector("#finishOverlay");
 const finishSummary = document.querySelector("#finishSummary");
@@ -170,6 +171,10 @@ function createLights() {
     scene.add(sun);
 }
 
+function terrainHeight(x, z) {
+    return Math.sin(x * 0.035) * Math.cos(z * 0.025) * 1.6 +
+        Math.sin((x + z) * 0.018) * 1.1 - 0.7;
+}
 function createTerrain() {
     const groundGeo = new THREE.PlaneGeometry(520, 520, 48, 48);
     groundGeo.rotateX(-Math.PI / 2);
@@ -390,6 +395,22 @@ function renderStats() {
     bestTimeEl.textContent = run.best ? formatTime(run.best) : "--:--";
     distanceEl.textContent = (car.model.meters / 1609.344).toFixed(1) + " MI";
     progressEl.style.width = Math.min(100, run.rings * 100 / RING_GOAL) + "%";
+    if (!run.finished && pickups.length) {
+        let closest = null;
+        for (const pickup of pickups) {
+            const dx = pickup.position.x - car.model.x;
+            const dz = pickup.position.z - car.model.z;
+            const dist = Math.hypot(dx, dz);
+            if (!closest || dist < closest.dist) closest = {dx, dz, dist};
+        }
+        const angle = Math.atan2(Math.sin(Math.atan2(closest.dx, closest.dz) - car.heading),
+            Math.cos(Math.atan2(closest.dx, closest.dz) - car.heading));
+        const direction = Math.abs(angle) > 2.55 ? "↓" :
+            angle > 0.6 ? "→" : angle < -0.6 ? "←" : "↑";
+        ringGuideEl.textContent = direction + " Nearest ring: " + Math.round(closest.dist) + " m";
+    } else {
+        ringGuideEl.textContent = "Trail complete!";
+    }
     pauseBtn.textContent = run.paused && !run.finished ? "▶" : "Ⅱ";
     pauseBtn.setAttribute("aria-label", run.paused ? "Resume game (P)" : "Pause game (P)");
     document.body.dataset.rings = String(run.rings);
@@ -578,7 +599,10 @@ function updateVehicle(dt) {
     const roughness = shoulder ? 2.2 : 0.42;
     car.suspension += dt * (4.5 + Math.abs(car.speed) * 0.13);
     const bounce = Math.sin(car.suspension * 5.4) * roughness * Math.min(Math.abs(car.speed) / 32, 1) * 0.035;
-    car.root.position.set(car.model.x, 0.1 + bounce, car.model.z);
+    const terrainY = terrainHeight(car.model.x, car.model.z) + 0.8;
+    const desiredY = shoulder ? terrainY : 0.1;
+    const nextY = THREE.MathUtils.lerp(car.root.position.y, desiredY, Math.min(1, dt * 7));
+    car.root.position.set(car.model.x, nextY + bounce, car.model.z);
     car.root.rotation.y = car.heading;
     car.root.rotation.z = THREE.MathUtils.lerp(car.root.rotation.z,
         -car.steer * Math.min(Math.abs(car.speed) / 32, 1) * 0.08, Math.min(1, dt * 9));
