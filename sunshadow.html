@@ -131,18 +131,68 @@ function renderInspector(){const b=state.buildings.find(x=>x.id===state.selected
  $('buildingTitle').textContent=b.manual?'Your drawn building':(b.tags?.name||`OSM building ${b.id.split('/')[1]}`);$('buildingSource').textContent=`${b.source} · Height ${ftn(b.height)}${b.height!==b.baseline?' · adjusted':''}. ${b.manual?'Custom footprint':b.id}`;$('selectedHeight').value=(b.height*M2FT).toFixed(1);
  $('removeBuilding').classList.toggle('hidden',!b.manual);$('resetHeight').disabled=b.height===b.baseline; $('mapOverlayText').textContent=`Selected: ${ftn(b.height)} high`;
 }
-async function requestBuildings(lat,lng,radius){const proxy='/api/overpass';const q=`[out:json][timeout:20];way["building"](around:${radius},${lat},${lng});out geom tags;`;
- const endpoints=[{url:proxy,init:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat,lng,radius})}},{url:'https://overpass-api.de/api/interpreter',init:{method:'POST',body:new URLSearchParams({data:q})}},{url:'https://overpass.kumi.systems/api/interpreter',init:{method:'POST',body:new URLSearchParams({data:q})}}];
- let err='';for(const endpoint of endpoints){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),13500);try{const r=await fetch(endpoint.url,{...endpoint.init,signal:controller.signal});if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);const data=await r.json();if(!Array.isArray(data.elements))throw new Error('Invalid building response');return data}catch(e){err=e.message||String(e)}finally{clearTimeout(timeout)}}throw new Error(err||'All map-data sources unavailable')
+// OpenStreetMap requests use our same-origin Vercel proxy first. It retries upstreams,
+// while GET enables edge caching. Direct Overpass is a last resort if the proxy fails.
+const OSM_CACHE_PREFIX='sunshadow-osm-v3-';
+function osmCacheKey(lat,lng,radius){return `${OSM_CACHE_PREFIX}${lat.toFixed(3)}_${lng.toFixed(3)}_${radius}`}
+function readOSMCache(lat,lng,radius){try{
+ const raw=localStorage.getItem(osmCacheKey(lat,lng,radius));if(!raw)return null;
+ const v=JSON.parse(raw);if(!v||Date.now()-v.saved>24*3600_000||Math.abs(v.lat-lat)>.0004||Math.abs(v.lng-lng)>.0004||!Array.isArray(v.elements))return null;
+ return v;
+ }catch{return null}}
+function saveOSMCache(lat,lng,radius,json){try{
+ const elements=json.elements.filter(el=>el.type==='way'&&el.tags?.building&&Array.isArray(el.geometry)).map(el=>({type:'way',id:el.id,tags:el.tags,geometry:el.geometry}));
+ const raw=JSON.stringify({saved:Date.now(),lat,lng,elements});if(raw.length>1_400_000)return;
+ const key=osmCacheKey(lat,lng,radius);localStorage.setItem(key,raw);
+ // Keep a small bounded cache; never displace unrelated app data.
+ const keys=Object.keys(localStorage).filter(k=>k.startsWith(OSM_CACHE_PREFIX));if(keys.length>5){
+  const ages=keys.map(k=>{try{return {k,t:JSON.parse(localStorage.getItem(k)).saved||0}}catch{return {k,t:0}}}).sort((a,b)=>a.t-b.t);
+  for(const entry of ages.slice(0,keys.length-5))localStorage.removeItem(entry.k);
+ }
+ }catch{/* Private browsing or storage quota: caching is optional. */}}
+async function fetchWithTimeout(url,init,ms,parentSignal){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(new DOMException('Building source timed out','TimeoutError')),ms);
+ const abort=()=>controller.abort(parentSignal.reason||new DOMException('Superseded location','AbortError'));
+ if(parentSignal?.aborted)abort();else parentSignal?.addEventListener('abort',abort,{once:true});
+ try{const response=await fetch(url,{...init,signal:controller.signal});if(!response.ok){let detail='';try{const error=await response.json();detail=error.error||''}catch{}throw new Error(detail||`HTTP ${response.status}`)}
+  const data=await response.json();if(!Array.isArray(data.elements))throw new Error('The building service returned invalid data');return data;
+ }catch(e){if(parentSignal?.aborted)throw new DOMException('Superseded location','AbortError');
+  if(controller.signal.aborted||e.name==='TimeoutError')throw new Error('The building service timed out. Try again or use a smaller search radius.');throw e;
+ }finally{clearTimeout(timer);parentSignal?.removeEventListener('abort',abort)}
 }
-async function loadBuildings(){if(!state.mapReady)return;const sequence=++state.pending,lat=state.lat,lng=state.lng,rad=+$('radius').value;
- // Manual footprints are retained when reloading OpenStreetMap data at the current pin.
- const custom=state.buildings.filter(x=>x.manual);setStatus(`Loading OpenStreetMap building footprints within ${rad} m…`);
- try{const json=await requestBuildings(lat,lng,rad);if(sequence!==state.pending)return;const imported=parseBuildings(json);state.buildings=[...imported,...custom];state.selected=null;renderInspector();renderFootprints();scheduleShadowRender();
- const measured=imported.filter(b=>b.source==='OSM measured/tagged height').length;const estimated=imported.length-measured;setStatus(`${imported.length} real mapped building footprints loaded (${measured} tagged heights, ${estimated} estimated heights). Select a building to adjust its height.`,imported.length?'ok':'neutral');
- if(!imported.length){$('mapOverlayText').textContent='No mapped footprints here — draw your building';setStatus('No OSM building footprints found near this pin. Increase radius, reposition the pin, or draw a building manually.','neutral')}
- else $('mapOverlayText').textContent=`${imported.length} OSM buildings · ${custom.length} custom`;
- }catch(e){if(sequence!==state.pending)return;state.buildings=custom;state.selected=null;renderInspector();renderFootprints();scheduleShadowRender();setStatus(`Could not load real building footprints: ${e.message}. Try Reload or draw a footprint manually.`,'error');$('mapOverlayText').textContent='Building data temporarily unavailable'}
+async function requestBuildings(lat,lng,radius,signal){
+ const url=`/api/overpass?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radius=${radius}`;
+ let error='';try{return await fetchWithTimeout(url,{method:'GET',headers:{'Accept':'application/json'}},38000,signal)}catch(e){if(signal.aborted)throw e;error=e.message||String(e)}
+ // Direct Overpass may be blocked by browser CORS; the same-origin proxy is preferred.
+ const q=`[out:json][timeout:16];way["building"](around:${radius},${lat},${lng});out geom tags;`;
+ try{return await fetchWithTimeout('https://overpass.kumi.systems/api/interpreter',{method:'POST',body:new URLSearchParams({data:q})},19000,signal)}catch(e){if(signal.aborted)throw e}
+ throw new Error(`${error}. The fallback Overpass service was also unavailable.`);
+}
+function showImportedBuildings(json,custom,mode){const imported=parseBuildings(json);state.buildings=[...imported,...custom];state.selected=null;renderInspector();renderFootprints();scheduleShadowRender();
+ const measured=imported.filter(b=>b.source==='OSM measured/tagged height').length;
+ if(!imported.length){$('mapOverlayText').textContent='No mapped footprints here — draw your building';setStatus(`${mode}: No building footprints found at this location. Increase the radius or draw your building.`, 'neutral')}
+ else{$('mapOverlayText').textContent=`${imported.length} OSM buildings · ${custom.length} custom`;
+ setStatus(`${mode}: ${imported.length} building footprints (${measured} tagged heights, ${imported.length-measured} estimated). Tap a building to adjust its height.`, 'ok')}
+}
+async function loadBuildings(){if(!state.mapReady)return;
+ // Cancel the old location's request rather than starting overlapping fetches.
+ state.buildingController?.abort();const controller=new AbortController();state.buildingController=controller;
+ const sequence=++state.pending,lat=state.lat,lng=state.lng,rad=+$('radius').value;
+ const custom=state.buildings.filter(x=>x.manual),cached=readOSMCache(lat,lng,rad);
+ const samePlace=state.loadedCenter&&Math.abs(state.loadedCenter.lat-lat)<.0004&&Math.abs(state.loadedCenter.lng-lng)<.0004&&state.loadedCenter.radius===rad;
+ if(cached){showImportedBuildings(cached,custom,'Saved map');state.loadedCenter={lat,lng,radius:rad};setStatus(`Showing ${parseBuildings(cached).length} saved building footprints while refreshing OpenStreetMap…`,'neutral')}
+ else if(samePlace&&state.buildings.some(b=>!b.manual)){setStatus(`Refreshing building footprints within ${rad} m; previous map remains visible…`)}
+ else{state.buildings=custom;state.selected=null;renderInspector();renderFootprints();scheduleShadowRender();setStatus(`Fetching real building footprints within ${rad} m (this can take 20–40 seconds)…`)}
+ try{const json=await requestBuildings(lat,lng,rad,controller.signal);if(sequence!==state.pending)return;
+  saveOSMCache(lat,lng,rad,json);showImportedBuildings(json,custom,'OpenStreetMap loaded');state.loadedCenter={lat,lng,radius:rad};
+ }catch(e){if(sequence!==state.pending||controller.signal.aborted)return;
+  if(cached||samePlace&&state.buildings.some(b=>!b.manual)){
+   setStatus(`Using previously loaded footprints because the live OpenStreetMap request failed (${e.message}). Reload to try again.`, 'neutral');$('mapOverlayText').textContent='Using saved building footprints';
+  }else{
+   state.buildings=custom;state.selected=null;renderInspector();renderFootprints();scheduleShadowRender();
+   setStatus(`OpenStreetMap building data is unavailable: ${e.message}. Try Reload, reduce the radius to 200 m, or draw a building manually.`, 'error');$('mapOverlayText').textContent='Could not download building outlines';
+  }
+ }finally{if(state.buildingController===controller)state.buildingController=null}
 }
 // Paint the UNION of swept wall quads and the shifted roof into an opaque mask,
 // then composite the mask ONCE at the desired opacity. This avoids dark overlap seams

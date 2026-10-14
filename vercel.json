@@ -63,5 +63,10 @@
       "source": "/api/sleep-score",
       "destination": "/api/oura?action=sleep-score"
     }
-  ]
+  ],
+  "functions": {
+    "api/tools.js": {
+      "maxDuration": 45
+    }
+  }
 }
