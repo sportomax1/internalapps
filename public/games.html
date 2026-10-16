@@ -4,16 +4,16 @@
 const $=id=>document.getElementById(id),c=$('screen'),g=c.getContext('2d'),W=960,H=540,PI=Math.PI;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>a+Math.random()*(b-a),distance=(a,b,x,y)=>Math.hypot(a-x,b-y);
 const defs=[
-['🎳','Bowling','Aim with phone tilt. Hold SWING, swing forward, release. Knock down pins over 10 frames.'],
+['🎳','Bowling','Tilt to aim and swing your phone to bowl. Knock down pins over 10 frames.'],
 ['🏎️','Racing','Tilt to steer. Hold ACTION for boost; dodge traffic and collect gold coins.'],
-['⛳','Golf','Tilt to aim. Hold SWING, swing, release to putt toward the flag. Three holes.'],
+['⛳','Golf','Tilt to aim and swing your phone to putt. Three holes.'],
 ['🎾','Tennis','Tilt to move racket. Tap ACTION or swing when the ball reaches you. First to 7 wins.'],
 ['☄️','Asteroids','Tilt to rotate ship. Hold ACTION to fire; BOOST accelerates. Clear asteroid waves.'],
 ['🐍','Snake','D-pad controls. Eat apples and avoid collisions.'],
-['🏹','Archery','Wii-style aiming: D-pad adjusts the sight, A fires, B steadies aim. Hit the bullseye in ten shots.'],
-['🏓','Pong','Classic controller: D-pad up/down moves your paddle. First to seven points wins.'],
-['🧱','Brick Breaker','Arcade controller: left/right moves the paddle, A launches the ball. Clear every brick.']];
-let levelVisible=false,levelData=null;let selected=0,state={},input={tilt:0,gas:false,action:false,boost:false,dir:null},clients=new Map(),peer=null,previous=performance.now(),lastAction=false,frame=0;
+['🏹','Archery','Tilt phone to aim; make a short controlled forward gesture to release. Ten arrows.'],
+['🏓','Pong','Buttons only: D-pad up/down moves your paddle. First to seven wins.'],
+['🧱','Brick Breaker','Buttons only: left/right moves the paddle, A launches the ball.']];
+const motionOnly=new Set([0,2,6]),hybrid=new Set([1,3,4]);let levelVisible=false,levelData=null;let selected=0,state={},input={tilt:0,gas:false,action:false,boost:false,dir:null},clients=new Map(),peer=null,previous=performance.now(),lastAction=false,frame=0;
 function reset(){frame=0;input.action=false;input.gas=false;input.boost=false;state={score:0,over:false,particles:[]};
 if(selected===0)Object.assign(state,{pins:Array.from({length:10},(_,i)=>({id:i,down:false})),ball:null,frameNo:1,roll:1,throws:0,frames:[],aim:0,remaining:10});
 if(selected===1)Object.assign(state,{x:480,traffic:[],coins:[],distance:0,hp:3,spawn:0,road:0,inv:0});
@@ -24,14 +24,14 @@ if(selected===5)Object.assign(state,{snake:[{x:12,y:10},{x:11,y:10},{x:10,y:10}]
 if(selected===6)Object.assign(state,{aimX:480,aimY:260,arrows:10,wind:rand(-1,1),targetX:480,targetY:250,hits:[]});
 if(selected===7)Object.assign(state,{py:270,ey:270,ball:{x:480,y:270,vx:5,vy:3},player:0,cpu:0});
 if(selected===8)Object.assign(state,{px:480,ball:{x:480,y:445,vx:3,vy:-5},started:false,lives:3,bricks:Array.from({length:50},(_,i)=>({x:140+(i%10)*70,y:75+Math.floor(i/10)*33,alive:true}))});
-if(selected===4)spawnRocks(4);$('help').textContent=defs[selected][2];$('mode').textContent=defs[selected][0]+' '+defs[selected][1];}
-function setGame(n){selected=n;document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('active',+b.dataset.game===n));reset();broadcast({type:'game',game:n,name:defs[n][1]})}
-defs.forEach((d,i)=>{let b=document.createElement('button');b.dataset.game=i;b.textContent=d[0]+' '+d[1];b.onclick=()=>setGame(i);$('tabs').append(b)});
+if(selected===4)spawnRocks(4);$('help').textContent=(motionOnly.has(selected)?'📱 MOTION ONLY — Tilt to aim or steer; swing phone to act. ':hybrid.has(selected)?'🎮 HYBRID — Move phone to steer; use A/B for actions. ':'🕹️ BUTTONS ONLY — Use D-pad and A/B. ')+defs[selected][2];$('mode').textContent=defs[selected][0]+' '+defs[selected][1];}
+function setGame(n){selected=n;input.tilt=0;input.dir=null;document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('active',+b.dataset.game===n));reset();broadcast({type:'game',game:n,name:defs[n][1]})}
+defs.forEach((d,i)=>{let b=document.createElement('button');b.dataset.game=i;b.textContent=(motionOnly.has(i)?'📱 ':hybrid.has(i)?'🎮 ':'🕹️ ')+d[0]+' '+d[1];b.onclick=()=>setGame(i);$('tabs').append(b)});
 $('restart').onclick=reset;$('levelToggle').onclick=()=>{levelVisible=!levelVisible;$('levelPanel').hidden=!levelVisible;$('levelToggle').textContent=levelVisible?'◎ Hide phone level':'◎ Show phone level';$('levelToggle').setAttribute('aria-pressed',String(levelVisible))};
 function broadcast(d){for(let conn of clients.values())if(conn.open)conn.send(d)}
-function onMessage(d){if(!d||typeof d!=='object')return;if(d.type==='level'){levelData={x:clamp(Number(d.x)||0,-90,90),y:clamp(Number(d.y)||0,-90,90),at:performance.now()};return;}if(d.type==='motion'){input.tilt=clamp(Number(d.tilt)||0,-1,1);input.gas=!!d.gas;input.action=!!d.action;input.boost=!!d.boost;if(d.dir)input.dir=d.dir}
-if(d.type==='press'){if(d.key==='action'||d.key==='a')action(clamp(Number(d.power)||.75,.15,1));else if(d.key==='b'){input.boost=true;input.gas=true;if(selected===5)reset()}else if(d.key==='restart')reset();else if(d.key==='left'){input.tilt=-1;input.dir='left'}else if(d.key==='right'){input.tilt=1;input.dir='right'}else if(d.key==='up'||d.key==='down')input.dir=d.key;}
-if(d.type==='release'){if(d.key==='b'){input.boost=false;input.gas=false}if(d.key==='left'||d.key==='right')input.tilt=0;if(d.key==='up'||d.key==='down')input.dir=null}
+function onMessage(d){if(!d||typeof d!=='object')return;if(d.type==='level'){levelData={x:clamp(Number(d.x)||0,-90,90),y:clamp(Number(d.y)||0,-90,90),at:performance.now()};return;}if(d.type==='sensor'){if(motionOnly.has(selected)||hybrid.has(selected)){input.tilt=clamp(Number(d.x)||0,-1,1);if(selected===6){state.aimY=clamp(260+(Number(d.y)||0)*160,90,430)}if(selected===0||selected===2||selected===6){if(d.swing)action(clamp(Number(d.power)||.7,.25,1))}}return}if(d.type==='motion'){if(!motionOnly.has(selected)&&!hybrid.has(selected))input.tilt=clamp(Number(d.tilt)||0,-1,1);input.gas=!!d.gas;input.action=!!d.action;input.boost=!!d.boost;if(d.dir)input.dir=d.dir}
+if(d.type==='press'){if(motionOnly.has(selected))return;if(d.key==='action'||d.key==='a')action(clamp(Number(d.power)||.75,.15,1));else if(d.key==='b'){input.boost=true;input.gas=true;if(selected===5)reset()}else if(d.key==='restart')reset();else if(d.key==='left'){input.tilt=-1;input.dir='left'}else if(d.key==='right'){input.tilt=1;input.dir='right'}else if(d.key==='up'||d.key==='down')input.dir=d.key;}
+if(d.type==='release'){if(motionOnly.has(selected))return;if(d.key==='b'){input.boost=false;input.gas=false}if(d.key==='left'||d.key==='right')input.tilt=0;if(d.key==='up'||d.key==='down')input.dir=null}
 if(d.type==='select'&&Number.isInteger(d.game)&&d.game>=0&&d.game<defs.length)setGame(d.game);}
 function action(power=.75){if(state.over)return;if(selected===0){if(state.ball)return;state.throws++;state.ball={x:480+input.tilt*125,y:480,vx:input.tilt*2.3,vy:-(7+power*12),t:0};}
 if(selected===2&&state.settled){let b=state.ball,ang=state.aim;state.strokes++;state.settled=false;b.vx=Math.cos(ang)*(3+power*12);b.vy=Math.sin(ang)*(3+power*12);}
