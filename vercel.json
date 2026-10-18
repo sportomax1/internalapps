@@ -4,6 +4,14 @@
   "installCommand": "npm install --omit=optional",
   "rewrites": [
     {
+      "source": "/color-swap",
+      "destination": "/color-swap.html"
+    },
+    {
+      "source": "/color-swap/",
+      "destination": "/color-swap.html"
+    },
+    {
       "source": "/api/market",
       "destination": "/api/tools?action=market"
     },
