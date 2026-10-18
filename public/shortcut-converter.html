@@ -34,4 +34,4 @@ function blob(){const f=$("outputType").value;if(!$("output").value.trim())throw
 function makeFile(){const b=blob();return new File([b.data],name+"."+b.ext,{type:b.type})}
 $("export").onclick=()=>run(()=>{const f=makeFile(),url=URL.createObjectURL(f),a=document.createElement("a");a.href=url;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);status("Exported "+f.name+".")});
 $("share").onclick=()=>run(async()=>{const f=makeFile();if(navigator.canShare?.({files:[f]})){await navigator.share({files:[f],title:"Shortcut Converter"});return}if(navigator.share){await navigator.share({title:"Shortcut Converter",text:$("output").value});return}await navigator.clipboard.writeText($("output").value);status("Native share unavailable. Copied output instead.")});
-</script></body></html>
+</script><script src="shortcut-examples.js" defer></script></body></html>
