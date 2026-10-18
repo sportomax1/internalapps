@@ -16,7 +16,7 @@ export default async function handler(req,res){
   const name=item.fields?.name?.value||"iCloud Shortcut";
   if(typeof link!=="string")throw Error("iCloud did not return a shortcut download link");
   const url=new URL(link);
-  if(url.protocol!=="https:"||!(url.hostname==="icloud.com"||url.hostname.endsWith(".icloud.com")||url.hostname.endsWith(".apple.com")||url.hostname==="apple.com"))throw Error("Unexpected iCloud download host");
+  if(url.protocol!=="https:"||!(url.hostname==="icloud.com"||url.hostname.endsWith(".icloud.com")||url.hostname.endsWith(".apple.com")||url.hostname==="apple.com"||url.hostname.endsWith(".icloud-content.com")||url.hostname==="icloud-content.com"))throw Error("Unexpected iCloud download host");
   const download=await fetch(url,{signal:controller.signal});
   if(!download.ok)throw Error("Shortcut download failed ("+download.status+")");
   const size=Number(download.headers.get("content-length")||0);
