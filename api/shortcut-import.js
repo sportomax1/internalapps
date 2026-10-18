@@ -12,18 +12,18 @@ export default async function handler(req,res){
   if(!metadata.ok)throw Error("iCloud metadata request failed ("+metadata.status+")");
   const record=await metadata.json();
   const item=record.records?.[0]||record;
-  const link=item.fields?.shortcut?.value?.downloadURL;
-  const name=item.fields?.name?.value||"iCloud Shortcut";
+  const link=item.fields?.shortcut?.value?.downloadURL||item.fields?.shortcut?.value?.downloadUrl||item.shortcut?.downloadURL||item.downloadURL;
+  const name=item.fields?.name?.value||item.fields?.name?.value?.text||item.name||"iCloud Shortcut";
   if(typeof link!=="string")throw Error("iCloud did not return a shortcut download link");
   const url=new URL(link);
-  if(url.protocol!=="https:"||!(url.hostname==="icloud.com"||url.hostname.endsWith(".icloud.com")||url.hostname.endsWith(".apple.com")||url.hostname==="apple.com"||url.hostname.endsWith(".icloud-content.com")||url.hostname==="icloud-content.com"))throw Error("Unexpected iCloud download host");
+  if(url.protocol!=="https:"||!["icloud.com","apple.com","icloud-content.com","apple-cloudkit.com","cdn-apple.com"].some(h=>url.hostname===h||url.hostname.endsWith("."+h)))throw Error("Unexpected iCloud download host: "+url.hostname);
   const download=await fetch(url,{signal:controller.signal});
   if(!download.ok)throw Error("Shortcut download failed ("+download.status+")");
   const size=Number(download.headers.get("content-length")||0);
   if(size>8*1024*1024)throw Error("Shortcut exceeds 8 MB");
   const bytes=Buffer.from(await download.arrayBuffer());
   if(bytes.length>8*1024*1024)throw Error("Shortcut exceeds 8 MB");
-  if(bytes.subarray(0,8).toString()!=="bplist00"&&!bytes.toString("utf8",0,80).includes("<plist"))throw Error("Unexpected shortcut format");
+  if(bytes.subarray(0,8).toString()!=="bplist00"&&!bytes.toString("utf8",0,160).includes("<plist"))throw Error("Downloaded shortcut uses an unsupported format (possibly Apple signed wrapper).");
   return res.status(200).json({name,base64:bytes.toString("base64"),format:bytes.subarray(0,8).toString()==="bplist00"?"binary":"xml"});
  }catch(e){return res.status(502).json({error:e.name==="AbortError"?"iCloud request timed out":e.message||"Unable to retrieve shortcut"})}
  finally{clearTimeout(timer)}
