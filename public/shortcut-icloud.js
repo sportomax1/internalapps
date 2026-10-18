@@ -10,11 +10,11 @@ btn.onclick=async()=>{
  btn.disabled=true;btn.textContent="Importing…";message.textContent="Retrieving shared Shortcut from iCloud…";message.className="message";
  try{
   const res=await fetch("/api/shortcut-import?id="+encodeURIComponent(match[1]),{headers:{"Accept":"application/json"}});
-  const data=await res.json();if(!res.ok)throw Error(data.error||"iCloud import failed");
+  const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw Error("iCloud import API returned a non-JSON response (deployment or route issue, HTTP "+res.status+").")}if(!res.ok)throw Error(data.error||"iCloud import failed (HTTP "+res.status+")");
   if(data.format==="binary"){input.value=data.base64;type.value="auto"}else{const bytes=Uint8Array.from(atob(data.base64),x=>x.charCodeAt(0));input.value=new TextDecoder().decode(bytes);type.value="xml"}
   input.dispatchEvent(new Event("input",{bubbles:true}));output.value="";
   document.getElementById("filename").textContent=data.name||"iCloud Shortcut";
-  message.textContent="Imported "+(data.name||"iCloud Shortcut")+". Click Convert to view JSON, XML or binary plist.";message.className="message";
+  message.textContent="Imported "+(data.name||"iCloud Shortcut")+". Decoding…";message.className="message";document.getElementById("convert").click();
  }catch(e){message.textContent=e.message+" — You can still import a local .shortcut file.";message.className="message error"}
  finally{btn.disabled=false;btn.textContent="Import Link"}
 };
