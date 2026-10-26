@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6f7f8" />
+  <meta name="description" content="Explore word meanings, synonyms, antonyms, related words, descriptors, and rhymes with live dictionary lookups." />
+  <title>WordAtlas — Dictionary & Thesaurus</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f8; --surface: #fff; --surface-2: #f1f4f5; --ink: #15232b;
+      --muted: #62717b; --faint: #88949c; --border: #dfe5e8; --accent: #315d70;
+      --accent-soft: #e8f0f3; --accent-strong: #214e62; --positive: #346757;
+      --negative: #925e57; --shadow: 0 5px 24px rgba(25, 43, 51, .045);
+      --radius: 18px; --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark; --bg: #141c20; --surface: #1b262c; --surface-2: #223139;
+      --ink: #f2f5f6; --muted: #b1bec5; --faint: #8da0a9; --border: #35444d;
+      --accent: #9fc3d0; --accent-soft: #2b414b; --accent-strong: #d5eaf1;
+      --positive: #aad2b8; --negative: #e9b7ad; --shadow: 0 5px 22px rgba(0,0,0,.12);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: var(--font); color: var(--ink); background: var(--bg); line-height: 1.55; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--accent-strong); }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .container { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .topbar-inner { min-height: 73px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { text-decoration: none; color: var(--ink); display: inline-flex; gap: 10px; align-items: center; font-weight: 820; font-size: 19px; letter-spacing: -.75px; }
+    .brand-mark { display: grid; place-items: center; height: 34px; width: 34px; border-radius: 10px; background: var(--ink); color: var(--surface); font-size: 20px; font-family: Georgia, serif; font-weight: 700; }
+    .brand b { color: var(--accent); }
+    .top-actions { display: flex; align-items: center; gap: 9px; }
+    .icon-button { width: 39px; height: 39px; padding: 0; display: inline-grid; place-items: center; flex: none; border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 12px; transition: .18s ease; }
+    .icon-button:hover { background: var(--accent-soft); color: var(--accent-strong); }
+    .icon-button svg, .search-icon svg, .chip-copy svg, .mini-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    .top-meta { font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); margin-right: 12px; }
+    .hero { padding: 51px 0 27px; }
+    .eyebrow { color: var(--accent); text-transform: uppercase; font-weight: 760; font-size: 11px; letter-spacing: 2px; margin-bottom: 11px; }
+    h1 { letter-spacing: -1.9px; font-size: clamp(32px, 4vw, 46px); line-height: 1.13; margin: 0 0 9px; font-weight: 810; }
+    .hero-subtitle { margin: 0 0 25px; color: var(--muted); font-size: 15px; max-width: 760px; }
+    .search-wrap { position: relative; max-width: 920px; }
+    .search-field { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 8px 9px 8px 17px; box-shadow: var(--shadow); }
+    .search-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .search-icon { display: grid; place-items: center; color: var(--faint); }
+    #wordInput { color: var(--ink); background: transparent; border: none; outline: none; font-weight: 520; width: 100%; min-width: 0; font-size: 17px; padding: 10px 4px; }
+    #wordInput::placeholder { color: var(--faint); font-weight: 420; }
+    .submit { color: white; background: #315d70; border: 1px solid #315d70; border-radius: 11px; min-width: 110px; min-height: 44px; font-weight: 700; padding: 9px 19px; transition: .18s; }
+    .submit:hover { background: #244c60; }
+    .submit:disabled { opacity: .65; cursor: wait; }
+    .suggestions { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 40px rgba(22, 40, 48, .16); overflow: hidden; max-height: 320px; overflow-y: auto; }
+    .suggestions.open { display: block; }
+    .suggestion { display: flex; align-items: center; justify-content: space-between; width: 100%; background: transparent; padding: 10px 16px; text-align: left; border: none; color: var(--ink); }
+    .suggestion:hover, .suggestion.active { background: var(--accent-soft); }
+    .suggestion small { color: var(--faint); }
+    .search-tips { max-width: 920px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 13px; }
+    .search-tips span { font-size: 12px; color: var(--muted); }
+    .example { background: transparent; color: var(--accent-strong); border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px; font-size: 12px; }
+    .example:hover { background: var(--accent-soft); }
+    .layout { display: grid; grid-template-columns: minmax(0,1fr) 275px; gap: 20px; align-items: start; padding: 5px 0 55px; }
+    .main { min-width: 0; }
+    .side { display: grid; gap: 16px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .word-card { padding: 26px 29px 22px; margin-bottom: 17px; }
+    .word-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .word-title { font-size: clamp(31px, 4vw, 48px); letter-spacing: -1.6px; line-height: 1.15; margin: 0; font-weight: 800; overflow-wrap: anywhere; }
+    .word-desc { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: var(--muted); margin-top: 11px; font-size: 13px; }
+    .pos-tag { padding: 3px 9px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--muted); }
+    .word-controls { display: flex; gap: 7px; align-items: center; }
+    .word-controls .icon-button { width: 39px; height: 39px; }
+    .icon-button.selected { color: var(--accent-strong); background: var(--accent-soft); border-color: var(--accent); }
+    .metrics { display: flex; gap: 0; border-top: 1px solid var(--border); margin-top: 23px; padding-top: 17px; overflow-x: auto; }
+    .metric { min-width: 105px; flex: 1; border-right: 1px solid var(--border); padding-right: 14px; padding-left: 20px; }
+    .metric:first-child { padding-left: 0; }
+    .metric:last-child { border-right: 0; }
+    .metric strong { font-size: 20px; font-weight: 780; letter-spacing: -.7px; display: block; }
+    .metric span { color: var(--muted); font-size: 11px; }
+    .tabs-card { padding: 0; overflow: hidden; }
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); padding: 9px 12px 0; overflow-x: auto; scrollbar-width: thin; }
+    .tab { border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted); padding: 12px 14px 11px; font-size: 13px; font-weight: 650; white-space: nowrap; }
+    .tab:hover { color: var(--ink); }
+    .tab.active { color: var(--accent-strong); border-color: var(--accent); }
+    .tab span { opacity: .65; font-weight: 500; font-size: 11px; margin-left: 4px; }
+    #panel { padding: 24px; }
+    .section-title { font-size: 19px; font-weight: 780; letter-spacing: -.45px; margin: 0; }
+    .section-sub { color: var(--muted); font-size: 12px; margin: 4px 0 18px; }
+    .section-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .muted { color: var(--muted); }
+    .definitions { display: grid; gap: 15px; }
+    .definition-group { border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    .definition-group:last-child { border: 0; padding-bottom: 0; }
+    .definition-group h3 { margin: 0 0 8px; color: var(--accent-strong); font-size: 12px; font-weight: 770; text-transform: uppercase; letter-spacing: 1px; }
+    .definition { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 9px; font-size: 14px; margin: 0 0 9px; }
+    .def-number { color: var(--faint); font-size: 12px; padding-top: 2px; }
+    .definition p { margin: 0; }
+    .example-line { border-left: 2px solid var(--border); margin: 7px 0 2px; padding-left: 11px; font-size: 13px; color: var(--muted); font-style: italic; }
+    .definition-tools { margin-top: 13px; }
+    .text-button { background: transparent; color: var(--accent-strong); border: 0; padding: 4px 0; font-size: 12px; font-weight: 730; }
+    .text-button:hover { text-decoration: underline; }
+    .panel-divider { height: 1px; background: var(--border); margin: 23px 0; }
+    .grid-sections { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .mini-section { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; padding: 18px; min-width: 0; }
+    .mini-section h3 { margin: 0; font-size: 15px; font-weight: 760; }
+    .mini-section .section-sub { margin-bottom: 14px; }
+    .term-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .term-chip { display: inline-flex; align-items: stretch; max-width: 100%; min-width: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; overflow: hidden; transition: .14s ease; }
+    .term-chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .term-main { border: 0; background: transparent; color: var(--ink); padding: 7px 9px 7px 11px; font-size: 12.5px; text-align: left; overflow-wrap: anywhere; }
+    .term-main:hover { color: var(--accent-strong); }
+    .chip-copy { background: transparent; border: 0; border-left: 1px solid var(--border); color: var(--faint); padding: 6px 7px; display: grid; place-items: center; }
+    .chip-copy:hover { color: var(--accent-strong); }
+    .chip-copy svg { width: 13px; height: 13px; }
+    .browse-more { display: inline-block; margin-top: 12px; }
+    .results-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 18px; }
+    select { border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--ink); padding: 8px 11px; font-size: 12px; cursor: pointer; }
+    .toolbar-note { margin-left: auto; color: var(--muted); font-size: 12px; }
+    .side-card { padding: 18px; }
+    .side-card h2 { font-size: 14px; margin: 0 0 12px; font-weight: 780; display: flex; align-items: center; justify-content: space-between; }
+    .side-card .count { font-size: 11px; color: var(--faint); font-weight: 520; }
+    .side-list { display: grid; gap: 4px; }
+    .side-item { display: flex; align-items: center; gap: 4px; min-width: 0; }
+    .side-item > button:first-child { border: 0; text-align: left; background: transparent; color: var(--ink); border-radius: 7px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; padding: 7px 8px; }
+    .side-item > button:first-child:hover { background: var(--accent-soft); color: var(--accent-strong); }
+    .side-item .mini-icon { border: 0; color: var(--faint); background: transparent; padding: 4px; display: grid; place-items: center; }
+    .side-item .mini-icon svg { width: 14px; height: 14px; }
+    .side-empty { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+    .hint-card { background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+    .hint-card h2 { font-size: 14px; margin: 0 0 6px; }
+    .hint-card p { font-size: 12px; color: var(--muted); margin: 0 0 13px; }
+    .hint-card button { padding: 7px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--accent-strong); font-weight: 700; font-size: 12px; }
+    .status-line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; color: var(--muted); font-size: 12px; }
+    .status-dot { background: #558976; width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    .status-dot.partial { background: #bf986b; }
+    .status-dot.error { background: #bb786e; }
+    .notice { margin-bottom: 14px; font-size: 12px; color: var(--muted); padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); }
+    .empty-state { padding: 33px 15px; text-align: center; }
+    .empty-state .big-icon { font-family: Georgia, serif; font-size: 53px; line-height: 1; color: var(--accent); margin-bottom: 10px; }
+    .empty-state h2 { margin: 0 0 8px; font-size: 20px; }
+    .empty-state p { margin: 0 auto 15px; max-width: 480px; color: var(--muted); font-size: 13px; }
+    .skeleton { background: linear-gradient(90deg,var(--surface-2) 25%,var(--border) 50%,var(--surface-2) 75%); background-size: 200% 100%; animation: pulse 1.4s ease infinite; height: 15px; border-radius: 7px; margin: 13px 0; }
+    @keyframes pulse { to { background-position-x: -200%; } }
+    #toast { position: fixed; right: 25px; bottom: 25px; background: var(--ink); color: var(--surface); font-size: 13px; border-radius: 12px; padding: 12px 17px; box-shadow: 0 10px 25px rgba(0,0,0,.15); opacity: 0; transform: translateY(10px); transition: .2s; pointer-events: none; z-index: 100; max-width: calc(100vw - 32px); }
+    #toast.visible { opacity: 1; transform: translateY(0); }
+    footer { border-top: 1px solid var(--border); padding: 19px 0 30px; color: var(--muted); font-size: 11px; }
+    footer .container { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    @media (max-width: 950px) { .layout { grid-template-columns: minmax(0,1fr) 230px; } .container { padding-left: 22px; padding-right: 22px; } .metric { min-width: 90px; } }
+    @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .side { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); } .hint-card { grid-column: 1 / -1; } .hero { padding: 35px 0 20px; } .word-card { padding: 22px; } }
+    @media (max-width: 525px) { .container { padding: 0 15px; } .topbar-inner { min-height: 63px; } .top-meta { display: none; } h1 { letter-spacing: -1px; } .hero-subtitle { margin-bottom: 18px; } .search-field { padding-left: 11px; gap: 5px; } #wordInput { font-size: 15px; } .submit { min-width: 79px; padding: 9px 11px; } .grid-sections { grid-template-columns: 1fr; } .side { grid-template-columns: 1fr 1fr; } .hint-card { grid-column: 1 / -1; } #panel { padding: 18px 15px; } .metric { min-width: 83px; padding-left: 12px; } .metric strong { font-size: 17px; } .word-card { padding: 20px 16px; } .word-title { font-size: 31px; } .word-controls { gap: 4px; } .word-controls .icon-button { width: 33px; height: 35px; } .section-head { flex-direction: column; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *,*::before,*::after { animation: none !important; transition: none !important; } }
+
+    /* Discover, lexicon browser, and procedural writing studio */
+    .workspace-nav {display:flex;gap:7px;flex-wrap:wrap;margin:3px 0 18px;border-bottom:1px solid var(--border);padding-bottom:11px;}
+    .workspace-nav button {border:1px solid var(--border);border-radius:10px;padding:9px 16px;background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;}
+    .workspace-nav button.active,.workspace-nav button:hover {background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong);}
+    .workspace-panel[hidden] {display:none !important;}
+    .workspace-panel {padding-bottom:55px;}
+    .studio-lead {display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:17px;}
+    .studio-lead h2 {margin:0 0 5px;font-size:24px;letter-spacing:-.7px;}
+    .studio-lead p {font-size:13px;color:var(--muted);max-width:740px;margin:0;}
+    .studio-card {padding:22px;margin-bottom:15px;}
+    .studio-toolbar {display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:15px;}
+    .field-group {display:grid;gap:5px;min-width:118px;flex:1 1 140px;}
+    .field-group label {font-size:11px;font-weight:700;color:var(--muted);}
+    .field-group input,.field-group select {width:100%;font-size:13px;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:9px;padding:9px 11px;min-height:39px;}
+    .field-group input[type=checkbox] {width:auto;min-height:0;}
+    .studio-btn {background:var(--accent-soft);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--accent-strong);font-weight:750;font-size:12px;min-height:40px;}
+    .studio-btn:hover {border-color:var(--accent);}
+    .studio-btn.primary {background:#315d70;color:white;border-color:#315d70;}
+    .studio-btn:disabled {opacity:.6;cursor:wait;}
+    .alpha-buttons {display:flex;gap:4px;flex-wrap:wrap;margin:12px 0 14px;}
+    .alpha-buttons button {border:1px solid var(--border);background:var(--surface);border-radius:7px;min-width:31px;min-height:31px;font-size:12px;color:var(--muted);}
+    .alpha-buttons button.active {background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong);font-weight:800;}
+    .library-info {font-size:12px;color:var(--muted);margin:9px 0;}
+    .library-results {display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;}
+    .lex-word {border:1px solid var(--border);border-radius:9px;padding:8px 10px;background:var(--surface-2);color:var(--ink);text-align:left;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .lex-word:hover {border-color:var(--accent);color:var(--accent-strong);}
+    .library-notice {font-size:12px;color:var(--muted);border:1px solid var(--border);background:var(--surface-2);padding:10px 12px;border-radius:10px;margin:13px 0;}
+    .studio-output {white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85;font-size:15px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);padding:23px;min-height:155px;}
+    .studio-output.empty {display:block;color:var(--muted);font-style:italic;}
+    .output-tools {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:14px 0 0;}
+    .tiny-label {font-size:11px;color:var(--muted);}
+    .gen-actions {display:flex;gap:8px;flex-wrap:wrap;}
+    .gen-heading {font-size:13px;color:var(--muted);margin:0 0 11px;}
+    .generate-layout {display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;align-items:start;}
+    .check-line {display:flex;gap:7px;align-items:center;color:var(--muted);font-size:12px;margin:3px 0 8px;}
+    .quick-picks {display:flex;gap:6px;flex-wrap:wrap;}
+    .quick-picks button {border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:12px;padding:7px 9px;color:var(--accent-strong);}
+    @media(max-width:760px){.generate-layout{grid-template-columns:1fr}.studio-card{padding:16px}.studio-lead h2{font-size:21px}.library-results{grid-template-columns:repeat(auto-fill,minmax(115px,1fr))}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#" aria-label="WordAtlas home" id="homeLink"><span class="brand-mark">W</span><span>Word<b>Atlas</b></span></a>
+      <div class="top-actions"><span class="top-meta">Dictionary & thesaurus</span><button class="icon-button" id="themeButton" type="button" title="Toggle light/dark theme" aria-label="Toggle theme"></button></div>
+    </div>
+  </header>
+  <main class="container">
+    <section class="hero" aria-label="Word search">
+      <div class="eyebrow">The word explorer</div>
+      <h1>Find the right word.</h1>
+      <p class="hero-subtitle">Discover definitions, synonyms, antonyms, descriptive words, and related ideas. Search a word or phrase.</p>
+      <form class="search-wrap" id="searchForm" autocomplete="off">
+        <div class="search-field">
+          <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
+          <input id="wordInput" type="search" placeholder="Search a word, e.g. brilliant" spellcheck="false" maxlength="80" role="combobox" aria-label="Search word" aria-autocomplete="list" aria-expanded="false" aria-controls="suggestions" />
+          <button class="submit" id="searchButton" type="submit">Explore</button>
+        </div>
+        <div class="suggestions" id="suggestions" role="listbox" aria-label="Search suggestions"></div>
+      </form>
+      <div class="search-tips"><span>Try:</span><button class="example" data-search="curious">curious</button><button class="example" data-search="resilient">resilient</button><button class="example" data-search="serendipity">serendipity</button><button class="example" data-search="fear of heights">fear of heights</button><button class="example" id="randomButton">Surprise me ↗</button></div>
+    </section>
+    <nav class="workspace-nav" aria-label="WordAtlas sections">
+      <button type="button" class="active" data-view="explore" aria-current="page">Dictionary &amp; Thesaurus</button>
+      <button type="button" data-view="library">Word Library</button>
+      <button type="button" data-view="generate">Sentence &amp; Story Studio</button>
+    </nav>
+    <section class="workspace-panel" id="exploreView" aria-label="Dictionary and thesaurus">
+    <div class="layout">
+      <div class="main" id="mainArea"><div class="card"><div class="empty-state"><div class="big-icon">Aa</div><h2>Start with a word.</h2><p>Look up a word to explore its meaning and find alternatives, opposites, and related vocabulary.</p></div></div></div>
+      <aside class="side" aria-label="Your saved and recent words">
+        <section class="card side-card"><h2>Saved words <span class="count" id="savedCount">0</span></h2><div class="side-list" id="savedList"><p class="side-empty">Save words with the bookmark button as you explore.</p></div></section>
+        <section class="card side-card"><h2>Recent searches <button class="text-button" type="button" id="clearHistory" style="font-size:11px">Clear</button></h2><div class="side-list" id="recentList"><p class="side-empty">Your last searches will appear here.</p></div></section>
+        <section class="hint-card"><h2>Reverse dictionary</h2><p>Can't remember the word? Search a description like “fear of heights” or “a love of books” to discover related terms.</p><button type="button" data-search="love of books">Try a description</button></section>
+      </aside>
+    </div>
+    </section>
+    <section class="workspace-panel" id="libraryView" aria-label="Browse English word library" hidden>
+      <div class="studio-lead"><div><h2>Word Library</h2><p>Search English words by prefix, substring, suffix, first letter, or length. Select a result to open its dictionary entry.</p></div><button class="studio-btn" type="button" id="libraryRandom">Random from results ↻</button></div>
+      <div class="card studio-card">
+        <div class="studio-toolbar">
+          <div class="field-group" style="flex:3 1 200px"><label for="libraryQuery">Find words</label><input id="libraryQuery" type="search" placeholder="e.g. astro, -ology, moon" autocomplete="off" /></div>
+          <div class="field-group"><label for="libraryMatch">Matching rule</label><select id="libraryMatch"><option value="starts">Starts with</option><option value="contains">Contains</option><option value="ends">Ends with</option><option value="exact">Exact match</option></select></div>
+          <div class="field-group"><label for="libraryLength">Word length</label><select id="libraryLength"><option value="any">Any length</option><option value="1-4">1–4 letters</option><option value="5-7">5–7 letters</option><option value="8-10">8–10 letters</option><option value="11-15">11–15 letters</option><option value="16-999">16+ letters</option></select></div>
+          <button type="button" class="studio-btn" id="libraryClear">Clear filters</button>
+        </div>
+        <div class="alpha-buttons" id="alphabetBar" aria-label="Filter by first letter"></div>
+        <p class="library-info" id="libraryStatus" role="status" aria-live="polite">Browse live word suggestions, or load the complete local index.</p>
+        <div class="library-results" id="libraryResults"></div>
+        <div class="output-tools"><button class="studio-btn" type="button" id="libraryMore" hidden>Show more words</button><span class="tiny-label" id="libraryPagination"></span></div>
+      </div>
+      <div class="card studio-card">
+        <div class="studio-lead"><div><h2 style="font-size:17px">Full English word index</h2><p>Optionally download the community-maintained ~370K alphabetic-word list (about 4 MB) for instant local filtering and truly library-wide random selections. This is a spelling index, not a list of validated definitions; it contains rare terms and variants.</p></div></div>
+        <div class="studio-toolbar" style="margin-bottom:0">
+          <button id="loadLibrary" class="studio-btn primary" type="button">Load full library</button>
+          <button id="importLibrary" class="studio-btn" type="button">Import your .txt word list</button>
+          <input id="libraryFile" type="file" accept=".txt,.csv,text/plain,text/csv" hidden />
+          <button id="forgetLibrary" class="studio-btn" type="button" hidden>Remove local index</button>
+        </div>
+        <div class="library-notice">Without the full index, live browsing is restricted to a ranked sample of up to 200 Datamuse results per query; substring and suffix browsing require the full index. Your loaded index is cached in your browser when storage is available.</div>
+        <p class="tiny-label">Index: <a href="https://github.com/dwyl/english-words" rel="noopener noreferrer" target="_blank">dwyl/english-words</a> (source list). Word lookups continue to use Free Dictionary API and Datamuse.</p>
+      </div>
+    </section>
+    <section class="workspace-panel" id="generateView" aria-label="Generate sentences and stories" hidden>
+      <div class="studio-lead"><div><h2>Sentence &amp; Story Studio</h2><p>Create different sentences or short stories with structured, randomized writing templates. No AI account or API key needed.</p></div></div>
+      <div class="generate-layout">
+        <div class="card studio-card">
+          <div class="studio-toolbar">
+            <div class="field-group"><label for="genType">Generate</label><select id="genType"><option value="sentence">Sentence</option><option value="story">Short story</option></select></div>
+            <div class="field-group"><label for="genGenre">Genre</label><select id="genGenre"><option value="adventure">Adventure</option><option value="mystery">Mystery</option><option value="fantasy">Fantasy</option><option value="scifi">Science fiction</option><option value="cozy">Everyday life</option></select></div>
+            <div class="field-group"><label for="genTone">Tone</label><select id="genTone"><option value="whimsical">Whimsical</option><option value="dramatic">Dramatic</option><option value="warm">Hopeful</option><option value="eerie">Eerie</option></select></div>
+            <div class="field-group"><label for="genLength">Length</label><select id="genLength"><option value="short">Short</option><option value="medium" selected>Medium</option><option value="long">Long</option></select></div>
+          </div>
+          <div class="studio-toolbar">
+            <div class="field-group" style="flex:1 1 210px"><label for="genWord">Optional inspiration word</label><input id="genWord" maxlength="60" placeholder="e.g. moonlight, courage, serendipity" /></div>
+            <div style="display:grid;gap:5px"><label class="tiny-label" for="genUseCurrent">Search word</label><label class="check-line"><input type="checkbox" id="genUseCurrent" /> Use current word</label></div>
+          </div>
+          <p class="gen-heading" id="generatorDescription">Generate one to five randomized sentences using grammatical templates.</p>
+          <div class="studio-output empty" id="generatedText" role="status" aria-live="polite">Click Generate to create a sentence or story.</div>
+          <div class="output-tools"><span class="tiny-label" id="generatedMeta">Locally generated · No AI</span><div class="gen-actions"><button type="button" class="studio-btn" id="copyGenerated">Copy text</button><button type="button" class="studio-btn primary" id="generateButton">Generate ↻</button></div></div>
+        </div>
+        <div class="card studio-card">
+          <h3 class="section-title" style="font-size:16px">Random discovery</h3>
+          <p class="section-sub">Find a fresh word or jump between generators.</p>
+          <div class="studio-toolbar"><div class="field-group"><label for="randomLength">Random word length</label><select id="randomLength"><option value="any">Any length</option><option value="5-8">5–8 letters</option><option value="9-12">9–12 letters</option><option value="13-20">13–20 letters</option></select></div></div>
+          <div class="quick-picks"><button type="button" id="generateWord">Random word ↻</button><button type="button" id="genQuickSentence">Random sentence ↻</button><button type="button" id="genQuickStory">Random story ↻</button></div>
+          <p class="library-info" id="randomStatus">Use the full word index for a broader, evenly sampled word pool.</p>
+          <div class="panel-divider"></div>
+          <h3 class="section-title" style="font-size:16px">How it works</h3><p class="section-sub">Procedural templates create new combinations, not AI-authored prose. Stories have a clear character, problem, discovery, and resolution. The vocabulary and plot structures are finite, though combinations vary.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer><div class="container"><span>Sources: <a href="https://dictionaryapi.dev/" target="_blank" rel="noopener noreferrer">Free Dictionary API</a> and <a href="https://www.datamuse.com/api/" target="_blank" rel="noopener noreferrer">Datamuse</a>. Results vary by available entries and word senses.</span><span>Live data requires internet access. Datamuse plans API-key requirements in February 2027. Full-index browser from dwyl/english-words.</span></div></footer>
+  <div role="status" aria-live="polite" id="toast"></div>
+  <script>
+  (() => {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const KEYS = {saved:'wordatlas-saved-v1',recent:'wordatlas-recent-v1',theme:'wordatlas-theme-v1'};
+    const CATEGORY = {
+      synonyms:{title:'Synonyms',subtitle:'Words with a closely related meaning.',api:'rel_syn'},
+      antonyms:{title:'Antonyms',subtitle:'Words with an opposite meaning.',api:'rel_ant'},
+      related:{title:'Related ideas',subtitle:'Similar ideas and expressions. Not always exact synonyms.',api:'ml'},
+      descriptors:{title:'Describing words',subtitle:'Adjectives frequently used to describe this noun.',api:'rel_jjb'},
+      rhymes:{title:'Rhyming words',subtitle:'Words that have a similar ending sound.',api:'rel_rhy'}
+    };
+    const TAB_KEYS = ['all','definitions','synonyms','antonyms','related','descriptors','rhymes'];
+    const ICONS = {
+      moon:'<path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>',
+      sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+      bookmark:'<path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4Z"/>',
+      sound:'<path d="M11 5 6 9H3v6h3l5 4V5ZM15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/>',
+      copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+      share:'<path d="M12 16V3m-5 5 5-5 5 5M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/>',
+      x:'<path d="M18 6 6 18M6 6l12 12"/>'
+    };
+    const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+    const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const attr = escapeHTML;
+    const storage = {
+      read(key, fallback) {try {const raw=localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback;} catch {return fallback;}},
+      write(key, value) {try {localStorage.setItem(key, JSON.stringify(value));} catch {/* Private mode/storage cap: app still works */}}
+    };
+    const safeArray = value => Array.isArray(value) ? value : [];
+    const savedInitial = storage.read(KEYS.saved, []);
+    const recentInitial = storage.read(KEYS.recent, []);
+    const state = {word:'',tab:'all',sort:'relevance',pos:'all',definitionsExpanded:false,data:null,loaded:false,partial:false,saved:safeArray(savedInitial),recent:safeArray(recentInitial),cache:new Map(),request:0,controller:null,toastTimer:0,suggestionController:null,suggestionTimer:0,suggestionIndex:-1,suggestionWords:[],suggestionToken:0};
+    state.saved = [...new Set(state.saved.filter(v=>typeof v==='string').map(s=>s.trim()).filter(Boolean))].slice(0,80);
+    state.recent = [...new Set(state.recent.filter(v=>typeof v==='string').map(s=>s.trim()).filter(Boolean))].slice(0,14);
+    const clean = s => String(s ?? '').replace(/\s+/g,' ').trim().slice(0,80);
+    const keyOf = s => clean(s).toLocaleLowerCase('en');
+    const unique = words => {const found = new Set(); return words.filter(obj => {const k=keyOf(obj.word); if(!k||found.has(k))return false;found.add(k);return true;});};
+    const normalizeList = list => unique(safeArray(list).filter(v=>v&&typeof v.word==='string').map((v,i)=>({word:clean(v.word),score:Number(v.score)||0,tags:safeArray(v.tags).filter(t=>typeof t==='string'),defs:safeArray(v.defs).filter(t=>typeof t==='string'),order:i}))).slice(0,100);
+    const shouldExclude = (item,word) => keyOf(item.word)===keyOf(word);
+    function showToast(message){const el=$('toast'); el.textContent=message;el.classList.add('visible');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>el.classList.remove('visible'),2400);}
+    async function copyText(value){
+      try {if(navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(value);else {const ta=document.createElement('textarea');ta.value=value;ta.style.cssText='position:fixed;top:-1000px;left:-1000px';document.body.appendChild(ta);ta.focus();ta.select();if(!document.execCommand('copy'))throw new Error('Copy not supported');ta.remove();} showToast(`Copied “${value}”`);}
+      catch {showToast('Copy failed. Select the text and copy manually.');}
+    }
+    function updateTheme(){const dark=document.documentElement.dataset.theme==='dark';$('themeButton').innerHTML=icon(dark?'sun':'moon');$('themeButton').title=dark?'Switch to light mode':'Switch to dark mode';}
+    function toggleTheme(){const dark=document.documentElement.dataset.theme==='dark';document.documentElement.dataset.theme=dark?'light':'dark';storage.write(KEYS.theme,document.documentElement.dataset.theme);updateTheme();}
+    function saveCurrent(){if(!state.word)return;const w=state.word;const index=state.saved.findIndex(v=>keyOf(v)===keyOf(w));if(index>=0){state.saved.splice(index,1);showToast('Removed from saved words');}else{state.saved.unshift(w);state.saved=state.saved.slice(0,80);showToast('Saved word');}storage.write(KEYS.saved,state.saved);renderAside();renderWordCard();}
+    function addRecent(word){state.recent=[word,...state.recent.filter(v=>keyOf(v)!==keyOf(word))].slice(0,14);storage.write(KEYS.recent,state.recent);renderAside();}
+    function renderAside(){
+      $('savedCount').textContent=String(state.saved.length);
+      $('savedList').innerHTML=state.saved.length?state.saved.map(w=>`<div class="side-item"><button type="button" data-search="${attr(w)}" title="Explore ${attr(w)}">${escapeHTML(w)}</button><button class="mini-icon" data-remove="${attr(w)}" title="Remove saved word" aria-label="Remove ${attr(w)}">${icon('x')}</button></div>`).join(''):'<p class="side-empty">Save words with the bookmark button as you explore.</p>';
+      $('recentList').innerHTML=state.recent.length?state.recent.slice(0,9).map(w=>`<div class="side-item"><button type="button" data-search="${attr(w)}">${escapeHTML(w)}</button></div>`).join(''):'<p class="side-empty">Your last searches will appear here.</p>';
+    }
+    function buildURL(base, params) {return `${base}?${new URLSearchParams(params).toString()}`;}
+    async function fetchJSON(url, signal) {
+      const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),9000);const abort=()=>ctrl.abort();
+      if(signal){if(signal.aborted)ctrl.abort();else signal.addEventListener('abort',abort,{once:true});}
+      try {const response=await fetch(url,{signal:ctrl.signal,headers:{Accept:'application/json'}});if(!response.ok){const error=new Error('HTTP '+response.status);error.status=response.status;throw error;}return await response.json();}
+      finally {clearTimeout(timer);signal?.removeEventListener('abort',abort);}
+    }
+    function apiWords(params,signal){return fetchJSON(buildURL('https://api.datamuse.com/words',{...params,max:55,md:'p'}),signal);}
+    function parseDefsFromDatamuse(list,term){
+      const exact=normalizeList(list).find(o=>keyOf(o.word)===keyOf(term));if(!exact)return [];
+      const mapped={n:'noun',v:'verb',adj:'adjective',adv:'adverb',u:'other'};
+      return safeArray(exact.defs).map(s=>{const m=String(s).match(/^([^\t]+)\t(.+)$/);return {pos:m?(mapped[m[1]]||m[1]):'definition',definition:m?m[2]:s,example:''};}).filter(d=>d.definition);
+    }
+    function parseDictionary(entries) {
+      const defs=[], dictionarySyn=[],dictionaryAnt=[],partSet=new Set();let phonetic='',audio='';let proper='';
+      for(const entry of safeArray(entries)){
+        if(!entry||typeof entry!=='object')continue;
+        if(!proper&&typeof entry.word==='string')proper=entry.word;
+        if(!phonetic && typeof entry.phonetic==='string')phonetic=entry.phonetic;
+        for(const p of safeArray(entry.phonetics)){
+          if(!phonetic&&typeof p?.text==='string')phonetic=p.text;
+          if(!audio&&typeof p?.audio==='string'&&p.audio)audio=p.audio;
+        }
+        for(const meaning of safeArray(entry.meanings)){
+          const pos=meaning?.partOfSpeech||'other';partSet.add(pos);
+          for(const s of safeArray(meaning.synonyms))if(typeof s==='string')dictionarySyn.push({word:s,score:0,tags:[],defs:[]});
+          for(const s of safeArray(meaning.antonyms))if(typeof s==='string')dictionaryAnt.push({word:s,score:0,tags:[],defs:[]});
+          for(const item of safeArray(meaning.definitions)){
+            if(typeof item?.definition==='string')defs.push({pos,definition:item.definition,example:typeof item.example==='string'?item.example:''});
+            for(const s of safeArray(item?.synonyms))if(typeof s==='string')dictionarySyn.push({word:s,score:0,tags:[],defs:[]});
+            for(const s of safeArray(item?.antonyms))if(typeof s==='string')dictionaryAnt.push({word:s,score:0,tags:[],defs:[]});
+          }
+        }
+      }
+      return {definitions:defs,syn:unique(dictionarySyn),ant:unique(dictionaryAnt),parts:[...partSet],phonetic,audio,proper};
+    }
+    function mergeCategory(primary,secondary,word){return unique([...normalizeList(primary),...secondary]).filter(w=>!shouldExclude(w,word));}
+    async function queryWord(word,signal){
+      const tasks={
+        dictionary:fetchJSON('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word),signal),
+        synonyms:apiWords({rel_syn:word},signal),
+        antonyms:apiWords({rel_ant:word},signal),
+        related:apiWords({ml:word},signal),
+        descriptors:apiWords({rel_jjb:word},signal),
+        descriptorsOf:apiWords({rel_jja:word},signal),
+        rhymes:apiWords({rel_rhy:word},signal)
+      };
+      const keys=Object.keys(tasks);const settled=await Promise.allSettled(Object.values(tasks));
+      if(signal.aborted)throw new DOMException('Cancelled','AbortError');
+      const response={};settled.forEach((r,i)=>response[keys[i]]=r.status==='fulfilled'?r.value:null);
+      const allFailed=settled.every(r=>r.status==='rejected');
+      const dictionary=parseDictionary(response.dictionary);
+      if(!dictionary.definitions.length){
+        // Datamuse's Wiktionary/WordNet definition metadata can supply a fallback.
+        try{const matches=await fetchJSON(buildURL('https://api.datamuse.com/words',{sp:word,md:'d',max:'15'}),signal);dictionary.definitions=parseDefsFromDatamuse(matches,word);}catch{/* Dictionary fallback optional */}
+      }
+      const adjectiveOnly=dictionary.parts.includes('adjective')&&!dictionary.parts.includes('noun');
+      const descriptorMode=adjectiveOnly?'modified':'modifiers';
+      const categories={
+        synonyms:mergeCategory(response.synonyms,dictionary.syn,word),
+        antonyms:mergeCategory(response.antonyms,dictionary.ant,word),
+        related:normalizeList(response.related).filter(o=>!shouldExclude(o,word)),
+        descriptors:normalizeList(adjectiveOnly?response.descriptorsOf:response.descriptors).filter(o=>!shouldExclude(o,word)),
+        rhymes:normalizeList(response.rhymes).filter(o=>!shouldExclude(o,word))
+      };
+      // Related ideas are deliberately wider than synonyms; remove strict synonyms and antonyms.
+      const exactWords=new Set([...categories.synonyms,...categories.antonyms].map(w=>keyOf(w.word)));
+      categories.related=categories.related.filter(w=>!exactWords.has(keyOf(w.word)));
+      const partial=settled.some((r,i)=>r.status==='rejected'&&!(keys[i]==='dictionary'&&r.reason?.status===404));
+      const notFound=!dictionary.definitions.length && Object.values(categories).every(v=>v.length===0);
+      return {definitions:dictionary.definitions,phonetic:dictionary.phonetic,audio:dictionary.audio,parts:dictionary.parts,proper:dictionary.proper,categories,descriptorMode,partial,allFailed,notFound,hasDictionary:!!response.dictionary};
+    }
+    function renderLoading(word){
+      $('mainArea').innerHTML=`<div class="card word-card" aria-busy="true"><div class="eyebrow">Exploring</div><h2 class="word-title">${escapeHTML(word)}</h2><div class="skeleton" style="width:36%"></div><div class="metrics"><div class="skeleton" style="width:80%"></div></div></div><div class="card" style="padding:25px"><div class="skeleton" style="width:25%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:76%"></div><div class="skeleton" style="width:81%"></div></div>`;
+    }
+    function renderEmpty(message,detail){
+      $('mainArea').innerHTML=`<div class="card"><div class="empty-state"><div class="big-icon">?</div><h2>${escapeHTML(message)}</h2><p>${escapeHTML(detail)}</p><button class="example" type="button" data-search="resilient">Try “resilient”</button></div></div>`;
+    }
+    function renderWordCard(){
+      const el=$('wordCard');if(!el||!state.data)return;
+      const d=state.data;const isSaved=state.saved.some(v=>keyOf(v)===keyOf(state.word));
+      const parts=d.parts.length?d.parts.slice(0,4).map(p=>`<span class="pos-tag">${escapeHTML(p)}</span>`).join(''):'<span class="pos-tag">Word or phrase</span>';
+      const metrics=['synonyms','antonyms','related','descriptors'].map(k=>`<div class="metric"><strong>${d.categories[k].length}</strong><span>${k==='descriptors'?(d.descriptorMode==='modified'?'descriptive uses':'descriptors'):k==='related'?'related terms':k}</span></div>`).join('');
+      el.innerHTML=`<div class="word-top"><div><div class="eyebrow">Word profile</div><h2 class="word-title">${escapeHTML(d.proper||state.word)}</h2><div class="word-desc">${parts}${d.phonetic?`<span>${escapeHTML(d.phonetic)}</span>`:''}</div></div><div class="word-controls"><button type="button" class="icon-button" data-action="speak" title="Hear pronunciation" aria-label="Hear pronunciation">${icon('sound')}</button><button type="button" class="icon-button ${isSaved?'selected':''}" data-action="save" title="${isSaved?'Remove bookmark':'Save word'}" aria-label="${isSaved?'Remove saved word':'Save word'}">${icon('bookmark')}</button><button type="button" class="icon-button" data-action="share" title="Copy share link" aria-label="Copy share link">${icon('share')}</button></div></div><div class="metrics">${metrics}</div>`;
+    }
+    function definitionMarkup(){
+      const defs=state.data.definitions;
+      if(!defs.length)return '<p class="side-empty">No dictionary definition was available for this search. Explore the related words below or try a different form of the word.</p>';
+      const groups=new Map();for(const d of defs){if(!groups.has(d.pos))groups.set(d.pos,[]);groups.get(d.pos).push(d);}
+      let count=0;let html='<div class="definitions">';
+      for(const [pos,items] of groups){
+        let out='';items.forEach((d,i)=>{count++;if(state.definitionsExpanded||count<=7){out+=`<div class="definition"><span class="def-number">${i+1}.</span><div><p>${escapeHTML(d.definition)}</p>${d.example?`<div class="example-line">“${escapeHTML(d.example)}”</div>`:''}</div></div>`;}});
+        if(out)html+=`<section class="definition-group"><h3>${escapeHTML(pos)}</h3>${out}</section>`;
+      }
+      html+='</div>';
+      if(count>7)html+=`<div class="definition-tools"><button class="text-button" data-action="expand-defs" type="button">${state.definitionsExpanded?'Show fewer definitions':'Show all '+count+' definitions'}</button></div>`;
+      return html;
+    }
+    function categoryMeta(key){
+      if(key==='descriptors'&&state.data?.descriptorMode==='modified')return {title:'What it describes',subtitle:'Nouns frequently modified by this adjective.'};
+      return CATEGORY[key];
+    }
+    function categorySubtitle(key){return categoryMeta(key).subtitle;}
+    function termMarkup(item){const w=item.word;const short=String(item.defs?.[0]??'').replace(/^[^\t]+\t/,'').slice(0,180);return `<span class="term-chip" title="${attr(short||'Explore '+w)}"><button class="term-main" type="button" data-search="${attr(w)}" aria-label="Explore ${attr(w)}">${escapeHTML(w)}</button><button class="chip-copy" type="button" data-copy="${attr(w)}" title="Copy ${attr(w)}" aria-label="Copy ${attr(w)}">${icon('copy')}</button></span>`;}
+    function miniSection(key){const list=state.data.categories[key];const title=categoryMeta(key).title;
+      return `<section class="mini-section"><div class="section-head"><h3>${title} <span class="muted" style="font-size:12px;font-weight:500">${list.length}</span></h3></div><p class="section-sub">${categorySubtitle(key)}</p>${list.length?`<div class="term-list">${list.slice(0,10).map(termMarkup).join('')}</div>${list.length>10?`<button class="text-button browse-more" data-tab="${key}" type="button">View all ${list.length} →</button>`:''}`:'<p class="side-empty">No matches in this category.</p>'}</section>`;}
+    function filterItems(key){let list=[...state.data.categories[key]];
+      if(state.pos!=='all') list=list.filter(o=>{if(!o.tags.length)return true;const tags=o.tags.filter(t=>['n','v','adj','adv','u'].includes(t));return !tags.length||tags.includes(state.pos);});
+      if(state.sort==='alpha')list.sort((a,b)=>a.word.localeCompare(b.word));
+      else if(state.sort==='length')list.sort((a,b)=>a.word.length-b.word.length||a.word.localeCompare(b.word));
+      return list;
+    }
+    function renderPanel(){
+      if(!state.data)return;
+      const panel=$('panel');if(!panel)return;
+      if(state.tab==='all'){
+        const defs=definitionMarkup();panel.innerHTML=`<section><h3 class="section-title">Definitions & usage</h3><p class="section-sub">Dictionary meanings for the word, grouped by part of speech.</p>${defs}</section><div class="panel-divider"></div><div class="section-head"><div><h3 class="section-title">Explore the word</h3><p class="section-sub">Select any word to look it up, or use its copy icon.</p></div></div><div class="grid-sections">${['synonyms','antonyms','related','descriptors','rhymes'].map(miniSection).join('')}</div>`;
+      } else if(state.tab==='definitions'){
+        panel.innerHTML=`<h3 class="section-title">Definitions & usage</h3><p class="section-sub">Dictionary meanings, example sentences, and parts of speech.</p>${definitionMarkup()}`;
+      } else {
+        const k=state.tab;const cat=categoryMeta(k);const options=['all','n','v','adj','adv'].map(p=>`<option value="${p}"${state.pos===p?' selected':''}>${({all:'All word types',n:'Nouns',v:'Verbs',adj:'Adjectives',adv:'Adverbs'})[p]}</option>`).join('');
+        const filtered=filterItems(k);
+        panel.innerHTML=`<div class="section-head"><div><h3 class="section-title">${cat.title}</h3><p class="section-sub">${cat.subtitle}</p></div></div><div class="results-toolbar"><select id="posSelect" aria-label="Filter part of speech">${options}</select><select id="sortSelect" aria-label="Sort results"><option value="relevance"${state.sort==='relevance'?' selected':''}>Most relevant</option><option value="alpha"${state.sort==='alpha'?' selected':''}>A to Z</option><option value="length"${state.sort==='length'?' selected':''}>Shortest first</option></select><span class="toolbar-note">${filtered.length} ${filtered.length===1?'result':'results'}</span></div>${filtered.length?`<div class="term-list">${filtered.map(termMarkup).join('')}</div>`:`<div class="empty-state" style="padding:20px"><h2>No matching words</h2><p>${state.pos==='all'?'There are no entries in this category for this search.':'Try changing the word type filter.'}</p></div>`}`;
+      }
+    }
+    function renderTabs(){const el=$('tabs');if(!el)return;el.innerHTML=TAB_KEYS.map(key=>{const label=key==='all'?'Overview':key==='definitions'?'Definitions':categoryMeta(key).title;const count=key==='definitions'?state.data.definitions.length:key==='all'?null:state.data.categories[key].length;return `<button class="tab ${state.tab===key?'active':''}" data-tab="${key}" type="button" role="tab" aria-selected="${state.tab===key}" tabindex="${state.tab===key?'0':'-1'}">${label}${count===null?'':` <span>${count}</span>`}</button>`;}).join('');}
+    function renderResults(){
+      const d=state.data;if(!d)return;
+      if(d.notFound){renderEmpty(d.allFailed?'Word lookup unavailable':'No results found',d.allFailed?'The external word services did not respond. Check your connection and try again.':'Try a different spelling or search a descriptive phrase to discover related ideas.');return;}
+      const status=d.allFailed?'error':d.partial?'partial':'ok';
+      $('mainArea').innerHTML=`<div class="status-line"><span class="status-dot ${status==='ok'?'':status}"></span>${d.partial?'Some word sources unavailable; results may be incomplete.':!d.definitions.length?'Related vocabulary (no exact dictionary definition found).':'Live dictionary and thesaurus results'}</div><section class="card word-card" id="wordCard"></section><section class="card tabs-card"><div class="tabs" id="tabs" role="tablist" aria-label="Word categories"></div><div id="panel" role="tabpanel"></div></section>`;
+      renderWordCard();renderTabs();renderPanel();
+    }
+    async function search(value,updateUrl=true){
+      const word=clean(value);if(!word){showToast('Type a word to explore');$('wordInput').focus();return;}
+      setView('explore');closeSuggestions();state.request++;const request=state.request;state.controller?.abort();state.controller=new AbortController();
+      state.word=word;state.data=null;state.tab='all';state.sort='relevance';state.pos='all';state.definitionsExpanded=false;$('wordInput').value=word;
+      $('searchButton').disabled=true;renderLoading(word);addRecent(word);
+      if(updateUrl){try{const url=new URL(window.location.href);url.searchParams.set('word',word);window.history.pushState({word},'',url);}catch{}}
+      try{
+        const cached=state.cache.get(keyOf(word));
+        const data=(cached&&Date.now()-cached.when<900000)?cached.data:await queryWord(word,state.controller.signal);
+        if(request!==state.request)return;
+        state.data=data;state.loaded=true;if(!data.partial&&!data.allFailed&&!data.notFound){state.cache.set(keyOf(word),{data,when:Date.now()});if(state.cache.size>50)state.cache.delete(state.cache.keys().next().value);}renderResults();
+      }catch(error){if(request!==state.request)return;if(error?.name==='AbortError')return;renderEmpty('Unable to look up this word','Check your internet connection and try again. The app relies on public word services.');}
+      finally{if(request===state.request)$('searchButton').disabled=false;}
+    }
+    function speak(){
+      const raw=state.data?.audio;
+      const audioURL=raw?.startsWith('//')?'https:'+raw:raw;
+      if(audioURL){try{const url=new URL(audioURL);if(url.protocol==='https:'){const audio=new Audio(url.href);audio.play().catch(()=>fallbackSpeak());return;}}catch{}}
+      fallbackSpeak();
+    }
+    function fallbackSpeak(){if(!('speechSynthesis'in window)){showToast('Pronunciation is not supported in this browser');return;}window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(state.word);utterance.lang='en-US';utterance.rate=.88;window.speechSynthesis.speak(utterance);}
+    function closeSuggestions(){state.suggestionWords=[];state.suggestionIndex=-1;$('suggestions').innerHTML='';$('suggestions').classList.remove('open');$('wordInput').setAttribute('aria-expanded','false');}
+    async function requestSuggestions(value,token){
+      const word=clean(value);if(word.length<2){closeSuggestions();return;}
+      state.suggestionController?.abort();const ctrl=new AbortController();state.suggestionController=ctrl;
+      try{const data=await fetchJSON(buildURL('https://api.datamuse.com/sug',{s:word,max:7}),ctrl.signal);if(token!==state.suggestionToken||document.activeElement!==$('wordInput'))return;
+        state.suggestionWords=normalizeList(data).slice(0,7).map(x=>x.word);state.suggestionIndex=-1;
+        $('suggestions').innerHTML=state.suggestionWords.map((w,i)=>`<button type="button" class="suggestion" id="suggestion-${i}" role="option" data-suggestion="${attr(w)}" aria-selected="false"><span>${escapeHTML(w)}</span><small>Explore ↗</small></button>`).join('');
+        $('suggestions').classList.toggle('open',state.suggestionWords.length>0);$('wordInput').setAttribute('aria-expanded',String(state.suggestionWords.length>0));
+      }catch{if(token===state.suggestionToken)closeSuggestions();}
+    }
+    function highlightSuggestion(){const buttons=[...$('suggestions').querySelectorAll('.suggestion')];buttons.forEach((b,i)=>{b.classList.toggle('active',i===state.suggestionIndex);b.setAttribute('aria-selected',String(i===state.suggestionIndex));});if(state.suggestionIndex>=0)buttons[state.suggestionIndex]?.scrollIntoView({block:'nearest'});}
+    function onInput(){state.suggestionToken++;const token=state.suggestionToken;clearTimeout(state.suggestionTimer);state.suggestionController?.abort();const v=$('wordInput').value;if(clean(v).length<2){closeSuggestions();return;}state.suggestionTimer=setTimeout(()=>requestSuggestions(v,token),240);}
+
+    // ----- Word library and procedural writing studio -----
+    const library = {words:null,filtered:[],offset:0,letter:'',timer:0,token:0,loading:false,preview:[],source:'live',lastRandom:''};
+    const LIBRARY_URLS = [
+      'https://cdn.jsdelivr.net/gh/dwyl/english-words@master/words_alpha.txt',
+      'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt'
+    ];
+    const FALLBACK_WORDS = 'abundance adventure alluring amber ambition anomaly aperture apparition arcane artisan astronomy atlas aurora beautiful benevolent bewildered bloom brilliant cadence cascade celestial cherished clarity clever compass constellation courageous crimson curious delightful discovery dreamy echo elegant enchanted ephemeral equanimity ethereal euphoria evergreen exploration extraordinary fable fearless flourish forgotten fragile galaxy generous gentle graceful gravity harmony horizon imagination ingenious intricate jubilant kaleidoscope kindness labyrinth luminous magnificent marvelous melody meticulous midnight miracle mysterious nostalgic novelty ocean opulent optimistic paradox peaceful peculiar perseverance phantom picturesque playful poetic possibility profound radiant resilient reverie ripple sanctuary serendipity shimmering solitude starlight steadfast symphony tapestry tenacious tranquil twilight unexpected universe vivid wander whimsical wonder zephyr'.split(' ');
+    const sample = items => items[Math.floor(Math.random()*items.length)];
+    const randInt = n => Math.floor(Math.random()*n);
+    function setView(name){
+      if(!['explore','library','generate'].includes(name)) name='explore';
+      ['explore','library','generate'].forEach(k=>{$(k+'View').hidden=k!==name;});
+      document.querySelectorAll('[data-view]').forEach(b=>{const active=b.dataset.view===name;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+      if(name==='library'&&!library.words) browseLiveWords();
+      if(name==='generate') updateGeneratorDescription();
+    }
+    function normalizeLexicon(raw){
+      const uniqueWords=new Set();
+      for(const item of raw.split(/\r?\n|,/)){
+        const word=item.trim().toLowerCase();
+        if(/^[a-z]+$/.test(word)&&word.length<=45) uniqueWords.add(word);
+      }
+      return [...uniqueWords].sort();
+    }
+    function openLexiconDB(){return new Promise((resolve,reject)=>{
+      if(!window.indexedDB){resolve(null);return;}
+      const req=indexedDB.open('wordatlas-library',1);
+      req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('lexicon'))req.result.createObjectStore('lexicon');};
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error);
+    });}
+    async function cachedLexicon(mode,value){
+      let db;try{
+        db=await openLexiconDB();if(!db)return null;
+        return await new Promise((resolve,reject)=>{
+          const tx=db.transaction('lexicon',mode==='get'?'readonly':'readwrite');
+          const req=tx.objectStore('lexicon')[mode](...(mode==='put'?[value,'words']:['words']));
+          req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+        });
+      }catch{return null;}finally{db?.close();}
+    }
+    function setLibraryState(words,source){
+      library.words=words;library.source=source;library.filtered=[];library.offset=0;
+      $('forgetLibrary').hidden=false;$('loadLibrary').textContent='Reload full library';
+      $('libraryStatus').textContent=`${words.length.toLocaleString()} indexed English words loaded (${source}). Use filters or a letter to browse.`;
+      renderLibrary();
+    }
+    function currentLibraryQuery(){return $('libraryQuery').value.trim().toLowerCase().replace(/[^a-z]/g,'');}
+    function matchWord(word,query,mode,length,letter){
+      if(letter&&!word.startsWith(letter))return false;
+      if(length!=='any'){const [min,max]=length.split('-').map(Number);if(word.length<min||word.length>max)return false;}
+      return !query || (mode==='starts'?word.startsWith(query):mode==='ends'?word.endsWith(query):mode==='exact'?word===query:word.includes(query));
+    }
+    function renderLibrary(reset=true){
+      if(!library.words)return;
+      const query=currentLibraryQuery(),mode=$('libraryMatch').value,length=$('libraryLength').value;
+      if(reset){library.offset=0;library.filtered=library.words.filter(w=>matchWord(w,query,mode,length,library.letter));}
+      const next=library.filtered.slice(library.offset,library.offset+140);library.offset+=next.length;
+      if(reset)$('libraryResults').innerHTML='';
+      $('libraryResults').insertAdjacentHTML('beforeend',next.map(w=>`<button class="lex-word" type="button" data-search="${attr(w)}" title="Define ${attr(w)}">${escapeHTML(w)}</button>`).join(''));
+      if(!library.filtered.length)$('libraryResults').innerHTML='<p class="muted" style="font-size:13px">No words match these filters.</p>';
+      $('libraryStatus').textContent=`${library.filtered.length.toLocaleString()} matches across ${library.words.length.toLocaleString()} indexed words (${library.source}).`;
+      $('libraryPagination').textContent=library.filtered.length?`Showing ${library.offset.toLocaleString()} of ${library.filtered.length.toLocaleString()}`:'';
+      $('libraryMore').hidden=library.offset>=library.filtered.length;
+    }
+    async function browseLiveWords(){
+      if(library.words)return renderLibrary();
+      const token=++library.token;const query=currentLibraryQuery(),mode=$('libraryMatch').value,length=$('libraryLength').value;
+      if(mode==='contains'||mode==='ends'){
+        $('libraryResults').innerHTML='';$('libraryMore').hidden=true;$('libraryPagination').textContent='';
+        $('libraryStatus').textContent='Load the full index or import a word list to use contains / ends-with searching.';return;
+      }
+      const prefix=library.letter||query.slice(0,2);
+      $('libraryStatus').textContent='Searching live word suggestions…';
+      try{
+        const response=await fetchJSON(buildURL('https://api.datamuse.com/words',{sp:prefix?prefix+'*':'*',max:200}),null);
+        if(token!==library.token)return;
+        library.preview=[...new Set(safeArray(response).map(x=>String(x.word||'').toLowerCase()).filter(w=>/^[a-z]+$/.test(w)&&matchWord(w,query,mode,length,library.letter)))];
+        $('libraryResults').innerHTML=library.preview.length?library.preview.map(w=>`<button type="button" class="lex-word" data-search="${attr(w)}">${escapeHTML(w)}</button>`).join(''):'<p class="muted">No matching results in the live sample. Try a shorter prefix.</p>';
+        $('libraryStatus').textContent=`${library.preview.length} matching words in a limited live sample (not the full English index).`;
+        $('libraryPagination').textContent='For full-index filtering, choose Load full library.';$('libraryMore').hidden=true;
+      }catch{if(token!==library.token)return;$('libraryStatus').textContent='Live browsing unavailable. Load the full index or import a local text file.';$('libraryResults').innerHTML='';}
+    }
+    function scheduleLibrary(){clearTimeout(library.timer);library.timer=setTimeout(()=>library.words?renderLibrary():browseLiveWords(),180);}
+    function renderAlphabet(){
+      $('alphabetBar').innerHTML=['All',...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(label=>{
+        const letter=label==='All'?'':label.toLowerCase(),on=library.letter===letter;
+        return `<button class="${on?'active':''}" type="button" data-letter="${letter}" aria-pressed="${on}">${label}</button>`;
+      }).join('');
+    }
+    async function loadFullLexicon(){
+      if(library.loading)return;library.loading=true;const btn=$('loadLibrary');btn.disabled=true;btn.textContent='Downloading…';
+      $('libraryStatus').textContent='Downloading word index (approximately 4 MB)…';
+      let error;
+      try{
+        for(const url of LIBRARY_URLS){
+          try{
+            const ctrl=new AbortController(),time=setTimeout(()=>ctrl.abort(),25000);
+            let response;
+            try{response=await fetch(url,{signal:ctrl.signal});if(!response.ok)throw new Error(`HTTP ${response.status}`);
+              const raw=await response.text();const words=normalizeLexicon(raw);if(words.length<100000)throw new Error('Unexpected index size');
+              setLibraryState(words,'community index');
+              // IndexedDB storage is optional; memory and searching still work in private mode.
+              cachedLexicon('put',raw).catch(()=>{});showToast('Full English index loaded');return;
+            }finally{clearTimeout(time);}
+          }catch(e){error=e;}
+        }
+        throw error||new Error('Index unavailable');
+      }catch{$('libraryStatus').textContent='Download unavailable. Import a local .txt list, or continue browsing live samples.';showToast('Could not load the word index');}
+      finally{library.loading=false;btn.disabled=false;btn.textContent=library.words?'Reload full library':'Load full library';}
+    }
+    async function randomWord(){
+      const len=$('randomLength').value;
+      const fit=w=>/^[a-z]+$/.test(w)&&(len==='any'||(()=>{const [min,max]=len.split('-').map(Number);return w.length>=min&&w.length<=max;})());
+      const pickDifferent=arr=>{const pool=arr.filter(w=>w!==library.lastRandom);return sample(pool.length?pool:arr);};
+      let word='';
+      if(library.words){const words=library.words;for(let tries=0;tries<100;tries++){const candidate=words[randInt(words.length)];if(fit(candidate)&&candidate!==library.lastRandom){word=candidate;break;}}}
+      if(!word){
+        $('randomStatus').textContent='Finding a random English word…';
+        try{
+          const start=sample('abcdefghijklmnopqrstuvwxyz'.split(''));
+          const results=await fetchJSON(buildURL('https://api.datamuse.com/words',{sp:start+'*',max:500}),null);
+          const pool=safeArray(results).map(x=>x.word).filter(w=>typeof w==='string'&&fit(w));
+          if(pool.length)word=pickDifferent(pool);
+        }catch{}
+      }
+      if(!word){const pool=FALLBACK_WORDS.filter(fit);word=pickDifferent(pool.length?pool:FALLBACK_WORDS);}
+      library.lastRandom=word;$('randomStatus').textContent=`Random word: ${word} · ${library.words?'full index':'live/fallback sample'}`;
+      setView('explore');search(word);return word;
+    }
+    const WORLD = {
+      adventure:{people:['an apprentice navigator','a mountain guide','a curious cartographer','an amateur explorer','a fearless courier'],places:['a hidden valley','an abandoned lighthouse','a storm-battered coastline','a forgotten desert city','a narrow mountain pass'],things:['a silver compass','a weathered journal','a glass key','a folded map','a brass telescope'],problems:['the only bridge had vanished overnight','the trail was missing from every map','a sudden storm blocked the route','a warning appeared in the sand','the tide was rising faster than expected'],clues:['a trail of blue stones','a message carved into wood','an unfamiliar constellation','a set of footprints leading uphill','a line written in a forgotten language'],reveal:['the destination had been beside them all along','the missing landmark was hidden by shifting light','the map was intended to be read backward','the warning was actually an invitation','the shortest path required leaving the trail']},
+      mystery:{people:['a night-shift librarian','an observant journalist','a retired detective','a quiet archivist','a curious neighbor'],places:['a town with no clocks','a nearly empty museum','an old railway station','a shuttered theater','a rain-soaked apartment building'],things:['a sealed letter','an unmarked photograph','a tarnished pocket watch','a black notebook','a set of antique keys'],problems:['someone had replaced every name on the guest list','the last page of the diary was missing','the lights went out at exactly midnight','a familiar voice called from an empty room','the same stranger appeared in three different photographs'],clues:['a faint mark under the ink','a ticket stamped with tomorrow’s date','a name scratched beneath the table','a footprint that stopped at the wall','a melody played on a broken radio'],reveal:['the stranger was trying to protect a secret','the missing page had been hidden inside the cover','the apparent thief was the person who asked for help','the message was meant for someone years in the future','the most important evidence had never left the room']},
+      fantasy:{people:['a novice spellkeeper','a wandering bard','a stubborn young wizard','a forest guardian','a dragon’s reluctant assistant'],places:['a floating village','an ancient forest','a castle made of moonstone','a village beneath giant roots','a bridge of living vines'],things:['an enchanted bell','a glowing seed','a book without an ending','a tiny crystal dragon','a mirror that remembered voices'],problems:['all the stars seemed to be going out','the river had forgotten how to flow','the town’s shadows began walking away','every doorway led to the wrong place','the forest had gone completely silent'],clues:['a whisper from the oldest tree','a constellation moving against the sky','a ribbon that glowed in the dark','a riddle spoken by a fox','a path that appeared only at dawn'],reveal:['the spell could only be broken by an honest promise','the feared creature was guarding the village','the missing magic had been shared among the villagers','the ancient riddle described an ordinary kindness','the smallest seed held the greatest power']},
+      scifi:{people:['a research pilot','a curious robot technician','a space-station botanist','a reluctant time traveler','an orbital mechanic'],places:['a silent research station','a ship orbiting a distant moon','a greenhouse on Mars','an underwater laboratory','a colony at the edge of a nebula'],things:['a cracked navigation chip','a luminous data cube','a miniature drone','a transmitter from the future','a star map with missing coordinates'],problems:['the station received a distress call from itself','the ship’s clocks began running backward','a planet disappeared from the sensors','the greenhouse started growing impossible flowers','an unfamiliar signal interrupted every transmission'],clues:['an old recording hidden in the system','a pattern of lights outside the hull','a message buried in the telemetry','a silent drone returning without its operator','an unexplained heartbeat in the radio static'],reveal:['the signal was a warning from their own future','the missing coordinates pointed home','the station itself had been protecting its crew','the strange flowers were translating the signal','the solution required trusting an obsolete machine']},
+      cozy:{people:['a neighborhood baker','a shy gardener','an overworked teacher','a cheerful shopkeeper','a young musician'],places:['a small seaside town','a busy community garden','a corner bakery','a quiet bookshop','a village market'],things:['a handwritten recipe','a lost postcard','a basket of wildflowers','an old songbook','a hand-painted teacup'],problems:['the annual festival was about to be canceled','an important delivery had gone missing','a neighbor stopped showing up at the market','the community garden gate would not open','the bakery’s oldest recipe had disappeared'],clues:['a note tucked into a cookbook','a trail of flower petals','a familiar tune from the next street','a sketch hidden behind a painting','a handwritten address on the back of a photograph'],reveal:['the neighbors had secretly organized a surprise','the recipe had been passed to the next generation','the lost parcel had started a new friendship','the forgotten song brought the town together','the missing key had been given away as a kindness']}
+    };
+    const TONE = {whimsical:['To make matters stranger,','Quite unexpectedly,','As if the day needed another surprise,'],dramatic:['With time running out,','Against every instinct,','Before anyone could object,'],warm:['With quiet determination,','Trusting a new friend,','In a small act of courage,'],eerie:['As an uneasy silence settled,','While the shadows grew long,','Without knowing why,']};
+    const EXTRA = ['The decision seemed small, but it changed everything.','For the first time, the pieces of the puzzle began to fit together.','There was no turning back now.','Nobody spoke for a moment.','A distant sound broke the silence.','Something about the discovery felt strangely familiar.','Even the air seemed different after that.','The next step would require more courage than expected.'];
+    const SENTENCE_SUBJECTS=['a curious librarian','a patient astronomer','an adventurous fox','a brilliant inventor','a sleepy gardener','an anxious musician','a thoughtful robot','a fearless traveler','an eccentric historian','a mischievous cat'];
+    const SENTENCE_VERBS=['discovered','examined','followed','protected','borrowed','uncovered','carried','watched','painted','carefully unfolded','quietly repaired','unexpectedly found'];
+    const SENTENCE_OBJECTS=['a forgotten map','an unusually bright lantern','a secret doorway','the last blue butterfly','a peculiar photograph','a tiny silver key','an unfinished masterpiece','a mysterious envelope','an impossible constellation','a strange wooden box'];
+    const SENTENCE_SETTINGS=['beneath a sky full of stars','just after sunrise','at the edge of the harbor','behind the old theater','during the quietest hour of the night','at the end of a winding path','before the first snow arrived','where the mountains met the sea'];
+    function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+    function inspiration(){const word=$('genUseCurrent').checked?state.word:$('genWord').value;return clean(word).slice(0,60);}
+    function makeSentence(){
+      const subject=sample(SENTENCE_SUBJECTS),verb=sample(SENTENCE_VERBS),object=sample(SENTENCE_OBJECTS),setting=sample(SENTENCE_SETTINGS);
+      const anchor=inspiration();const variants=[
+        ()=>`${cap(subject)} ${verb} ${object} ${setting}.`,
+        ()=>`${cap(setting)}, ${subject} ${verb} ${object}.`,
+        ()=>`Nobody expected ${subject} to find ${object} ${setting}.`,
+        ()=>`It was ${setting.replace(/^just /,'shortly ') } when ${subject} ${verb} ${object}.`,
+        ()=>`The day changed when ${subject} ${verb} ${object} ${setting}.`
+      ];
+      let sentence=sample(variants)();
+      if(anchor){const base=sentence.slice(0,-1);sentence=`${base}, beside a note marked “${anchor}.”`;}
+      return sentence;
+    }
+    function makeStory(){
+      const world=WORLD[$('genGenre').value]||WORLD.adventure;
+      const lead=sample(world.people),place=sample(world.places),thing=sample(world.things),problem=sample(world.problems),clue=sample(world.clues),reveal=sample(world.reveal),tone=$('genTone').value,anchor=inspiration();
+      const intro=`At the edge of ${place}, ${lead} found ${thing}.`;
+      const motivation=anchor?`A label on it carried one word: “${anchor}.” Nobody could explain why it mattered.`:`At first, it looked ordinary, but something about it refused to make sense.`;
+      const complication=`By the following morning, ${problem}.`;
+      const plan=`Determined to understand what was happening, the traveler followed ${clue}.`;
+      const twist=`${sample(TONE[tone]||TONE.whimsical)} a simple discovery changed the whole investigation: ${reveal}.`;
+      const resolution=`Instead of giving up, the unlikely hero used ${thing} to bring the scattered clues together.`;
+      const ending=tone==='eerie'?'By nightfall the immediate danger had passed, but one unanswered question remained.':tone==='dramatic'?'The danger passed at last, leaving behind a story that nobody would ever quite believe.':tone==='warm'?'In the end, what mattered most was not the object, but the people who helped along the way.':'And from then on, even the most ordinary day seemed full of possibilities.';
+      const length=$('genLength').value;
+      let lines=[intro,motivation,complication,plan,twist,resolution,ending];
+      if(length==='short')lines=[intro,complication,twist,ending];
+      if(length==='long')lines=[intro,motivation,complication,sample(EXTRA),plan,sample(EXTRA),twist,sample(EXTRA),resolution,ending];
+      return lines.join(' ');
+    }
+    let generated='';
+    function updateGeneratorDescription(){
+      $('generatorDescription').textContent=$('genType').value==='story'?'A mini-narrative with a protagonist, obstacle, clue, turning point, and resolution.':'Generate randomized, grammatically structured sentences. Length controls sentence count.';
+    }
+    function generateText(){
+      const isStory=$('genType').value==='story';
+      if(isStory){generated=makeStory();}
+      else{const n={short:1,medium:3,long:5}[$('genLength').value]||3;generated=Array.from({length:n},makeSentence).join(' ');}
+      const output=$('generatedText');output.textContent=generated;output.classList.remove('empty');
+      $('generatedMeta').textContent=`${generated.split(/\s+/).length} words · ${isStory?'story':'sentence'} · procedural (not AI)`;
+    }
+    function handleGeneratorType(kind){$('genType').value=kind;setView('generate');updateGeneratorDescription();generateText();}
+    // Mode switch is deliberately separate from dictionary tabs.
+    document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+    $('alphabetBar').addEventListener('click',e=>{const b=e.target.closest('[data-letter]');if(!b)return;library.letter=b.dataset.letter;renderAlphabet();scheduleLibrary();});
+    renderAlphabet();
+    $('libraryQuery').addEventListener('input',scheduleLibrary);
+    $('libraryMatch').addEventListener('change',scheduleLibrary);
+    $('libraryLength').addEventListener('change',scheduleLibrary);
+    $('libraryMore').addEventListener('click',()=>renderLibrary(false));
+    $('libraryClear').addEventListener('click',()=>{$('libraryQuery').value='';$('libraryMatch').value='starts';$('libraryLength').value='any';library.letter='';renderAlphabet();scheduleLibrary();});
+    $('libraryRandom').addEventListener('click',()=>{
+      const pool=library.words?library.filtered:library.preview;
+      if(!pool.length){showToast('No matching words yet. Adjust filters or load the index.');return;}
+      const word=sample(pool);setView('explore');search(word);
+    });
+    $('loadLibrary').addEventListener('click',loadFullLexicon);
+    $('importLibrary').addEventListener('click',()=>$('libraryFile').click());
+    $('libraryFile').addEventListener('change',async e=>{
+      const file=e.target.files?.[0];if(!file)return;
+      if(file.size>30*1024*1024){showToast('Maximum word list size is 30 MB');e.target.value='';return;}
+      try{const raw=await file.text();const words=normalizeLexicon(raw);if(!words.length)throw Error('No alphabetic words');
+        setLibraryState(words,`import: ${file.name}`);cachedLexicon('put',raw).catch(()=>{});showToast(`Imported ${words.length.toLocaleString()} words`);
+      }catch{showToast('Could not read that word list');}finally{e.target.value='';}
+    });
+    $('forgetLibrary').addEventListener('click',async()=>{
+      library.words=null;library.filtered=[];library.preview=[];library.source='live';library.letter='';renderAlphabet();
+      try{let db=await openLexiconDB();if(db){await new Promise((resolve,reject)=>{const tx=db.transaction('lexicon','readwrite');tx.objectStore('lexicon').delete('words');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});db.close();}}catch{}
+      $('forgetLibrary').hidden=true;$('loadLibrary').textContent='Load full library';browseLiveWords();showToast('Local index removed');
+    });
+    $('genUseCurrent').addEventListener('change',()=>{$('genWord').disabled=$('genUseCurrent').checked;});
+    $('genType').addEventListener('change',updateGeneratorDescription);
+    $('generateButton').addEventListener('click',generateText);
+    $('copyGenerated').addEventListener('click',()=>generated?copyText(generated):showToast('Generate text first'));
+    $('generateWord').addEventListener('click',randomWord);
+    $('genQuickSentence').addEventListener('click',()=>handleGeneratorType('sentence'));
+    $('genQuickStory').addEventListener('click',()=>handleGeneratorType('story'));
+    $('libraryRandom').title='Select a random word from the current library-filtered results';
+    // Initialize cached word index without requiring another network request.
+    cachedLexicon('get').then(raw=>{if(raw&&!library.words){const words=normalizeLexicon(raw);if(words.length)setLibraryState(words,'browser cache');}}).catch(()=>{});
+
+    $('searchForm').addEventListener('submit',e=>{e.preventDefault();const suggestion=state.suggestionIndex>=0?state.suggestionWords[state.suggestionIndex]:null;search(suggestion||$('wordInput').value);});
+    $('wordInput').addEventListener('input',onInput);
+    $('wordInput').addEventListener('keydown',e=>{if(e.key==='Escape'){closeSuggestions();return;}if(e.key==='ArrowDown'&&state.suggestionWords.length){e.preventDefault();state.suggestionIndex=(state.suggestionIndex+1)%state.suggestionWords.length;highlightSuggestion();}if(e.key==='ArrowUp'&&state.suggestionWords.length){e.preventDefault();state.suggestionIndex=(state.suggestionIndex-1+state.suggestionWords.length)%state.suggestionWords.length;highlightSuggestion();}});
+    $('wordInput').addEventListener('blur',()=>{setTimeout(()=>{if(!$('suggestions').contains(document.activeElement))closeSuggestions();},120);});
+    $('themeButton').addEventListener('click',toggleTheme);
+    $('clearHistory').addEventListener('click',()=>{state.recent=[];storage.write(KEYS.recent,state.recent);renderAside();showToast('Search history cleared');});
+    $('homeLink').addEventListener('click',e=>{e.preventDefault();$('wordInput').focus();window.scrollTo({top:0,behavior:'smooth'});});
+    $('randomButton').addEventListener('click',randomWord);
+    document.addEventListener('click',e=>{
+      const suggestion=e.target.closest('[data-suggestion]');if(suggestion){search(suggestion.dataset.suggestion);return;}
+      const searchWord=e.target.closest('[data-search]');if(searchWord){search(searchWord.dataset.search);return;}
+      const copy=e.target.closest('[data-copy]');if(copy){copyText(copy.dataset.copy);return;}
+      const remove=e.target.closest('[data-remove]');if(remove){state.saved=state.saved.filter(v=>keyOf(v)!==keyOf(remove.dataset.remove));storage.write(KEYS.saved,state.saved);renderAside();renderWordCard();showToast('Removed saved word');return;}
+      const tab=e.target.closest('[data-tab]');if(tab&&state.data){state.tab=tab.dataset.tab;state.sort='relevance';state.pos='all';renderTabs();renderPanel();return;}
+      const action=e.target.closest('[data-action]');if(action&&state.data){switch(action.dataset.action){case 'speak':speak();break;case 'save':saveCurrent();break;case 'share':{let link='';try{const url=new URL(location.href);url.searchParams.set('word',state.word);link=url.href;}catch{link=state.word;}copyText(link);break;}case 'expand-defs':state.definitionsExpanded=!state.definitionsExpanded;renderPanel();break;}}
+      if(!e.target.closest('#searchForm'))closeSuggestions();
+    });
+    document.addEventListener('change',e=>{if(e.target.id==='posSelect'){state.pos=e.target.value;renderPanel();}if(e.target.id==='sortSelect'){state.sort=e.target.value;renderPanel();}});
+    document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('wordInput').focus();$('wordInput').select();}});
+    window.addEventListener('popstate',()=>{const w=new URL(location.href).searchParams.get('word');if(w)search(w,false);});
+    // Theme, bookmarks and history are optional enhancements; API data is not hard-coded.
+    const savedTheme=storage.read(KEYS.theme,null);
+    document.documentElement.dataset.theme=savedTheme==='dark'?'dark':'light';updateTheme();renderAside();
+    const initialWord=new URL(location.href).searchParams.get('word');
+    if(initialWord)search(initialWord,false);else search('curious',false);
+  })();
+  </script>
+</body>
+</html>
