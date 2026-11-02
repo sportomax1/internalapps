@@ -167,7 +167,7 @@ function labelsAndSeries(view,data){
  config.series.forEach(function(def){
   var val=data[def[0]],arr=Array.isArray(val)?val.map(num):labels.map(function(){return num(val)});
   if(!arr.length||!arr.some(function(v){return v!==null}))return;
-  series.push({key:def[0],name:def[1],color:def[2],values:arr.slice(0,labels.length)});
+  series.push({key:def[0],name:def[1],color:def[2],values:labels.map(function(_,i){return arr[i]===undefined?null:arr[i]})});
  });
  return {labels:labels,series:series,unit:config.unit};
 }
@@ -188,7 +188,7 @@ function seriesLast(series){
 function metric(label,value,sub){return '<article class="kpi"><div class="cap">'+esc(label)+'</div><div class="value">'+esc(value)+'</div><div class="sub">'+esc(sub)+'</div></article>'}
 function renderKpis(view,data){
  var primary=data.series[0];if(!primary){byId("kpis").innerHTML=metric("No observations","—","No values returned");return}
- var valid=primary.values.filter(function(v){return v!==null}),current=seriesLast(primary),first=valid[0],lo=Math.min.apply(null,valid),hi=Math.max.apply(null,valid);
+ var valid=primary.values.filter(function(v){return v!==null}),current=seriesLast(primary),lo=Infinity,hi=-Infinity;valid.forEach(function(v){if(v<lo)lo=v;if(v>hi)hi=v});
  var label=data.labels[current.index]||"Latest",unit=VIEWS[view].unit;
  var html;
  if(view==="elevation"){
@@ -226,9 +226,10 @@ function draw(canvasId,tooltipId,legendId,data){
  canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);canvas.style.height=height+"px";
  var ctx=canvas.getContext("2d");ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,width,height);
  var pad={l:68,r:15,t:18,b:45},plotW=width-pad.l-pad.r,plotH=height-pad.t-pad.b,n=data.labels.length;
- var all=data.series.flatMap(function(s){return s.values.filter(function(v){return v!==null})});
- if(!all.length){setUnavailable(canvasId,canvasId==="chart"?"chartPlaceholder":"riverPlaceholder","No numeric chart values.");return}
- var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),gap=Math.max((hi-lo)*0.09,1);
+ var lo=Infinity,hi=-Infinity;
+ data.series.forEach(function(s){s.values.forEach(function(v){if(v!==null&&Number.isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v}})});
+ if(!Number.isFinite(lo)||!Number.isFinite(hi)){setUnavailable(canvasId,canvasId==="chart"?"chartPlaceholder":"riverPlaceholder","No numeric chart values.");return}
+ var gap=Math.max((hi-lo)*0.09,1);
  if(lo===hi){lo-=gap;hi+=gap}else{lo-=gap;hi+=gap}
  var xp=function(i){return pad.l+(n<2?plotW/2:i/(n-1)*plotW)},yp=function(v){return pad.t+(hi-v)/(hi-lo)*plotH};
  ctx.font="11px system-ui";ctx.lineWidth=1;ctx.textBaseline="middle";ctx.textAlign="right";
