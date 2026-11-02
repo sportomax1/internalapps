@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1823">
+<meta name="description" content="Lake Powell levels, historical inflow and outflow, and river flow dashboards.">
+<title>Lake Powell | Water Data Explorer</title>
+<style>
+:root{color-scheme:dark;--bg:#0c1823;--panel:#142635;--panel2:#172d3f;--line:#294251;--ink:#eef7fa;--muted:#a6bbc6;--aqua:#6ec3d0;--blue:#7baeea;--orange:#e3b06e;--green:#8bcca9;--red:#db8888}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 74% -15%,#1b3c4e 0,transparent 44%),var(--bg);color:var(--ink);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,select{font:inherit}
+button{cursor:pointer}
+a{color:var(--aqua)}
+.shell{max-width:1460px;margin:0 auto;padding:20px 24px 36px}
+.top{display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap;margin-bottom:23px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}
+.mark{width:43px;height:43px;border:1px solid #426777;border-radius:13px;display:grid;place-items:center;background:linear-gradient(160deg,#27465b,#183346);color:#b1e2e7;font-size:25px}
+.brand h1{font-size:20px;letter-spacing:-.5px;line-height:1.1;margin:0;font-weight:800}
+.brand small{font-size:11px;color:var(--muted);display:block;margin-top:3px;letter-spacing:.08em;text-transform:uppercase}
+.actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.btn{min-height:36px;padding:7px 12px;border-radius:10px;border:1px solid #365265;background:#1d3444;color:var(--ink)}
+.btn:hover{border-color:#76a4ae;background:#29485a}
+.btn:focus-visible,.seg button:focus-visible,.tab:focus-visible{outline:2px solid var(--aqua);outline-offset:3px}
+.btn.primary{border-color:#688e95;background:#2e5661}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.status{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
+.dot{display:inline-block;width:7px;height:7px;background:#9aafbc;border-radius:50%}
+.status.good .dot{background:var(--green)}
+.status.bad .dot{background:var(--red)}
+.hero{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;margin-bottom:20px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--aqua);font-weight:750}
+.hero h2{font-size:clamp(27px,3.1vw,41px);line-height:1.1;letter-spacing:-1.3px;margin:6px 0 7px}
+.hero p{color:var(--muted);margin:0;font-size:13px;max-width:720px}
+.source-link{font-size:12px;white-space:nowrap;text-decoration:none}
+.tabs{display:flex;align-items:center;gap:7px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:0 0 18px;padding-bottom:10px}
+.tab{border:1px solid transparent;background:transparent;color:#a8bdc9;padding:10px 16px;border-radius:10px;font-weight:700}
+.tab.active{background:#214153;border-color:#3d6a7a;color:#f5fbfd}
+.tab:hover:not(.active){background:#182f40;color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:17px}
+.kpi,.panel{border-radius:16px;background:linear-gradient(165deg,rgba(26,48,64,.97),rgba(16,34,47,.96));border:1px solid var(--line);box-shadow:0 8px 25px #030a1055}
+.kpi{padding:15px 16px;min-height:107px}
+.kpi .cap{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.11em;font-weight:750}
+.kpi .value{font-size:clamp(19px,2vw,29px);font-weight:800;letter-spacing:-.7px;margin:5px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:11px;color:var(--muted)}
+.panel{padding:17px 19px;margin-bottom:15px}
+.panelhead{display:flex;justify-content:space-between;gap:13px;align-items:center;flex-wrap:wrap;margin-bottom:11px}
+.panelhead h3{font-size:16px;margin:0;font-weight:750;letter-spacing:-.3px}
+.panelhead p{font-size:11px;margin:3px 0 0;color:var(--muted)}
+.seg{display:flex;gap:3px;padding:3px;background:#0c202e;border:1px solid #294859;border-radius:11px}
+.seg button{border:0;border-radius:8px;background:transparent;color:#9cb2bd;font-size:11px;font-weight:750;padding:7px 10px;min-width:37px}
+.seg button.active{color:#fff;background:#355569}
+.chart-wrap{position:relative;min-height:390px}
+canvas{display:block;width:100%;height:390px;touch-action:pan-y}
+.tooltip{position:absolute;z-index:4;pointer-events:none;min-width:142px;max-width:230px;box-shadow:0 8px 30px #0009;border:1px solid #63818a;background:#112734;border-radius:10px;padding:9px 11px;font-size:12px;display:none}
+.tooltip b{font-size:12px}
+.tooltip span{display:block;color:#becfd7;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:8px 15px;align-items:center;flex-wrap:wrap;margin:12px 0 0}
+.legend span{font-size:11px;color:#bdcdd4;display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:17px;height:3px;border-radius:3px}
+.notice{display:none;padding:10px 12px;margin-bottom:14px;border:1px solid #72594a;background:#36291f;color:#f2d2b7;border-radius:12px;font-size:12px}
+.notice.show{display:block}
+.skeleton{display:grid;place-items:center;height:390px;color:var(--muted);font-size:13px;text-align:center}
+.loading::before{content:"";display:block;margin:0 auto 12px;width:26px;height:26px;border:3px solid #355269;border-top-color:var(--aqua);border-radius:50%;animation:spin .85s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.datagrid{overflow:auto;border:1px solid #284454;border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid #253c4b;font-variant-numeric:tabular-nums}
+th{position:sticky;top:0;background:#1e3747;color:#bed1dc;text-transform:uppercase;font-size:10px;letter-spacing:.06em}
+td{color:#dfe9ee}th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:0}tbody tr:hover td{background:#1e3949}
+.tiny{font-size:11px;color:var(--muted)}
+.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--muted)}
+.rivercontrols{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+footer{margin:24px 0 2px;text-align:center;color:#99b2c0;font-size:11px;line-height:1.8}
+.hidden{display:none!important}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{grid-template-columns:1fr}.source-link{display:none}}
+@media(max-width:560px){.shell{padding:15px 12px 30px}.top{gap:10px;margin-bottom:19px}.brand h1{font-size:17px}.mark{width:38px;height:38px;font-size:22px}.actions{width:100%}.actions .btn{flex:1}.hero h2{font-size:28px}.tab{padding:8px 10px;font-size:12px;flex:1}.kpi{gap:8px}.kpi{padding:13px 11px;min-height:100px}.kpi .value{font-size:19px}.panel{padding:13px 11px}.chart-wrap{min-height:290px}canvas,.skeleton{height:290px}.panelhead{align-items:start}.seg button{padding:7px 8px}table{font-size:11px}th,td{padding:8px}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="top">
+  <a class="brand" href="/"><div class="mark" aria-hidden="true">≋</div><div><h1>Lake Powell</h1><small>Water data explorer</small></div></a>
+  <div class="actions"><span id="status" class="status"><span class="dot"></span><span id="statusText">Ready</span></span><button id="refreshBtn" class="btn icon-btn" type="button" title="Reload from the original data source">↻ Refresh</button><button id="csvBtn" class="btn icon-btn" type="button" title="Export the selected data">↓ Export CSV</button><a class="btn" href="/" style="text-decoration:none">All apps</a></div>
+</header>
+<section class="hero"><div><div class="eyebrow">Colorado River Basin · Arizona / Utah</div><h2>See the lake. Understand the trend.</h2><p>Lake levels, historical water-year inflows and outflows, and upstream river gauges. Figures are sourced from the third-party Water-Data site and may be delayed.</p></div><a class="source-link" href="https://lakepowell.water-data.com/" target="_blank" rel="noopener noreferrer">Original water-data site ↗</a></section>
+<nav class="tabs" aria-label="Data categories">
+ <button class="tab active" data-view="elevation" type="button">Elevation</button>
+ <button class="tab" data-view="inflows" type="button">Inflows</button>
+ <button class="tab" data-view="outflows" type="button">Outflows</button>
+ <button class="tab" data-view="rivers" type="button">River flows</button>
+</nav>
+<div id="notice" class="notice" role="alert"></div>
+<section class="kpis" id="kpis" aria-live="polite">
+ <article class="kpi"><div class="cap">Latest reading</div><div class="value">—</div><div class="sub">Loading data</div></article>
+ <article class="kpi"><div class="cap">Reference level</div><div class="value">—</div><div class="sub">—</div></article>
+ <article class="kpi"><div class="cap">Historical low</div><div class="value">—</div><div class="sub">—</div></article>
+ <article class="kpi"><div class="cap">Historical high</div><div class="value">—</div><div class="sub">—</div></article>
+</section>
+<section id="historyPanel" class="panel">
+ <div class="panelhead"><div><h3 id="chartTitle">Historical lake elevation</h3><p id="chartSubtitle">Official readings displayed by water-data.com</p></div>
+  <div class="seg" id="rangeButtons" aria-label="Time span">
+  <button type="button" data-range="1">1Y</button><button type="button" data-range="5">5Y</button><button type="button" data-range="10">10Y</button><button type="button" class="active" data-range="all">All</button>
+  </div>
+ </div>
+ <div class="chart-wrap" id="chartWrap"><div id="chartPlaceholder" class="skeleton loading">Loading historical data…</div><canvas id="chart" role="img" aria-label="Interactive historical Lake Powell data chart" class="hidden"></canvas><div class="tooltip" id="tooltip"></div></div>
+ <div class="legend" id="legend"></div><div class="meta"><span id="seriesCount">No data loaded</span><span id="dateRange">—</span></div>
+</section>
+<section id="riverPanel" class="hidden">
+ <article class="panel"><div class="panelhead"><div><h3>River flow history</h3><p>Actual flow versus historical mean from the source's river endpoints</p></div><div class="seg" id="riverButtons"><button data-river="30" class="active" type="button">Past 30 days</button><button data-river="2yr" type="button">Past 2 years</button></div></div>
+ <div class="chart-wrap" id="riverChartWrap"><div id="riverPlaceholder" class="skeleton loading">Loading river history…</div><canvas id="riverChart" role="img" aria-label="River flow history" class="hidden"></canvas><div class="tooltip" id="riverTooltip"></div></div><div class="legend" id="riverLegend"></div></article>
+ <article class="panel"><div class="panelhead"><div><h3>Current river gauges</h3><p id="riverSummary">Loading latest available observations…</p></div></div><div class="datagrid"><table><thead><tr><th>Station</th><th>As of</th><th>Current (CFS)</th><th>Mean (CFS)</th><th>% Mean</th><th>Minimum</th><th>Maximum</th><th>Notes</th></tr></thead><tbody id="riverRows"><tr><td colspan="8">Loading…</td></tr></tbody></table></div></article>
+</section>
+<section id="recordsPanel" class="panel">
+ <div class="panelhead"><div><h3>Recent observations</h3><p>Most recent entries returned by the original dataset</p></div><span class="tiny" id="recordHint">—</span></div>
+ <div class="datagrid"><table><thead id="recordsHead"></thead><tbody id="recordsBody"></tbody></table></div>
+</section>
+<footer>Independent visualization, not affiliated with Water-Data or the Bureau of Reclamation. No figures are estimated or invented. <a href="https://lakepowell.water-data.com/" target="_blank" rel="noopener">Data origin</a> · <a href="https://www.usbr.gov/uc/water/" target="_blank" rel="noopener">USBR water resources</a></footer>
+</main>
+<script>
+(function(){
+"use strict";
+var SOURCE="/api/lake-powell?view=", CACHE_KEY="internalapps_lake_powell_v1_";
+var VIEWS={
+ elevation:{title:"Historical lake elevation",subtitle:"Lake surface elevation · feet above sea level",unit:"ft",series:[["elevation","Elevation","#78c6d1"],["full_pool","Full pool","#a6c9e4"],["min_power","Minimum power pool","#e2b16b"],["dead_pool","Dead pool","#ca8989"]]},
+ inflows:{title:"Water-year inflows",subtitle:"Cumulative incoming water by season · acre-feet",unit:"acre-ft",series:[["inf_allwy","All water year","#7fb6e8"],["inf_to415","Oct–Apr","#7ac3ab"],["inf_to731","Apr–Sep","#dfb071"],["avg_all","Historical average","#b6a6d0"]]},
+ outflows:{title:"Water-year outflows",subtitle:"Cumulative water released by season · acre-feet",unit:"acre-ft",series:[["out_allwy","All water year","#7fb6e8"],["out_to415","Oct–Apr","#7ac3ab"],["out_to731","Apr–Sep","#dfb071"],["avg_out_all","Historical average","#b6a6d0"]]}
+};
+var state={view:"elevation",range:"all",riverRange:"30",data:{},meta:{},river:{},hover:-1};
+var byId=function(id){return document.getElementById(id)};
+var num=function(x){if(x===null||x===undefined||x==="")return null;var n=Number(String(x).replace(/,/g,""));return Number.isFinite(n)?n:null};
+var esc=function(s){return String(s===null||s===undefined?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+var formatted=function(n,unit,precision){if(n===null||!Number.isFinite(n))return "—";var digits=precision===undefined?(unit==="ft"?2:0):precision;return n.toLocaleString("en-US",{maximumFractionDigits:digits,minimumFractionDigits:unit==="ft"?2:0})};
+var compact=function(n){if(!Number.isFinite(n))return "—";if(Math.abs(n)>=1000000)return (n/1000000).toFixed(1).replace(/\.0$/,"")+"M";if(Math.abs(n)>=1000)return (n/1000).toFixed(0)+"K";return formatted(n,"",0)};
+var yearOf=function(value){var s=String(value);var match=s.match(/(?:^|[^0-9])((?:19|20)\d{2})(?:[^0-9]|$)/);return match?Number(match[1]):null};
+var notice=function(msg){var el=byId("notice");el.textContent=msg||"";el.classList.toggle("show",!!msg)};
+var status=function(label,kind){byId("statusText").textContent=label;byId("status").className="status "+(kind||"")};
+var setLoading=function(canvasId,placeholderId,message){byId(canvasId).classList.add("hidden");byId(placeholderId).classList.remove("hidden");byId(placeholderId).className="skeleton loading";byId(placeholderId).textContent=message};
+var setUnavailable=function(canvasId,placeholderId,message){byId(canvasId).classList.add("hidden");byId(placeholderId).className="skeleton";byId(placeholderId).textContent=message};
+var saveCache=function(key,payload){try{localStorage.setItem(CACHE_KEY+key,JSON.stringify(payload))}catch(e){}};
+var cached=function(key){try{var v=JSON.parse(localStorage.getItem(CACHE_KEY+key)||"null");return v&&v.data?v:null}catch(e){return null}};
+async function getData(key,force){
+ if(!force&&state.meta[key])return {data:state.data[key],meta:state.meta[key]};
+ var ctrl=new AbortController(), timer=setTimeout(function(){ctrl.abort()},22000);
+ try{
+  var resp=await fetch(SOURCE+encodeURIComponent(key)+(force?"&refresh=1":""),{signal:ctrl.signal,headers:{Accept:"application/json"}});
+  var body=await resp.json().catch(function(){return null});
+  if(!resp.ok||!body||!body.data)throw Error(body&&body.error?body.error:"Data service returned HTTP "+resp.status);
+  var pack={data:body.data,meta:{at:body.fetchedAt||new Date().toISOString(),cached:false}};
+  state.data[key]=pack.data;state.meta[key]=pack.meta;saveCache(key,pack);return pack;
+ }catch(err){
+  var prev=cached(key);
+  if(prev){
+   state.data[key]=prev.data;
+   state.meta[key]={at:prev.meta&&prev.meta.at||null,cached:true};
+   return {data:state.data[key],meta:state.meta[key],warning:"Live request failed: "+err.message+". Showing last successfully saved data."};
+  }
+  throw err;
+ }finally{clearTimeout(timer)}
+}
+function labelsAndSeries(view,data){
+ var labels=Array.isArray(data.dates)?data.dates.map(String):[];
+ var config=VIEWS[view],series=[];
+ config.series.forEach(function(def){
+  var val=data[def[0]],arr=Array.isArray(val)?val.map(num):labels.map(function(){return num(val)});
+  if(!arr.length||!arr.some(function(v){return v!==null}))return;
+  series.push({key:def[0],name:def[1],color:def[2],values:arr.slice(0,labels.length)});
+ });
+ return {labels:labels,series:series,unit:config.unit};
+}
+function filtered(data,range){
+ if(range==="all"||!data.labels.length)return data;
+ var years=data.labels.map(yearOf).filter(function(y){return y!==null});
+ if(!years.length)return data;
+ var latest=Math.max.apply(null,years),cutoff=latest-Number(range)+1;
+ var indexes=data.labels.map(function(x,i){return yearOf(x)>=cutoff?i:-1}).filter(function(i){return i>=0});
+ if(!indexes.length)return data;
+ return {labels:indexes.map(function(i){return data.labels[i]}),series:data.series.map(function(s){return {key:s.key,name:s.name,color:s.color,values:indexes.map(function(i){return s.values[i]===undefined?null:s.values[i]})}}),unit:data.unit};
+}
+function seriesLast(series){
+ if(!series)return null;
+ for(var i=series.values.length-1;i>=0;i--)if(series.values[i]!==null)return {value:series.values[i],index:i};
+ return null;
+}
+function metric(label,value,sub){return '<article class="kpi"><div class="cap">'+esc(label)+'</div><div class="value">'+esc(value)+'</div><div class="sub">'+esc(sub)+'</div></article>'}
+function renderKpis(view,data){
+ var primary=data.series[0];if(!primary){byId("kpis").innerHTML=metric("No observations","—","No values returned");return}
+ var valid=primary.values.filter(function(v){return v!==null}),current=seriesLast(primary),first=valid[0],lo=Math.min.apply(null,valid),hi=Math.max.apply(null,valid);
+ var label=data.labels[current.index]||"Latest",unit=VIEWS[view].unit;
+ var html;
+ if(view==="elevation"){
+  var raw=state.data.elevation,full=num(raw.full_pool),minPower=num(raw.min_power);
+  var d=full===null?null:current.value-full,power=minPower===null?null:current.value-minPower;
+  html=metric("Latest elevation",formatted(current.value,unit)+" ft",label)
+   +metric("Below full pool",d===null?"—":formatted(Math.abs(d),"ft")+" ft",full===null?"Full pool not reported":"Full pool: "+formatted(full,"ft")+" ft")
+   +metric("Above power pool",power===null?"—":formatted(power,"ft")+" ft",minPower===null?"Threshold not reported":"Minimum power: "+formatted(minPower,"ft")+" ft")
+   +metric("Historical range",formatted(lo,"ft")+"–"+formatted(hi,"ft")+" ft",valid.length.toLocaleString("en-US")+" readings");
+ }else{
+  var avg=data.series.find(function(x){return x.key===("inflows"?"avg_all":"avg_out_all")});
+  var lastAvg=seriesLast(avg),delta=lastAvg&&lastAvg.value?100*current.value/lastAvg.value:null;
+  html=metric("Latest water year",formatted(current.value,unit)+" AF",label)
+   +metric("Historical average",lastAvg?formatted(lastAvg.value,unit)+" AF":"—","Average reported by source")
+   +metric("Against average",delta===null?"—":formatted(delta,"",1)+"%",delta===null?"Average unavailable":"Current ÷ average")
+   +metric("Historical range",compact(lo)+"–"+compact(hi)+" AF",valid.length.toLocaleString("en-US")+" entries");
+ }
+ byId("kpis").innerHTML=html;
+}
+function updateHistoryTable(display){
+ var cols=[{name:"Date / Water year",values:display.labels}].concat(display.series.map(function(s){return {name:s.name,values:s.values}}));
+ byId("recordsHead").innerHTML="<tr>"+cols.map(function(c){return "<th>"+esc(c.name)+"</th>"}).join("")+"</tr>";
+ var rows=[];
+ for(var i=display.labels.length-1;i>=0&&rows.length<15;i--){
+  if(!display.series.some(function(s){return s.values[i]!==null}))continue;
+  rows.push("<tr>"+cols.map(function(c,j){return "<td>"+esc(j===0?c.values[i]:formatted(c.values[i],display.unit))+"</td>"}).join("")+"</tr>");
+ }
+ byId("recordsBody").innerHTML=rows.join("")||'<tr><td colspan="'+cols.length+'">No observations</td></tr>';
+ byId("recordHint").textContent="Latest "+rows.length+" rows · all rows in CSV";
+}
+function draw(canvasId,tooltipId,legendId,data){
+ var canvas=byId(canvasId),tt=byId(tooltipId),legend=byId(legendId);
+ if(!data.labels.length||!data.series.length){setUnavailable(canvasId,canvasId==="chart"?"chartPlaceholder":"riverPlaceholder","No chart values returned.");legend.innerHTML="";return}
+ var wrap=canvas.parentElement,width=Math.max(280,wrap.clientWidth),height=innerWidth<560?290:390,scale=Math.min(devicePixelRatio||1,2);
+ canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);canvas.style.height=height+"px";
+ var ctx=canvas.getContext("2d");ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,width,height);
+ var pad={l:68,r:15,t:18,b:45},plotW=width-pad.l-pad.r,plotH=height-pad.t-pad.b,n=data.labels.length;
+ var all=data.series.flatMap(function(s){return s.values.filter(function(v){return v!==null})});
+ if(!all.length){setUnavailable(canvasId,canvasId==="chart"?"chartPlaceholder":"riverPlaceholder","No numeric chart values.");return}
+ var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),gap=Math.max((hi-lo)*0.09,1);
+ if(lo===hi){lo-=gap;hi+=gap}else{lo-=gap;hi+=gap}
+ var xp=function(i){return pad.l+(n<2?plotW/2:i/(n-1)*plotW)},yp=function(v){return pad.t+(hi-v)/(hi-lo)*plotH};
+ ctx.font="11px system-ui";ctx.lineWidth=1;ctx.textBaseline="middle";ctx.textAlign="right";
+ for(var j=0;j<=4;j++){
+  var val=lo+(hi-lo)*(4-j)/4,y=pad.t+plotH*j/4;
+  ctx.strokeStyle="#294453";ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(width-pad.r,y);ctx.stroke();
+  ctx.fillStyle="#a2b7c4";ctx.fillText(compact(val),pad.l-9,y);
+ }
+ var ticks=Math.min(7,n),labelsY=height-18;
+ ctx.textAlign="center";ctx.textBaseline="top";ctx.fillStyle="#a2b7c4";
+ for(var t=0;t<ticks;t++){var idx=Math.round((n-1)*t/Math.max(1,ticks-1));ctx.fillText(String(data.labels[idx]).slice(0,10),xp(idx),labelsY)}
+ data.series.forEach(function(s){
+  ctx.strokeStyle=s.color;ctx.lineWidth=s.key.indexOf("avg")>=0?1.7:2.5;
+  if(s.key.indexOf("avg")>=0)ctx.setLineDash([5,5]);else ctx.setLineDash([]);
+  ctx.beginPath();var started=false;var stride=Math.max(1,Math.ceil(n/2000));
+  for(var i=0;i<n;i+=stride){var v=s.values[i];if(v===null){started=false;continue}if(!started){ctx.moveTo(xp(i),yp(v));started=true}else ctx.lineTo(xp(i),yp(v))}
+  if((n-1)%stride!==0&&s.values[n-1]!==null){ctx.lineTo(xp(n-1),yp(s.values[n-1]))}
+  ctx.stroke();ctx.setLineDash([]);
+ });
+ legend.innerHTML=data.series.map(function(s){return '<span><i style="background:'+s.color+'"></i>'+esc(s.name)+'</span>'}).join("");
+ canvas.classList.remove("hidden");
+ var placeholder=canvasId==="chart"?"chartPlaceholder":"riverPlaceholder";byId(placeholder).classList.add("hidden");
+ canvas.onpointermove=function(ev){
+  var rect=canvas.getBoundingClientRect(),x=ev.clientX-rect.left,i=Math.max(0,Math.min(n-1,Math.round((x-pad.l)/plotW*(n-1))));
+  if(x<pad.l-10||x>width-pad.r+8){tt.style.display="none";return}
+  var pieces=['<b>'+esc(data.labels[i])+'</b>'];
+  data.series.forEach(function(s){if(s.values[i]!==null&&s.values[i]!==undefined)pieces.push('<span style="color:'+s.color+'">'+esc(s.name)+': '+esc(formatted(s.values[i],data.unit))+' '+esc(data.unit)+'</span>')});
+  tt.innerHTML=pieces.join("");
+  tt.style.display="block";tt.style.top=Math.max(5,Math.min(height-95,ev.clientY-rect.top-50))+"px";
+  tt.style.left=Math.max(3,Math.min(width-230,x+12))+"px";
+ };
+ canvas.onpointerleave=function(){tt.style.display="none"};
+}
+function renderHistory(){
+ var view=state.view,source=state.data[view];if(!source)return;
+ var parsed=labelsAndSeries(view,source),display=filtered(parsed,state.range);
+ byId("chartTitle").textContent=VIEWS[view].title;
+ byId("chartSubtitle").textContent=VIEWS[view].subtitle;
+ renderKpis(view,parsed);updateHistoryTable(display);
+ byId("seriesCount").textContent=display.labels.length.toLocaleString("en-US")+" observations";
+ byId("dateRange").textContent=display.labels.length?(display.labels[0]+" to "+display.labels[display.labels.length-1]):"No dates";
+ draw("chart","tooltip","legend",display);
+}
+async function loadHistory(force){
+ var view=state.view;
+ if(!force&&state.data[view]){renderHistory();status("Stored data","good");return}
+ setLoading("chart","chartPlaceholder","Loading "+view+" data…");status("Fetching "+view+"…","");
+ try{
+  var res=await getData(view,force);
+  if(state.view!==view)return;
+  renderHistory();status(res.meta.cached?"Saved data":"Data loaded",res.meta.cached?"":"good");
+  notice(res.warning||"");
+ }catch(err){
+  if(state.view!==view)return;
+  setUnavailable("chart","chartPlaceholder","Unable to load this dataset. Use Refresh to retry.");
+  byId("kpis").innerHTML=metric("Data unavailable","—","Source request failed");
+  byId("recordsHead").innerHTML="";byId("recordsBody").innerHTML="";
+  status("Source unavailable","bad");notice(err.message);
+ }
+}
+function riverChartData(){
+ var key=state.riverRange==="30"?"rivers30":"rivers2yr",raw=state.data[key],arr;
+ if(!raw)return null;
+ if(key==="rivers30"){arr=Array.isArray(raw)?raw:Array.isArray(raw.powell)?raw.powell:[]}
+ else arr=Array.isArray(raw)?raw:(raw.powell||raw.general||[]);
+ if(!Array.isArray(arr)||!arr.length)return null;
+ var pct=state.riverRange==="2yr";
+ return {labels:arr.map(function(x){return String(x.date||x.as_of||"")}),unit:pct?"%":"CFS",
+  series:pct?[{name:"% of historical mean",color:"#7ec4b1",values:arr.map(function(x){return num(x.pct_of_mean)})}]:
+  [{name:"Current flow",color:"#80b8e9",values:arr.map(function(x){return num(x.cur_flow)})},{name:"Historical mean",color:"#e2b16b",values:arr.map(function(x){return num(x.hist_mean)})}]};
+}
+function renderRiverTable(){
+ var raw=state.data.rivers,arr=Array.isArray(raw)?raw:[];
+ var tbody=byId("riverRows");if(!arr.length){tbody.innerHTML='<tr><td colspan="8">No current river stations returned.</td></tr>';byId("riverSummary").textContent="No station data";return}
+ tbody.innerHTML=arr.map(function(r){return "<tr>"+[
+ r.location||"Unknown",r.as_of||"",formatted(num(r.cur_flow),"",0),formatted(num(r.mean),"",0),
+ r.pct===null||r.pct===undefined?"—":String(r.pct)+"%",formatted(num(r.min),"",0),formatted(num(r.max),"",0),r.notes||""
+ ].map(function(v){return "<td>"+esc(v)+"</td>"}).join("")+"</tr>"}).join("");
+ byId("riverSummary").textContent=arr.length+" source stations · CFS = cubic feet per second";
+ var flows=arr.map(function(r){return num(r.cur_flow)}).filter(function(x){return x!==null});
+ var means=arr.map(function(r){return num(r.mean)}).filter(function(x){return x!==null});
+ var pct=arr.filter(function(r){return num(r.pct)!==null}).map(function(r){return num(r.pct)});
+ byId("kpis").innerHTML=metric("Reporting stations",String(arr.length),"Latest available in source")
+  +metric("Combined flow",flows.length?formatted(flows.reduce(function(a,b){return a+b},0),"",0)+" CFS":"—","Sum of listed readings")
+  +metric("Combined mean",means.length?formatted(means.reduce(function(a,b){return a+b},0),"",0)+" CFS":"—","Sum of listed means")
+  +metric("Average station %",pct.length?formatted(pct.reduce(function(a,b){return a+b},0)/pct.length,"",1)+"%":"—","Unweighted station average");
+}
+async function loadRiverHistory(force){
+ var key=state.riverRange==="30"?"rivers30":"rivers2yr";
+ if(!force&&state.data[key]){renderRiverChart();return}
+ setLoading("riverChart","riverPlaceholder","Loading river history…");
+ try{
+  var result=await getData(key,force);
+  if(state.view==="rivers"&&(state.riverRange==="30"?"rivers30":"rivers2yr")===key){
+    renderRiverChart();if(result.warning)notice(result.warning);status(result.meta.cached?"Saved river data":"Data loaded","good");
+  }
+ }catch(err){if(state.view==="rivers"){setUnavailable("riverChart","riverPlaceholder","River history unavailable.");status("Source unavailable","bad");notice(err.message)}}
+}
+function renderRiverChart(){
+ var data=riverChartData();
+ if(!data){setUnavailable("riverChart","riverPlaceholder","No river data returned.");return}
+ draw("riverChart","riverTooltip","riverLegend",data);
+}
+async function loadRivers(force){
+ byId("historyPanel").classList.add("hidden");byId("recordsPanel").classList.add("hidden");byId("riverPanel").classList.remove("hidden");
+ if(force||!state.data.rivers){
+  byId("riverRows").innerHTML='<tr><td colspan="8">Loading gauges…</td></tr>';
+  try{var result=await getData("rivers",force);if(state.view!=="rivers")return;renderRiverTable();status(result.meta.cached?"Saved river data":"Data loaded","good");if(result.warning)notice(result.warning)}
+  catch(err){if(state.view==="rivers"){byId("riverRows").innerHTML='<tr><td colspan="8">Unable to load river gauges.</td></tr>';byId("kpis").innerHTML=metric("River gauges","—","Data unavailable");notice(err.message);status("Source unavailable","bad")}}
+ }else{renderRiverTable();status("Data loaded","good")}
+ loadRiverHistory(force);
+}
+function selectView(view){
+ if(view!== "rivers"&&!VIEWS[view])return;
+ state.view=view;notice("");
+ document.querySelectorAll(".tab").forEach(function(btn){var yes=btn.dataset.view===view;btn.classList.toggle("active",yes);btn.setAttribute("aria-current",yes?"page":"false")});
+ if(view==="rivers"){loadRivers(false);return}
+ byId("historyPanel").classList.remove("hidden");byId("recordsPanel").classList.remove("hidden");byId("riverPanel").classList.add("hidden");
+ loadHistory(false);
+}
+function csvCell(x){var v=String(x===null||x===undefined?"":x);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function exportCSV(){
+ var rows=[],file;
+ if(state.view==="rivers"){
+  var gauges=state.data.rivers;
+  if(!Array.isArray(gauges)||!gauges.length){notice("No river observations are available to export.");return}
+  var cols=["location","as_of","cur_flow","mean","pct","min","max","notes"];
+  rows=[cols].concat(gauges.map(function(x){return cols.map(function(k){return x[k]===undefined?"":x[k]})}));file="lake-powell-river-gauges.csv";
+ }else{
+  var raw=state.data[state.view];if(!raw){notice("No dataset available to export.");return}
+  var display=filtered(labelsAndSeries(state.view,raw),state.range),series=display.series;
+  rows=[["date"].concat(series.map(function(s){return s.key}))];
+  display.labels.forEach(function(label,i){rows.push([label].concat(series.map(function(s){return s.values[i]})))});
+  file="lake-powell-"+state.view+"-"+state.range+".csv";
+ }
+ var csv=rows.map(function(row){return row.map(csvCell).join(",")}).join("\r\n");
+ var blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=file;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},3000);
+}
+document.querySelectorAll(".tab").forEach(function(btn){btn.addEventListener("click",function(){selectView(btn.dataset.view)})});
+document.querySelectorAll("#rangeButtons button").forEach(function(btn){btn.addEventListener("click",function(){state.range=btn.dataset.range;document.querySelectorAll("#rangeButtons button").forEach(function(b){b.classList.toggle("active",b===btn)});renderHistory()})});
+document.querySelectorAll("#riverButtons button").forEach(function(btn){btn.addEventListener("click",function(){state.riverRange=btn.dataset.river;document.querySelectorAll("#riverButtons button").forEach(function(b){b.classList.toggle("active",b===btn)});loadRiverHistory(false)})});
+byId("refreshBtn").addEventListener("click",function(){notice("");if(state.view==="rivers")loadRivers(true);else loadHistory(true)});
+byId("csvBtn").addEventListener("click",exportCSV);
+window.addEventListener("resize",function(){if(state.view==="rivers"){if(riverChartData())renderRiverChart()}else if(state.data[state.view])renderHistory()});
+selectView("elevation");
+})();
+</script>
+</body>
+</html>
