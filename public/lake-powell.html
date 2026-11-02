@@ -242,8 +242,8 @@ function draw(canvasId,tooltipId,legendId,data){
  ctx.textAlign="center";ctx.textBaseline="top";ctx.fillStyle="#a2b7c4";
  for(var t=0;t<ticks;t++){var idx=Math.round((n-1)*t/Math.max(1,ticks-1));ctx.fillText(String(data.labels[idx]).slice(0,10),xp(idx),labelsY)}
  data.series.forEach(function(s){
-  ctx.strokeStyle=s.color;ctx.lineWidth=s.key.indexOf("avg")>=0?1.7:2.5;
-  if(s.key.indexOf("avg")>=0)ctx.setLineDash([5,5]);else ctx.setLineDash([]);
+  ctx.strokeStyle=s.color;ctx.lineWidth=String(s.key||"").indexOf("avg")>=0?1.7:2.5;
+  if(String(s.key||"").indexOf("avg")>=0)ctx.setLineDash([5,5]);else ctx.setLineDash([]);
   ctx.beginPath();var started=false;var stride=Math.max(1,Math.ceil(n/2000));
   for(var i=0;i<n;i+=stride){var v=s.values[i];if(v===null){started=false;continue}if(!started){ctx.moveTo(xp(i),yp(v));started=true}else ctx.lineTo(xp(i),yp(v))}
   if((n-1)%stride!==0&&s.values[n-1]!==null){ctx.lineTo(xp(n-1),yp(s.values[n-1]))}
