@@ -86,12 +86,12 @@ footer{margin:24px 0 2px;text-align:center;color:#99b2c0;font-size:11px;line-hei
   <a class="brand" href="/"><div class="mark" aria-hidden="true">≋</div><div><h1>Lake Powell</h1><small>Water data explorer</small></div></a>
   <div class="actions"><span id="status" class="status"><span class="dot"></span><span id="statusText">Ready</span></span><button id="refreshBtn" class="btn icon-btn" type="button" title="Reload from the original data source">↻ Refresh</button><button id="csvBtn" class="btn icon-btn" type="button" title="Export the selected data">↓ Export CSV</button><a class="btn" href="/" style="text-decoration:none">All apps</a></div>
 </header>
-<section class="hero"><div><div class="eyebrow">Colorado River Basin · Arizona / Utah</div><h2>See the lake. Understand the trend.</h2><p>Lake levels, historical water-year inflows and outflows, and upstream river gauges. Figures are sourced from the third-party Water-Data site and may be delayed.</p></div><a class="source-link" href="https://lakepowell.water-data.com/" target="_blank" rel="noopener noreferrer">Original water-data site ↗</a></section>
+<section class="hero"><div><div class="eyebrow">Colorado River Basin · Arizona / Utah</div><h2>See the lake. Understand the trend.</h2><p>Lake Powell reservoir surface elevation and historical water-level trends only. Reference: Lake Powell Water Database.</p></div><a class="source-link" href="https://lakepowell.water-data.com/" target="_blank" rel="noopener noreferrer">Original water-data site ↗</a></section>
 <nav class="tabs" aria-label="Data categories">
  <button class="tab active" data-view="elevation" type="button">Elevation</button>
- <button class="tab" data-view="inflows" type="button">Inflows</button>
- <button class="tab" data-view="outflows" type="button">Outflows</button>
- <button class="tab" data-view="rivers" type="button">River flows</button>
+ 
+ 
+ 
 </nav>
 <div id="notice" class="notice" role="alert"></div>
 <section class="kpis" id="kpis" aria-live="polite">
@@ -101,7 +101,7 @@ footer{margin:24px 0 2px;text-align:center;color:#99b2c0;font-size:11px;line-hei
  <article class="kpi"><div class="cap">Historical high</div><div class="value">—</div><div class="sub">—</div></article>
 </section>
 <section id="historyPanel" class="panel">
- <div class="panelhead"><div><h3 id="chartTitle">Historical lake elevation</h3><p id="chartSubtitle">Official readings displayed by water-data.com</p></div>
+ <div class="panelhead"><div><h3 id="chartTitle">Historical lake elevation</h3><p id="chartSubtitle">Lake Powell surface elevation (feet above sea level)</p></div>
   <div class="seg" id="rangeButtons" aria-label="Time span">
   <button type="button" data-range="1">1Y</button><button type="button" data-range="5">5Y</button><button type="button" data-range="10">10Y</button><button type="button" class="active" data-range="all">All</button>
   </div>
@@ -109,7 +109,7 @@ footer{margin:24px 0 2px;text-align:center;color:#99b2c0;font-size:11px;line-hei
  <div class="chart-wrap" id="chartWrap"><div id="chartPlaceholder" class="skeleton loading">Loading historical data…</div><canvas id="chart" role="img" aria-label="Interactive historical Lake Powell data chart" class="hidden"></canvas><div class="tooltip" id="tooltip"></div></div>
  <div class="legend" id="legend"></div><div class="meta"><span id="seriesCount">No data loaded</span><span id="dateRange">—</span></div>
 </section>
-<section id="riverPanel" class="hidden">
+<section id="riverPanel" class="hidden" aria-hidden="true">
  <article class="panel"><div class="panelhead"><div><h3>River flow history</h3><p>Actual flow versus historical mean from the source's river endpoints</p></div><div class="seg" id="riverButtons"><button data-river="30" class="active" type="button">Past 30 days</button><button data-river="2yr" type="button">Past 2 years</button></div></div>
  <div class="chart-wrap" id="riverChartWrap"><div id="riverPlaceholder" class="skeleton loading">Loading river history…</div><canvas id="riverChart" role="img" aria-label="River flow history" class="hidden"></canvas><div class="tooltip" id="riverTooltip"></div></div><div class="legend" id="riverLegend"></div></article>
  <article class="panel"><div class="panelhead"><div><h3>Current river gauges</h3><p id="riverSummary">Loading latest available observations…</p></div></div><div class="datagrid"><table><thead><tr><th>Station</th><th>As of</th><th>Current (CFS)</th><th>Mean (CFS)</th><th>% Mean</th><th>Minimum</th><th>Maximum</th><th>Notes</th></tr></thead><tbody id="riverRows"><tr><td colspan="8">Loading…</td></tr></tbody></table></div></article>
@@ -118,12 +118,12 @@ footer{margin:24px 0 2px;text-align:center;color:#99b2c0;font-size:11px;line-hei
  <div class="panelhead"><div><h3>Recent observations</h3><p>Most recent entries returned by the original dataset</p></div><span class="tiny" id="recordHint">—</span></div>
  <div class="datagrid"><table><thead id="recordsHead"></thead><tbody id="recordsBody"></tbody></table></div>
 </section>
-<footer>Independent visualization, not affiliated with Water-Data or the Bureau of Reclamation. No figures are estimated or invented. <a href="https://lakepowell.water-data.com/" target="_blank" rel="noopener">Data origin</a> · <a href="https://www.usbr.gov/uc/water/" target="_blank" rel="noopener">USBR water resources</a></footer>
+<footer>Independent Lake Powell water-level visualization. Figures are not estimated or invented. <a href="https://lakepowell.water-data.com/" target="_blank" rel="noopener">Data origin</a> · <a href="https://www.usbr.gov/uc/water/" target="_blank" rel="noopener">USBR water resources</a></footer>
 </main>
 <script>
 (function(){
 "use strict";
-var SOURCE="/api/lake-powell?view=", CACHE_KEY="internalapps_lake_powell_v1_";
+var SOURCE="/api/lake-powell?view=", CACHE_KEY="internalapps_lake_powell_elevation_v2_";
 var VIEWS={
  elevation:{title:"Historical lake elevation",subtitle:"Lake surface elevation · feet above sea level",unit:"ft",series:[["elevation","Elevation","#78c6d1"],["full_pool","Full pool","#a6c9e4"],["min_power","Minimum power pool","#e2b16b"],["dead_pool","Dead pool","#ca8989"]]},
  inflows:{title:"Water-year inflows",subtitle:"Cumulative incoming water by season · acre-feet",unit:"acre-ft",series:[["inf_allwy","All water year","#7fb6e8"],["inf_to415","Oct–Apr","#7ac3ab"],["inf_to731","Apr–Sep","#dfb071"],["avg_all","Historical average","#b6a6d0"]]},
@@ -343,7 +343,7 @@ async function loadRivers(force){
  loadRiverHistory(force);
 }
 function selectView(view){
- if(view!== "rivers"&&!VIEWS[view])return;
+ if(view!=="elevation")return;
  state.view=view;notice("");
  document.querySelectorAll(".tab").forEach(function(btn){var yes=btn.dataset.view===view;btn.classList.toggle("active",yes);btn.setAttribute("aria-current",yes?"page":"false")});
  if(view==="rivers"){loadRivers(false);return}
