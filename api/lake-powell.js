@@ -39,7 +39,7 @@ export default async function handler(req,res){
  if(view.startsWith("rivers"))return res.status(503).json({error:"River gauge history requires a separate verified USGS source; unavailable rather than displaying incorrect data."});
  try{
   const now=new Date(),end=now.toISOString().slice(0,10);
-  const start=new Date(Date.UTC(now.getUTCFullYear()-65,0,1)).toISOString().slice(0,10);
+  const start=new Date(Date.UTC(now.getUTCFullYear()-20,0,1)).toISOString().slice(0,10);
   const rows=await query(ITEMS[view],start,end);
   if(!rows.length)throw Error("USBR RISE returned no usable observations");
   let data;
