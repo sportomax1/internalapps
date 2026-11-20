@@ -94,8 +94,7 @@ function preserveWhiteIllustrations(p,w,h,alpha,limit){const len=w*h,visited=new
 for(let start=0;start<len;start++){if(visited[start])continue;const pos=start*4;if(Math.max(Math.abs(255-p[pos]),Math.abs(255-p[pos+1]),Math.abs(255-p[pos+2]))>whiteCutoff||p[pos+3]===0)continue;let head=0,tail=0,border=0,edgeDark=0,edgeTotal=0,minX=w,maxX=0,minY=h,maxY=0;queue[tail++]=start;visited[start]=1;
 while(head<tail){const idx=queue[head++],x=idx%w,y=Math.floor(idx/w);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);if(x===0||x===w-1||y===0||y===h-1)border=1;
 const neighbors=[x>0?idx-1:-1,x<w-1?idx+1:-1,y>0?idx-w:-1,y<h-1?idx+w:-1];
-for(const n of neighbors){if(n<0)continue;const k=n*4,dist=Math.max(Math.abs(255-p[k]),Math.abs(255-p[k+1]),Math.abs(255-p[k+2]));if(dist<=whiteCutoff&&p[k+3]>0){if(!visited[n]&&tail<=maxArea+1){visited[n]=1;queue[tail++]=n}}else{edgeTotal++;const v=Math.max(p[k],p[k+1],p[k+2]);if(v<170)edgeDark++}}
-if(tail>maxArea)break
+for(const n of neighbors){if(n<0)continue;const k=n*4,dist=Math.max(Math.abs(255-p[k]),Math.abs(255-p[k+1]),Math.abs(255-p[k+2]));if(dist<=whiteCutoff&&p[k+3]>0){if(!visited[n]){visited[n]=1;queue[tail++]=n}}else{edgeTotal++;const v=Math.max(p[k],p[k+1],p[k+2]);if(v<170)edgeDark++}}
 }
 if(tail>maxArea)continue;
 const enclosed=!border&&tail>=10&&tail<maxArea&&(maxX-minX)<w*.65&&(maxY-minY)<h*.65&&edgeTotal>0&&edgeDark/edgeTotal>.12;
