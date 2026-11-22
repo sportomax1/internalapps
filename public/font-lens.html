@@ -14,32 +14,165 @@
 .url-load-row .btn{white-space:nowrap}
 .image-import-actions{margin-top:12px}
 @media(max-width:590px){.url-load-row{flex-direction:column}.url-load-row .btn{width:100%}}
+
+/* Compact, low-scroll workspace */
+:root{--accent:#285f90;--bg:#f3f5f7;--line:#dce3e9}
+.wrap{max-width:1500px;padding:16px 24px 30px}
+.top{margin:0 0 12px;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.brand{font-size:20px;flex-wrap:wrap}.brand-detail{font-size:12px;font-weight:450;letter-spacing:0;color:var(--muted);padding-left:8px;border-left:1px solid var(--line)}
+.logo{width:32px;height:32px;border-radius:9px;font-size:21px}
+.hero{margin:0 0 14px;display:block}
+.hero h1{font-size:clamp(21px,2.4vw,28px);letter-spacing:-.8px;line-height:1.15;margin:0 0 2px}
+.hero p{font-size:12px;max-width:none;line-height:1.4}
+.tabs{padding:3px}.tab{padding:9px 14px;font-size:12px;white-space:nowrap}
+.columns{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:14px;align-items:start}
+.stack{gap:12px;min-width:0}.card{padding:15px 17px;border-radius:13px}
+.card h2{font-size:15px;margin:0}.section-heading{margin-bottom:10px}
+.card .sub{font-size:12px;margin:6px 0 14px}
+.import-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:stretch}
+.drop{min-height:64px;padding:9px 13px;flex-direction:row;justify-content:flex-start;gap:10px;text-align:left;border-width:1px}
+.drop svg{width:24px;height:24px;flex:0 0 24px}.drop strong{font-size:12px;margin:0}.drop span{font-size:11px}
+.import-row .btn{align-self:stretch}
+.import-card .url-load-row{margin-top:10px}
+.url-load-row input{border:1px solid #cad4de;border-radius:9px;padding:9px 11px;font-size:12px;min-width:0;background:#fff;color:var(--ink)}
+.url-load-row .btn{padding:9px 13px;font-size:12px}
+.source-info{font-size:11px;color:var(--muted);white-space:nowrap;max-width:62%;overflow:hidden;text-overflow:ellipsis}
+.analyze-card{display:flex;flex-direction:column;min-height:0}
+.preview-area{display:flex;align-items:center;justify-content:center;min-height:190px;max-height:min(44dvh,410px);background-color:#f7f9fb}
+.preview-area canvas{display:block;width:auto;height:auto;max-width:100%;max-height:min(44dvh,410px);object-fit:contain;cursor:crosshair}
+.preview-area .empty{width:100%;padding:45px 8px;line-height:1.6}
+.preview-icon{display:block;font-size:27px;font-weight:600;color:#97a9b9;margin-top:6px}
+.sample-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:end;margin-top:10px}
+.sample-row .field{margin:0}.sample-row .field label{margin:0 0 4px;font-size:11px}
+.sample-row .field input{padding:9px 10px;font-size:12px}
+.sample-row .btn{height:37px;padding:8px 10px;white-space:nowrap;font-size:12px}
+.tuning{margin-top:9px;font-size:12px;color:var(--muted);border-top:1px solid #edf0f3;padding-top:8px}
+.tuning summary{cursor:pointer;font-size:12px;color:#486783;user-select:none}
+.tuning[open] summary{margin-bottom:10px}.tuning .form-row{margin-bottom:3px}.tuning .field{margin-top:5px}
+.tuning .field input,.tuning .field select{padding:8px 9px;font-size:12px}
+.status{min-height:0;margin-top:8px;font-size:11px}.status:empty{display:none}
+.result-column{min-height:0}
+.results-card{display:flex;flex-direction:column;min-height:min(720px,calc(100dvh - 160px));max-height:calc(100dvh - 157px)}
+.result-title{flex-shrink:0}
+.score-guide{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--muted);margin:0 0 10px}
+.score-guide span:last-child{cursor:help;color:var(--accent)}
+.selection-reference{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:7px 10px;border:1px solid #e4e9ee;border-radius:9px;background:#fafbfd;flex-shrink:0}
+.selection-reference span{font-size:10px;color:var(--muted);white-space:nowrap}
+.selection-reference canvas{display:block;width:auto;height:auto;max-width:min(75%,350px);max-height:45px;object-fit:contain}
+.match-list{min-height:0;overflow-y:auto;flex:1;overscroll-behavior:contain;scrollbar-gutter:stable;display:grid;align-content:start;gap:6px}
+.match-list .empty-results{padding:70px 16px}
+.result{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 10px;border-radius:10px}
+.result-rank{font-variant-numeric:tabular-nums;color:#8396a8;font-size:11px;font-weight:750;text-align:center}
+.result-head{gap:7px}.result-head strong{font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-head .score{font-size:11px;flex-shrink:0;padding:3px 7px}
+.font-sample{font-size:21px;line-height:1.13;padding:2px 0;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.result-meta{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px 12px;font-size:10px;color:var(--muted)}
+.result-meta .chip{font-size:9px;padding:2px 5px}
+.result .copy-css{padding:6px 8px;font-size:10px;align-self:center}
+.results-footer{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
+.results-footer .btn{flex-shrink:0}
+.site-results-scroll{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.site-setup .sub{margin-bottom:12px}
+.booklet-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;color:var(--muted);font-size:11px}
+.bookmark{padding:10px 13px;font-size:12px}
+.site-result{gap:8px}
+.site-font .site-font-top{padding:10px 11px 7px}
+.site-font h3{font-size:14px}.site-font .site-font-preview{font-size:22px;padding:0 11px 9px}
+.site-font .site-font-details,.site-font .example{padding:7px 11px}
+.secondary-box{padding:10px}.loaded{margin-top:9px;padding:9px}
+.foot{margin-top:12px;font-size:10px}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:1050px){.brand-detail{display:none}.columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.sample-row{grid-template-columns:minmax(0,1fr) auto auto}}
+@media(max-width:850px){.columns{grid-template-columns:1fr}.results-card{min-height:0;max-height:none}.match-list,.site-results-scroll{max-height:52dvh;flex:none}.source-column{gap:10px}.preview-area,.preview-area canvas{max-height:41dvh}.top{margin-bottom:10px}}
+@media(max-width:590px){.wrap{padding:12px 11px 30px}.top{align-items:stretch;flex-direction:column;gap:9px;padding-bottom:9px}.tabs{width:100%}.tab{flex:1}.hero{margin-bottom:12px}.hero h1{font-size:22px}.hero p{font-size:11px}.card{padding:13px}.import-row{grid-template-columns:1fr auto}.drop{min-height:58px}.drop span{display:none}.sample-row{grid-template-columns:minmax(0,1fr) auto}.sample-row .field{grid-column:1/-1}.sample-row .btn{width:100%}.sample-row #matchButton{grid-column:2}.preview-area,.preview-area canvas{max-height:38dvh}.form-row{grid-template-columns:1fr}.results-card{max-height:none}.match-list,.site-results-scroll{max-height:56dvh}.result{grid-template-columns:19px minmax(0,1fr) auto;gap:6px;padding:8px}.font-sample{font-size:18px}}
+@media(max-height:680px) and (min-width:851px){.preview-area,.preview-area canvas{max-height:33dvh}.results-card{max-height:calc(100dvh - 145px);min-height:0}}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<header class="top"><div class="brand"><span class="logo">F</span><span>Font Lens</span></div><small>Browser-based typeface inspector · No account required</small></header>
-<section class="hero"><div><div class="eyebrow">Typography identification studio</div><h1>Find the fonts behind<br>the design.</h1><p>Match typography from an image, or inspect a live website's font families, weights and sizes. All analysis happens in your browser.</p></div><div class="tabs" role="tablist" aria-label="Analysis mode"><button id="imageTab" class="tab active" role="tab" aria-selected="true">Image / screenshot</button><button id="siteTab" class="tab" role="tab" aria-selected="false">Website URL</button></div></section>
-<section id="imagePanel" class="panel active" role="tabpanel">
-<div class="columns">
-<div class="stack">
-<article class="card"><h2>1. Add an image</h2><p class="sub">Upload a file, paste a screenshot, or enter a direct image URL.</p>
-<label class="drop" id="drop" for="fileInput"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 16-5-5L5 21"/></svg><strong>Choose an image or drop it here</strong><span>Or paste a screenshot using Ctrl/Cmd + V</span></label><input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" hidden>
-<div class="actions image-import-actions"><button id="pasteImage" class="btn" type="button">📋 Paste image from clipboard</button></div>
-<div class="field"><label for="imageUrl">Direct image URL</label><div class="url-load-row"><input id="imageUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/photo.png" aria-describedby="imageUrlHint"><button id="loadImageUrl" class="btn primary" type="button">Load image</button></div><p class="hint" id="imageUrlHint">Paste an image link, not a webpage URL. The image host must allow browser access (CORS). If blocked, open the image, copy it, then use Paste Image.</p></div>
-<div id="imageInfo" class="hint" hidden></div></article>
-<article class="card"><div class="section-heading"><h2>2. Select the text</h2><button id="resetCrop" class="btn sm" disabled>Reset selection</button></div><p class="sub">Drag a rectangle tightly around <b>one line</b> of text. Avoid photos, borders, icons and other nearby text.</p><div id="preview" class="preview-area"><div class="empty" id="previewEmpty">Your uploaded image appears here</div><canvas id="imageCanvas" hidden aria-label="Uploaded image with a selectable crop area"></canvas></div><p class="hint">Blue outline = sample area used for matching. Drag again to replace the selection.</p></article>
-<article class="card"><h2>3. Identify the typeface</h2><p class="sub">Enter the exact letters shown inside the selection. Optional OCR can fill this in automatically.</p><div class="field"><label for="sampleText">Text visible in selection</label><input id="sampleText" type="text" maxlength="80" placeholder="e.g. The quick brown fox" autocomplete="off" spellcheck="false"></div><div class="form-row"><div class="field"><label for="textTone">Text contrast</label><select id="textTone"><option value="auto">Auto-detect contrast</option><option value="dark">Dark text on light background</option><option value="light">Light text on dark background</option><option value="difference">Colored text / contrast only</option></select></div><div class="field"><label for="sensitivity">Background removal</label><select id="sensitivity"><option value="30">Loose</option><option value="44" selected>Normal</option><option value="64">Strict</option><option value="86">Very strict</option></select></div></div><div class="actions"><button class="btn" id="ocrButton" disabled>Read text with OCR</button><button class="btn primary" id="matchButton" disabled>Find font matches</button></div><div id="imageStatus" class="status" role="status"></div><div class="help">Image matching compares letter shapes against a curated set of 70+ fonts. It provides <b>approximate visual matches</b>, not forensic proof of a specific font. Logos, complex backgrounds and modified letters may need manual comparison.</div></article>
-</div>
-<div class="stack"><article class="card"><div class="section-heading"><h2>Closest font matches</h2><span id="resultCount" class="pill">Not analyzed</span></div><div id="matches"><div class="empty-results"><div class="big">Aa</div>Upload a screenshot, select some text and run the matcher to see ranked candidates.</div></div></article></div>
-</div>
+<header class="top">
+  <div class="brand"><span class="logo">F</span><span>Font Lens</span><span class="brand-detail">Find typefaces in images and websites</span></div>
+  <div class="tabs" role="tablist" aria-label="Analysis mode">
+    <button id="imageTab" class="tab active" role="tab" aria-selected="true" aria-controls="imagePanel">Image matching</button>
+    <button id="siteTab" class="tab" role="tab" aria-selected="false" aria-controls="sitePanel">Website fonts</button>
+  </div>
+</header>
+<section class="hero"><div><h1>Identify the font.</h1><p>Upload or paste an image, select the letters, and compare typefaces. Inspect websites for CSS font data.</p></div></section>
+<section id="imagePanel" class="panel active" role="tabpanel" aria-labelledby="imageTab">
+  <div class="columns image-workspace">
+    <div class="stack source-column">
+      <article class="card import-card">
+        <div class="section-heading"><h2>1 · Image source</h2><span id="imageInfo" class="source-info" hidden></span></div>
+        <div class="import-row">
+          <label class="drop" id="drop" for="fileInput" title="Choose an image or drop it here">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 16-5-5L5 21"/></svg>
+            <strong>Upload / drop image</strong><span>or Ctrl/Cmd + V</span>
+          </label>
+          <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" hidden>
+          <button id="pasteImage" class="btn" type="button">Paste image</button>
+        </div>
+        <div class="url-load-row"><input id="imageUrl" type="url" inputmode="url" autocomplete="url" placeholder="Paste a direct image URL…" aria-label="Direct image URL" aria-describedby="imageUrlHint"><button id="loadImageUrl" class="btn" type="button">Load URL</button></div>
+        <span class="visually-hidden" id="imageUrlHint">Direct image links need CORS access. Paste the image instead if blocked.</span>
+      </article>
+      <article class="card analyze-card">
+        <div class="section-heading"><h2>2 · Select & match text</h2><button id="resetCrop" class="btn sm" disabled type="button">Reset crop</button></div>
+        <div id="preview" class="preview-area">
+          <div class="empty" id="previewEmpty">Upload, paste or load an image to begin.<span class="preview-icon">Aa</span></div>
+          <canvas id="imageCanvas" hidden aria-label="Select text in this image by dragging a rectangle"></canvas>
+        </div>
+        <div class="sample-row">
+          <div class="field"><label for="sampleText">Exact text in selection</label><input id="sampleText" type="text" maxlength="80" placeholder="Enter visible letters or use OCR" autocomplete="off" spellcheck="false"></div>
+          <button class="btn" id="ocrButton" type="button" disabled>Read OCR</button>
+          <button class="btn primary" id="matchButton" type="button" disabled>Find matches</button>
+        </div>
+        <details class="tuning"><summary>Adjust contrast & background removal</summary>
+          <div class="form-row">
+            <div class="field"><label for="textTone">Text contrast</label><select id="textTone"><option value="auto">Auto-detect contrast</option><option value="dark">Dark on light</option><option value="light">Light on dark</option><option value="difference">Color contrast only</option></select></div>
+            <div class="field"><label for="sensitivity">Background removal</label><select id="sensitivity"><option value="30">Loose</option><option value="44" selected>Normal</option><option value="64">Strict</option><option value="86">Very strict</option></select></div>
+          </div>
+          <p class="hint">Select one line of text as tightly as possible. Adjust these settings if the match looks wrong.</p>
+        </details>
+        <div id="imageStatus" class="status" role="status" aria-live="polite"></div>
+      </article>
+    </div>
+    <div class="stack result-column">
+      <article class="card results-card">
+        <div class="section-heading result-title"><h2>Closest font matches</h2><span id="resultCount" class="pill">Not analyzed</span></div>
+        <div id="selectionReference" class="selection-reference" hidden><span>Selected sample</span><canvas id="cropCanvas" aria-label="Selected text reference"></canvas></div>
+        <div class="score-guide"><span>Composite visual score · 0–100</span><span title="58% shape alignment, 16% width ratio, 10% vertical profile, 9% horizontal profile and 7% ink density. Higher means more similar, not more certain.">ⓘ How scoring works</span></div>
+        <div id="matches" class="match-list" role="list" aria-label="Ranked font candidates"><div class="empty-results"><div class="big">Aa</div>Choose an image and select one line of text to see ranked candidates here.</div></div>
+        <div class="results-footer"><span>Visual similarity only, not identification certainty.</span><button id="showMoreMatches" class="btn sm" type="button" hidden>Show all matches</button></div>
+      </article>
+    </div>
+  </div>
 </section>
-<section id="sitePanel" class="panel" role="tabpanel">
-<div class="columns"><div class="stack"><article class="card"><h2>1. Open the website</h2><p class="sub">The inspector reads the page's actual computed CSS. It works with live sites, including ones that block cross-origin fetching.</p><div class="field"><label for="siteUrl">Website URL</label><input id="siteUrl" type="url" placeholder="https://example.com" inputmode="url" autocomplete="url"></div><div class="actions"><button class="btn primary" id="openSite">Open website in new tab</button></div><p id="siteStatus" class="status" role="status"></p></article>
-<article class="card"><h2>2. Install the inspection bookmarklet</h2><p class="sub">This tiny bookmark runs on the website itself, avoiding browser cross-origin restrictions. No extensions or API keys needed.</p><div class="steps"><div class="step">Show your browser's bookmarks bar (<b>Ctrl/Cmd + Shift + B</b> in Chrome).</div><div class="step"><b>Drag</b> the button below onto the bookmarks bar.</div><div class="step">On the target website, click that bookmark. If opened from this app, the report should appear automatically.</div></div><a id="bookmarklet" class="bookmark" href="#" draggable="true" title="Drag this onto your bookmarks bar">✣ Font Lens Inspector</a><p class="hint">Bookmarklets may be restricted by some browsers or site policies. In that case, use the copy-and-paste fallback below.</p></article>
-<article class="card"><h2>3. Import a report (fallback)</h2><p class="sub">The bookmarklet also attempts to copy a JSON report to your clipboard. Paste it here if results don't appear automatically.</p><div class="field"><label for="reportJson">Inspection JSON</label><textarea id="reportJson" rows="4" placeholder="Paste the report JSON here..." spellcheck="false"></textarea></div><div class="actions"><button class="btn primary" id="importReport">Analyze pasted report</button><button class="btn" id="pasteReport">Paste from clipboard</button><button class="btn" id="downloadReport" disabled>Download JSON</button></div><div id="reportStatus" class="status" role="status"></div></article></div>
-<div class="stack"><article class="card"><div class="section-heading"><h2>Fonts detected on page</h2><span id="siteCount" class="pill">Not inspected</span></div><div id="siteResults"><div class="empty-results"><div class="big">Ag</div>Open a website, click the Font Lens Inspector bookmark, and the page's typography report appears here.</div></div></article></div>
-</div>
+<section id="sitePanel" class="panel" role="tabpanel" aria-labelledby="siteTab">
+  <div class="columns site-workspace">
+    <div class="stack source-column">
+      <article class="card site-setup">
+        <h2>Inspect website typography</h2><p class="sub">Read computed CSS font families, sizes and weights using a bookmarklet on the target page.</p>
+        <div class="url-load-row"><input id="siteUrl" type="url" placeholder="https://example.com" inputmode="url" autocomplete="url" aria-label="Website URL"><button class="btn primary" id="openSite" type="button">Open website</button></div>
+        <div class="booklet-row"><a id="bookmarklet" class="bookmark" href="#" draggable="true" title="Drag this onto your bookmarks bar">✣ Font Lens Inspector</a><span>Drag to bookmarks bar once, then click it on the website.</span></div>
+        <div id="siteStatus" class="status" role="status"></div>
+        <details class="tuning"><summary>Setup steps & manual report import</summary>
+          <div class="steps">
+            <div class="step">Show your browser bookmarks bar (Ctrl/Cmd + Shift + B in Chrome).</div>
+            <div class="step">Drag the <b>Font Lens Inspector</b> link above to it.</div>
+            <div class="step">Open the target website and click the inspector bookmark. Return here for results.</div>
+          </div>
+          <p class="hint">If the browser blocks the automatic report transfer, paste the JSON from the bookmarklet below.</p>
+          <div class="field"><label for="reportJson">Inspection JSON</label><textarea id="reportJson" rows="4" placeholder="Paste font report JSON…" spellcheck="false"></textarea></div>
+          <div class="actions"><button class="btn primary" id="importReport" type="button">Import report</button><button class="btn" id="pasteReport" type="button">Paste report</button><button class="btn" id="downloadReport" type="button" disabled>Download JSON</button></div>
+          <div id="reportStatus" class="status" role="status"></div>
+        </details>
+      </article>
+    </div>
+    <div class="stack result-column">
+      <article class="card results-card site-results-card"><div class="section-heading"><h2>Fonts detected on page</h2><span id="siteCount" class="pill">Not inspected</span></div>
+      <div id="siteResults" class="site-results-scroll"><div class="empty-results"><div class="big">Ag</div>Open a website and click the Font Lens Inspector bookmark to display its typography here.</div></div></article>
+    </div>
+  </div>
 </section>
 <footer class="foot"><span>Font Lens · Single-file HTML · Image data stays on your device. OCR and Google Fonts need internet access.</span><span>Website results show CSS-declared families and loaded font faces; browser fallback can differ.</span></footer>
 </div>
@@ -63,8 +196,20 @@ function addDownload(name,text,mime){const blob=new Blob([text],{type:mime});con
 let original=null, selection=null, dragStart=null, currentFileName='', fontsCssLoaded=false, fontsCssFailed=false, lastImageResults=[];
 const availableFonts=new Set(CATALOG.filter(x=>x[1]==='System').map(x=>x[0]));
 const canvas=$('imageCanvas'),canvasCtx=canvas.getContext('2d',{willReadFrequently:true});
+function updateCropReference(){
+ const ref=$('cropCanvas'),wrapper=$('selectionReference');
+ if(!original||!selection||selection.w<10||selection.h<10){wrapper.hidden=true;return;}
+ const crop=getCrop(),scale=Math.min(1,340/crop.width,48/crop.height);
+ ref.width=Math.max(1,Math.round(crop.width*scale));ref.height=Math.max(1,Math.round(crop.height*scale));
+ ref.getContext('2d').drawImage(crop,0,0,ref.width,ref.height);wrapper.hidden=false;
+}
+function invalidateMatches(){
+ lastImageResults=[]; expandedMatches=false;
+ $('resultCount').textContent='Not analyzed';$('showMoreMatches').hidden=true;
+ $('matches').innerHTML='<div class="empty-results"><div class="big">Aa</div>Run the matcher to see ranked candidates.</div>';
+}
 function renderImage(){if(!original)return;canvas.width=original.width;canvas.height=original.height;canvasCtx.drawImage(original,0,0);if(selection){const {x,y,w,h}=selection;canvasCtx.save();canvasCtx.fillStyle='rgba(29,108,183,.09)';canvasCtx.fillRect(x,y,w,h);canvasCtx.lineWidth=Math.max(2,canvas.width/480*2);canvasCtx.strokeStyle='#277cba';canvasCtx.setLineDash([9,6]);canvasCtx.strokeRect(x,y,w,h);canvasCtx.restore();}}
-async function uploadFile(file){if(!file||!file.type.startsWith('image/')){setStatus('imageStatus','Choose an image file.','error');return;}try{let img; if('createImageBitmap' in window){img=await createImageBitmap(file);}else{const obj=URL.createObjectURL(file);img=await new Promise((res,rej)=>{const a=new Image();a.onload=()=>{URL.revokeObjectURL(obj);res(a)};a.onerror=rej;a.src=obj;});}const scale=Math.min(1,2800/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);if(typeof img.close==='function')img.close();original=c;currentFileName=file.name||'Clipboard image';selection={x:Math.round(c.width*.08),y:Math.round(c.height*.36),w:Math.round(c.width*.84),h:Math.round(c.height*.27)};$('previewEmpty').hidden=true;canvas.hidden=false;$('resetCrop').disabled=false;$('matchButton').disabled=false;$('ocrButton').disabled=false;$('imageInfo').hidden=false;$('imageInfo').textContent=`${currentFileName} · ${c.width} × ${c.height}px`;renderImage();$('sampleText').value='';$('resultCount').textContent='Not analyzed';$('matches').innerHTML='<div class="empty-results"><div class="big">Aa</div>Select the text, then run the matcher to see ranked candidates.</div>';setStatus('imageStatus','Crop a single line of text, then enter its exact characters.');}catch(e){setStatus('imageStatus','Could not open this image: '+e.message,'error');}}
+async function uploadFile(file){if(!file||!file.type.startsWith('image/')){setStatus('imageStatus','Choose an image file.','error');return;}try{let img; if('createImageBitmap' in window){img=await createImageBitmap(file);}else{const obj=URL.createObjectURL(file);img=await new Promise((res,rej)=>{const a=new Image();a.onload=()=>{URL.revokeObjectURL(obj);res(a)};a.onerror=rej;a.src=obj;});}const scale=Math.min(1,2800/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);if(typeof img.close==='function')img.close();original=c;currentFileName=file.name||'Clipboard image';selection={x:Math.round(c.width*.08),y:Math.round(c.height*.36),w:Math.round(c.width*.84),h:Math.round(c.height*.27)};$('previewEmpty').hidden=true;canvas.hidden=false;$('resetCrop').disabled=false;$('matchButton').disabled=false;$('ocrButton').disabled=false;$('imageInfo').hidden=false;$('imageInfo').textContent=`${currentFileName} · ${c.width} × ${c.height}px`;renderImage();updateCropReference();$('sampleText').value='';invalidateMatches();setStatus('imageStatus','Crop a single line of text, then enter its exact characters.');}catch(e){setStatus('imageStatus','Could not open this image: '+e.message,'error');}}
 $('fileInput').addEventListener('change',e=>uploadFile(e.target.files[0]));
 const drop=$('drop');for(const ev of ['dragover','dragenter'])drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')});for(const ev of ['dragleave','drop'])drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')});drop.addEventListener('drop',e=>uploadFile([...e.dataTransfer.files].find(f=>f.type.startsWith('image/'))));
 // Both keyboard paste and a dedicated paste button accept actual image clipboard data.
@@ -76,9 +221,9 @@ $('imageUrl').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefaul
 function pos(e){const b=canvas.getBoundingClientRect();return {x:Math.max(0,Math.min(canvas.width,(e.clientX-b.left)*canvas.width/b.width)),y:Math.max(0,Math.min(canvas.height,(e.clientY-b.top)*canvas.height/b.height))};}
 canvas.addEventListener('pointerdown',e=>{if(!original)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);dragStart=pos(e);selection={x:dragStart.x,y:dragStart.y,w:1,h:1};renderImage();});
 canvas.addEventListener('pointermove',e=>{if(!dragStart)return;const p=pos(e);selection={x:Math.min(p.x,dragStart.x),y:Math.min(p.y,dragStart.y),w:Math.abs(p.x-dragStart.x),h:Math.abs(p.y-dragStart.y)};renderImage();});
-function endDrag(e){if(!dragStart)return;const p=pos(e);selection={x:Math.round(Math.min(p.x,dragStart.x)),y:Math.round(Math.min(p.y,dragStart.y)),w:Math.round(Math.abs(p.x-dragStart.x)),h:Math.round(Math.abs(p.y-dragStart.y))};if(selection.w<10||selection.h<10){selection=null;setStatus('imageStatus','Selection too small. Drag a rectangle around the text.','error');}else setStatus('imageStatus',`Selection: ${selection.w} × ${selection.h}px.`);dragStart=null;renderImage();}
+function endDrag(e){if(!dragStart)return;const p=pos(e);selection={x:Math.round(Math.min(p.x,dragStart.x)),y:Math.round(Math.min(p.y,dragStart.y)),w:Math.round(Math.abs(p.x-dragStart.x)),h:Math.round(Math.abs(p.y-dragStart.y))};if(selection.w<10||selection.h<10){selection=null;setStatus('imageStatus','Selection too small. Drag a rectangle around the text.','error');}else setStatus('imageStatus',`Selection: ${selection.w} × ${selection.h}px.`);dragStart=null;renderImage();updateCropReference();invalidateMatches();}
 canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',()=>{dragStart=null;renderImage();});
-$('resetCrop').addEventListener('click',()=>{if(!original)return;selection={x:Math.round(original.width*.08),y:Math.round(original.height*.36),w:Math.round(original.width*.84),h:Math.round(original.height*.27)};renderImage();});
+$('resetCrop').addEventListener('click',()=>{if(!original)return;selection={x:Math.round(original.width*.08),y:Math.round(original.height*.36),w:Math.round(original.width*.84),h:Math.round(original.height*.27)};renderImage();updateCropReference();invalidateMatches();});
 function getCrop(){if(!original||!selection||selection.w<5||selection.h<5)throw Error('Select an area containing a single line of text first.');const c=document.createElement('canvas');c.width=Math.max(1,Math.floor(selection.w));c.height=Math.max(1,Math.floor(selection.h));c.getContext('2d',{willReadFrequently:true}).drawImage(original,selection.x,selection.y,selection.w,selection.h,0,0,c.width,c.height);return c;}
 let tesseractPromise=null;function loadTesseract(){if(window.Tesseract)return Promise.resolve();if(tesseractPromise)return tesseractPromise;tesseractPromise=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=()=>rej(Error('OCR library could not be downloaded. Enter text manually.'));document.head.appendChild(s);});return tesseractPromise;}
 $('ocrButton').addEventListener('click',async()=>{const btn=$('ocrButton');btn.disabled=true;setStatus('imageStatus','Loading OCR and reading selected text…');let worker;try{const crop=getCrop();await loadTesseract();worker=await Tesseract.createWorker('eng');const r=await worker.recognize(crop.toDataURL('image/png'));const line=(r.data.text||'').split(/\r?\n/).map(t=>t.trim()).filter(Boolean)[0]||'';if(!line)throw Error('No readable text found. Adjust the selection or enter text manually.');$('sampleText').value=line.slice(0,80);setStatus('imageStatus','OCR suggestion added. Correct the text if needed before matching.','ok');}catch(e){setStatus('imageStatus',e.message,'error');}finally{if(worker)await worker.terminate().catch(()=>{});btn.disabled=false;}});
@@ -90,8 +235,85 @@ function candidateMask(family,text,weight){let fontSize=120;matchCtx.font=`${wei
 function closeness(a,b){const w=180,h=60;let hitsA=0,hitsB=0,nA=0,nB=0,intersection=0,union=0;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(a[i]){nA++;if(b[i])intersection++;let matched=false;for(let dy=-2;dy<=2&&!matched;dy++)for(let dx=-2;dx<=2;dx++){if(x+dx<0||x+dx>=w||y+dy<0||y+dy>=h)continue;if(b[(y+dy)*w+(x+dx)]){matched=true;break;}}if(matched)hitsA++;}if(b[i]){nB++;let matched=false;for(let dy=-2;dy<=2&&!matched;dy++)for(let dx=-2;dx<=2;dx++){if(x+dx<0||x+dx>=w||y+dy<0||y+dy>=h)continue;if(a[(y+dy)*w+(x+dx)]){matched=true;break;}}if(matched)hitsB++;}if(a[i]||b[i])union++;}const recall=hitsA/Math.max(1,nA),precision=hitsB/Math.max(1,nB),f1=2*recall*precision/Math.max(.00001,recall+precision);return .76*f1+.24*(intersection/Math.max(1,union));}
 async function loadGoogleFonts(){if(fontsCssLoaded)return !fontsCssFailed;let stylesheet=$('googleFontCatalog');if(!stylesheet){stylesheet=document.createElement('link');stylesheet.id='googleFontCatalog';stylesheet.rel='stylesheet';const fontFamilies=CATALOG.filter(x=>x[1]!=='System');const query=fontFamilies.map(x=>'family='+encodeURIComponent(x[0]).replace(/%20/g,'+')).join('&');stylesheet.href='https://fonts.googleapis.com/css2?'+query+'&display=swap';document.head.appendChild(stylesheet);}const ok=await Promise.race([new Promise(resolve=>{stylesheet.onload=()=>resolve(true);stylesheet.onerror=()=>resolve(false);}),new Promise(resolve=>setTimeout(()=>resolve(false),8000))]);fontsCssLoaded=true;fontsCssFailed=!ok;return ok;}
 async function prepareFonts(){if(!await loadGoogleFonts())return;const google=CATALOG.filter(x=>x[1]!=='System');let index=0;const runners=Array.from({length:7},async()=>{while(index<google.length){const [name]=google[index++];try{const loaded=await Promise.race([document.fonts.load(`400 48px ${cssQuote(name)}`),new Promise((_,rej)=>setTimeout(()=>rej(Error('timeout')),3500))]);if(loaded.length && loaded.some(f=>f.status==='loaded'))availableFonts.add(name);}catch{}}});await Promise.all(runners);}
-function renderMatches(list,rawText){$('resultCount').textContent=`${list.length} candidates`;const results=$('matches');results.innerHTML='';list.forEach((item,i)=>{const wrap=document.createElement('div');wrap.className='result';const family=escapeHtml(item.family);const cssFamily=cssQuote(item.family);wrap.innerHTML=`<div class="result-head"><strong>${i+1}. ${family}</strong><span class="score">${item.score.toFixed(1)} / 100 similarity</span></div><div class="font-sample"></div><div class="result-foot"><span><span class="chip">${escapeHtml(item.category)}</span> &nbsp;weight ${item.weight}</span><button class="btn sm copy-css" type="button">Copy CSS</button></div>`;const textEl=wrap.querySelector('.font-sample');textEl.textContent=rawText;textEl.style.fontFamily=`${cssFamily},sans-serif`;textEl.style.fontWeight=String(item.weight);wrap.querySelector('.copy-css').addEventListener('click',async()=>{const isSystem=item.category==='System';const snippet=isSystem?`font-family: ${cssFamily}, sans-serif;\nfont-weight: ${item.weight};`:`<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(item.family).replace(/%20/g,'+')}\u0026display=swap" rel="stylesheet">\n\nfont-family: ${cssFamily}, sans-serif;\nfont-weight: ${item.weight};`;try{await copy(snippet);setStatus('imageStatus',`Copied CSS for ${item.family}.`,'ok');}catch(e){setStatus('imageStatus',e.message,'error');}});results.appendChild(wrap);});}
-$('matchButton').addEventListener('click',async()=>{const btn=$('matchButton');btn.disabled=true;setStatus('imageStatus','Analyzing the text sample…');try{const text=$('sampleText').value.trim();if(!text)throw Error('Enter the exact text shown in the selection, or use OCR.');const sample=extractTextMask(getCrop());setStatus('imageStatus','Loading comparison fonts and matching glyph shapes…');await prepareFonts();const target=normMask(sample.canvas,sample.bbox);const ratio=sample.bbox.w/sample.bbox.h;const list=[];let count=0;for(const [family,category] of CATALOG){if(!availableFonts.has(family))continue;let best=null;for(const weight of [400,700]){const candidate=candidateMask(family,text,weight);if(!candidate)continue;const aspect=Math.abs(Math.log(Math.max(.01,candidate.ratio)/Math.max(.01,ratio)));const similarity=closeness(target,candidate.pixels);const score=Math.max(0,Math.min(100,100*(similarity-.17*Math.min(2,aspect))));if(!best||score>best.score)best={family,category,weight,score};}if(best)list.push(best);count++;if(count%12===0){setStatus('imageStatus',`Compared ${count} of ${availableFonts.size} available font families…`);await new Promise(r=>setTimeout(r,0));}}list.sort((a,b)=>b.score-a.score);lastImageResults=list.slice(0,20);renderMatches(lastImageResults,text);setStatus('imageStatus',`Compared ${count} available families; showing ${lastImageResults.length}. ${count<CATALOG.length?'Some web fonts did not load, so results are limited. ':''}Similarity is not a probability of correct identification.`,'ok');}catch(e){setStatus('imageStatus',e.message||'Matching failed.','error');}finally{btn.disabled=false;}});
+function maskStats(pixels){
+ const cols=new Float32Array(18),rows=new Float32Array(12);let ink=0;
+ for(let y=0;y<60;y++)for(let x=0;x<180;x++){
+   if(!pixels[y*180+x])continue;ink++;rows[Math.floor(y/5)]++;cols[Math.floor(x/10)]++;
+ }
+ for(let i=0;i<rows.length;i++)rows[i]/=Math.max(1,ink);
+ for(let i=0;i<cols.length;i++)cols[i]/=Math.max(1,ink);
+ return {rows,cols,density:ink/10800};
+}
+function profileMatch(a,b){
+ let difference=0;
+ for(let i=0;i<a.length;i++)difference+=Math.abs(a[i]-b[i]);
+ return Math.max(0,1-difference/2);
+}
+function visualScore(targetPixels,targetStats,sourceRatio,candidate){
+ const shape=closeness(targetPixels,candidate.pixels);
+ const ratioDelta=Math.abs(Math.log(Math.max(.001,sourceRatio)/Math.max(.001,candidate.ratio)));
+ const proportion=Math.exp(-1.8*ratioDelta);
+ const stats=maskStats(candidate.pixels);
+ const vertical=profileMatch(targetStats.rows,stats.rows);
+ const horizontal=profileMatch(targetStats.cols,stats.cols);
+ const density=Math.exp(-2.2*Math.abs(Math.log((targetStats.density+.01)/(stats.density+.01))));
+ const score=100*(.58*shape+.16*proportion+.10*vertical+.09*horizontal+.07*density);
+ return {score,details:{shape:100*shape,proportion:100*proportion,profile:100*(.10*vertical+.09*horizontal)/.19,ink:100*density}};
+}
+let expandedMatches=false,lastMatchedText='';
+function renderMatches(list,rawText){
+ $('resultCount').textContent=list.length+' candidates';
+ const results=$('matches');results.innerHTML='';
+ const count=expandedMatches?list.length:Math.min(8,list.length);
+ $('showMoreMatches').hidden=list.length<=8;
+ $('showMoreMatches').textContent=expandedMatches?'Show top 8':'Show all '+list.length;
+ list.slice(0,count).forEach((item,i)=>{
+   const wrap=document.createElement('div');wrap.className='result';wrap.setAttribute('role','listitem');
+   const family=escapeHtml(item.family),cssFamily=cssQuote(item.family);
+   const d=item.details;
+   wrap.innerHTML=`<div class="result-rank">${i+1}</div><div class="result-main"><div class="result-head"><strong>${family}</strong><span class="score">${item.score.toFixed(1)} / 100</span></div><div class="font-sample"></div><div class="result-meta"><span><span class="chip">${escapeHtml(item.category)}</span> &nbsp; ${item.weight} weight</span><span title="Shape similarity, proportion agreement and stroke density">Shape ${d.shape.toFixed(0)} · Width ${d.proportion.toFixed(0)} · Ink ${d.ink.toFixed(0)}</span></div></div><button class="btn sm copy-css" type="button" aria-label="Copy CSS for ${family}">Copy CSS</button>`;
+   const textEl=wrap.querySelector('.font-sample');textEl.textContent=rawText;
+   textEl.style.fontFamily=`${cssFamily},sans-serif`;textEl.style.fontWeight=String(item.weight);
+   wrap.querySelector('.copy-css').addEventListener('click',async()=>{
+     const isSystem=item.category==='System';
+     const snippet=isSystem?`font-family: ${cssFamily}, sans-serif;\nfont-weight: ${item.weight};`:`<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(item.family).replace(/%20/g,'+')}\u0026display=swap" rel="stylesheet">\n\nfont-family: ${cssFamily}, sans-serif;\nfont-weight: ${item.weight};`;
+     try{await copy(snippet);setStatus('imageStatus',`Copied CSS for ${item.family}.`,'ok');}
+     catch(e){setStatus('imageStatus',e.message,'error');}
+   });
+   results.appendChild(wrap);
+ });
+}
+$('showMoreMatches').addEventListener('click',()=>{expandedMatches=!expandedMatches;renderMatches(lastImageResults,lastMatchedText);});
+$('sampleText').addEventListener('input',()=>{if(lastImageResults.length)invalidateMatches();});
+$('matchButton').addEventListener('click',async()=>{
+ const btn=$('matchButton');btn.disabled=true;setStatus('imageStatus','Analyzing selected text…');
+ try{
+   const text=$('sampleText').value.trim();
+   if(!text)throw Error('Enter the exact text shown in the selection, or use OCR.');
+   const sample=extractTextMask(getCrop());
+   setStatus('imageStatus','Loading comparison fonts…');
+   await prepareFonts();
+   const target=normMask(sample.canvas,sample.bbox),stats=maskStats(target);
+   const ratio=sample.bbox.w/Math.max(1,sample.bbox.h),list=[];let count=0;
+   for(const [family,category] of CATALOG){
+     if(!availableFonts.has(family))continue;let best=null;
+     for(const weight of [400,700]){
+       const candidate=candidateMask(family,text,weight);if(!candidate)continue;
+       const candidateScore=visualScore(target,stats,ratio,candidate);
+       const match={family,category,weight,...candidateScore};
+       if(!best||match.score>best.score)best=match;
+     }
+     if(best)list.push(best);count++;
+     if(count%12===0){setStatus('imageStatus',`Comparing ${count} font families…`);await new Promise(resolve=>setTimeout(resolve,0));}
+   }
+   if(!list.length)throw Error('No fonts are available for comparison. Check your connection and retry.');
+   list.sort((a,b)=>b.score-a.score);
+   lastImageResults=list.slice(0,20);lastMatchedText=text;expandedMatches=false;
+   renderMatches(lastImageResults,text);updateCropReference();
+   setStatus('imageStatus',`Compared ${count} families. ${count<CATALOG.length?'Some web fonts did not load. ':''}Scores are visual similarity, not identification certainty.`,'ok');
+ }catch(e){setStatus('imageStatus',e.message||'Matching failed.','error');}
+ finally{btn.disabled=false;}
+});
 
 // Website inspector: serialized as a self-contained bookmarklet, executing on the inspected page.
 function inspectThisPage(){
