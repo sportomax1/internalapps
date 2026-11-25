@@ -60,7 +60,7 @@ function setTab(tab){$('layout').dataset.tab=tab;$('mapTab').setAttribute('aria-
 function normalize(s){return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'')}
 function matchRoad(c,road){if(!road)return true;const text=(c.title+' '+c.route).toUpperCase();const [prefix,n]=road.split('-');const alternatives=prefix==='I'?'(?:I(?:NTERSTATE)?)':prefix==='US'?'(?:US|U\\.?S\\.?|US HIGHWAY)':prefix==='CO'?'(?:CO|SH|STATE HIGHWAY|HWY)':prefix;return new RegExp('(?:^|[^A-Z0-9])'+alternatives+'[\\s-]*0*'+n+'(?![0-9])','i').test(text)}
 function cameraIcon(active){return L.divIcon({className:'camicon'+(active?' selected':''),html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>',iconSize:[30,30],iconAnchor:[15,15]})}
-function updateList(){const list=$('list');list.replaceChildren();$('listCount').textContent=shown.length.toLocaleString()+' camera'+(shown.length===1?'':'s');$('more').hidden=shown.length<=visibleCount;for(const c of shown.slice(0,visibleCount)){const b=document.createElement('button');b.className='camera';b.setAttribute('aria-current',String(selected?.id===c.id));const label=document.createElement('span');label.className='title';label.textContent=c.title;const flag=document.createElement('span');flag.className='star';flag.textContent=fav.has(c.id)?'★':'›';b.append(label,flag);b.onclick=()=>selectCamera(c);list.append(b)}if(!shown.length){const el=document.createElement('p');el.className='notice';el.textContent=busy?'Loading cameras…':'No matching cameras. Try another road, search, or map area.';list.append(el)}}
+function updateList(){const list=$('list');list.replaceChildren();$('listCount').textContent=shown.length.toLocaleString()+' camera'+(shown.length===1?'':'s');$('more').hidden=shown.length<=visibleCount;for(const c of shown.slice(0,visibleCount)){const b=document.createElement('button');b.className='camera';b.setAttribute('aria-current',String(selected?.id===c.id));const label=document.createElement('span');label.className='title';label.textContent=c.title;const coords=document.createElement('span');coords.className='muted';coords.style.display='block';coords.textContent=c.lat.toFixed(4)+', '+c.lon.toFixed(4);label.append(coords);const flag=document.createElement('span');flag.className='star';flag.textContent=fav.has(c.id)?'★':'›';b.append(label,flag);b.onclick=()=>selectCamera(c);list.append(b)}if(!shown.length){const el=document.createElement('p');el.className='notice';el.textContent=busy?'Loading cameras…':'No matching cameras. Try another road, search, or map area.';list.append(el)}}
 function render(reset=true){const query=normalize($('search').value),road=$('road').value;const source=favsOnly?fav:catalog;shown=[...source.values()].filter(c=>matchRoad(c,road)&&(!query||normalize(c.title+' '+c.route).includes(query))).sort((a,b)=>a.title.localeCompare(b.title,undefined,{numeric:true}));if(reset)visibleCount=PAGE;cluster?.clearLayers();markers.clear();if(cluster){const layers=shown.map(c=>{const m=L.marker([c.lat,c.lon],{icon:cameraIcon(selected?.id===c.id),title:c.title,keyboard:true});const label=document.createElement('span');label.textContent=c.title;m.bindTooltip(label);m.on('click',()=>selectCamera(c));markers.set(c.id,m);return m});cluster.addLayers(layers)}updateList()}
 function fitCameras(){if(!shown.length)return;const bounds=L.latLngBounds(shown.map(c=>[c.lat,c.lon]));map.fitBounds(bounds,{padding:[30,30],maxZoom:14})}
 function coView(){map.fitBounds([[CO[1],CO[0]],[CO[3],CO[2]]],{padding:[10,10]});return load(CO)}
@@ -163,8 +163,91 @@ function message(text){$('preview').replaceChildren();const p=document.createEle
 function link(url){const el=$('sourceLink');el.hidden=!url;if(url)el.href=url;else el.removeAttribute('href')}
 function updateStar(){const isFav=selected&&fav.has(selected.id);$('star').textContent=isFav?'★':'☆';$('star').setAttribute('aria-pressed',String(Boolean(isFav)));$('star').setAttribute('aria-label',isFav?'Remove camera from favorites':'Save camera to favorites')}
 function frameTime(v){const n=num(v);if(!Number.isFinite(n)||n<=0)return '';const d=new Date(n<1e12?n*1000:n);return Number.isNaN(d.getTime())?'':d.toLocaleString()}
-async function refreshDetail(){if(!selected)return;stopTimer();detailController?.abort();const c=selected;const seq=++detailSeq;const ctrl=new AbortController();detailController=ctrl;$('frameStatus').textContent='Checking provider…';$('refresh').disabled=true;let deadline=setTimeout(()=>ctrl.abort(),12000);try{const raw=await json(API+'/'+encodeURIComponent(c.id),ctrl.signal);if(seq!==detailSeq)return;const d=raw.item||raw;if(d.is_free!==true){message('This camera is not confirmed free. No paid feed will be requested.');link(null);$('auto').checked=false;return}const v=d.view||{},r=d.redistribution||{},a=r.attribution||{};const label=typeof a==='string'?a:a.name;const url=cleanUrl(v.url);const source=cleanUrl(typeof a==='object'?a.url:null);$('camMeta').textContent=[label||'OpenEye directory',c.lat.toFixed(4)+', '+c.lon.toFixed(4)].join(' · ');autoDelay=Math.max(30,Math.min(600,Number(d.frame_interval_s)||60));$('autoLabel').title='Refresh at the provider cadence, at least every 30 seconds';const time=frameTime(d.frame_ts);const frameLabel=time?'Provider frame: '+time:'Provider capture time unavailable';$('frameStatus').textContent=frameLabel+(d.live===false?' · provider reports not live':'');link(v.render==='link'?url:(source||((c.lat>=CO[1]&&c.lat<=CO[3]&&c.lon>=CO[0]&&c.lon<=CO[2])?'https://www.cotrip.org/':null)));if(v.render==='image'&&url&&r.preview_embed!==false){const image=new Image();image.alt=c.title+' traffic camera';image.referrerPolicy='no-referrer';image.onload=()=>{if(seq!==detailSeq)return;$('preview').replaceChildren(image);$('frameStatus').textContent=frameLabel+(d.live===false?' · provider reports not live':'')+' · checked '+new Date().toLocaleTimeString()};image.onerror=()=>{if(seq===detailSeq){message('Image unavailable. Try Refresh or open the provider.');$('frameStatus').textContent='Image failed to load · '+frameLabel}};image.src=url}else{message(v.render==='link'?'This feed must be viewed on its original website.':'No embeddable preview is currently available.');$('auto').checked=false}}catch(err){if(seq===detailSeq){$('frameStatus').textContent='Unable to refresh camera. Any previously displayed image may be stale.';if(!$('preview').querySelector('img'))message('Camera unavailable. Try again or open the original provider.')}}finally{clearTimeout(deadline);if(seq===detailSeq){$('refresh').disabled=false;schedule()}}}
-function selectCamera(c){if(!c)return;detailController?.abort();detailSeq++;stopTimer();const old=selected;selected=c;markers.get(old?.id)?.setIcon(cameraIcon(false));markers.get(c.id)?.setIcon(cameraIcon(true));$('camTitle').textContent=c.title;$('camMeta').textContent=c.lat.toFixed(4)+', '+c.lon.toFixed(4);$('star').hidden=false;$('showMap').hidden=false;$('refresh').hidden=c.provider!=='openeye';$('autoLabel').hidden=c.provider!=='openeye';$('frameStatus').textContent='';updateStar();link(null);message('Loading camera…');updateList();if(matchMedia('(max-width:760px)').matches)setTab('list');if(c.provider==='directory'){message('This location is from a public camera index. Open the agency website to view the actual feed.');$('camMeta').textContent=c.attribution||'Public location index';link(cleanUrl(c.sourceUrl));$('frameStatus').textContent='Directory coverage is sampled; feed availability has not been verified.'}else{refreshDetail()}}
+// A map result is explicitly free; detail payloads may wrap their camera metadata.
+function extractDetail(raw,id){
+  if(!raw||typeof raw!=='object')return null;
+  const candidates=[];
+  function visit(o,depth){
+    if(!o||typeof o!=='object'||depth>4)return;
+    if(Array.isArray(o)){for(const x of o)visit(x,depth+1);return}
+    if(o.view||o.redistribution||o.preview_url||o.is_free!==undefined)candidates.push(o);
+    for(const k of ['item','items','camera','stream','data','result','catalog'])if(o[k])visit(o[k],depth+1);
+  }
+  visit(raw,0);
+  const matching=candidates.filter(o=>String(o.id??o.stream_id??o.camera_id??'')===String(id));
+  const anonymous=candidates.filter(o=>o.id==null&&o.stream_id==null&&o.camera_id==null);
+  const usable=matching.length?matching.concat(anonymous):anonymous;
+  if(!usable.length)return null;
+  const detail=Object.assign({},...usable);
+  if(usable.some(o=>o.is_free===false||o.is_free==='false'||o.is_free===0))detail.is_free=false;
+  return detail;
+}
+function isExplicitlyPaid(d){return d?.is_free===false||d?.is_free===0||d?.is_free==='false'}
+function directoryPage(c){return 'https://openeye.cam/cam/'+encodeURIComponent(c.id)}
+async function getCameraDetail(c,signal){
+  const raw=await boundedJson(API+'/'+encodeURIComponent(c.id),signal,9000);
+  let d=extractDetail(raw,c.id);
+  if(d&&(d.view||isExplicitlyPaid(d)))return d;
+  // Enriched directory rows are the documented alternate representation.
+  const q=new URLSearchParams({near:c.lat+','+c.lon,radius_km:'1',category:'traffic',limit:'50'});
+  const nearby=await boundedJson(API+'?'+q,signal,8000);
+  const row=Array.isArray(nearby.items)?nearby.items.find(x=>String(x.id)===c.id):null;
+  const alt=row?extractDetail(row,c.id):null;
+  if(alt)return {...d,...alt,is_free:isExplicitlyPaid(d)||isExplicitlyPaid(alt)?false:(alt.is_free??d?.is_free)};
+  return d;
+}
+function setAttribution(c,a){
+  const meta=$('camMeta');meta.replaceChildren();
+  const name=typeof a==='string'?a:a?.name;
+  const href=cleanUrl(typeof a==='object'?a?.url:null);
+  if(name){if(href){const el=document.createElement('a');el.href=href;el.target='_blank';el.rel='noopener noreferrer';el.textContent=name;meta.append(el)}else meta.append(document.createTextNode(name));meta.append(document.createTextNode(' · '))}
+  meta.append(document.createTextNode(c.lat.toFixed(4)+', '+c.lon.toFixed(4)));
+}
+async function refreshDetail(){
+  if(!selected)return;
+  stopTimer();detailController?.abort();
+  const c=selected,seq=++detailSeq,ctrl=new AbortController();detailController=ctrl;
+  $('frameStatus').textContent='Checking provider…';$('refresh').disabled=true;
+  link(directoryPage(c));
+  const deadline=setTimeout(()=>ctrl.abort(),19000);
+  try{
+    const d=await getCameraDetail(c,ctrl.signal);
+    if(seq!==detailSeq)return;
+    if(!d){message('The provider did not return usable camera details. Open the camera on its source page.');$('frameStatus').textContent='Camera metadata unavailable';$('auto').checked=false;return}
+    // Only free catalog entries are selected. Missing detail flags are not a paid declaration.
+    // Never call metered frame or streaming endpoints; honor explicit embedding permission.
+    if(isExplicitlyPaid(d)){message('The provider now marks this camera as paid. No paid feed will be requested.');$('frameStatus').textContent='Paid feed excluded';$('auto').checked=false;return}
+    const v=d.view||{},r=d.redistribution||{},a=r.attribution||{};
+    const url=cleanUrl(v.url),source=cleanUrl(typeof a==='object'?a?.url:null);
+    setAttribution(c,a);
+    const original=v.render==='link'?url:(source||directoryPage(c));
+    link(original||directoryPage(c));
+    autoDelay=Math.max(30,Math.min(600,Number(d.frame_interval_s)||60));
+    const time=frameTime(d.frame_ts),frameLabel=time?'Provider frame: '+time:'Provider capture time unavailable';
+    const liveLabel=d.live===false?' · provider reports not live':'';
+    $('frameStatus').textContent=frameLabel+liveLabel;
+    const credit=typeof a==='string'?a:a?.name;
+    const attributionOK=Boolean(credit)&&(!(typeof a==='object'&&a?.required)||Boolean(source));
+    if(v.render==='image'&&url&&r.preview_embed===true&&attributionOK){
+      const image=new Image();image.alt=c.title+' traffic camera';image.referrerPolicy='no-referrer';
+      image.onload=()=>{if(seq!==detailSeq)return;$('preview').replaceChildren(image);$('frameStatus').textContent=frameLabel+liveLabel+' · checked '+new Date().toLocaleTimeString()};
+      image.onerror=()=>{if(seq===detailSeq){message('Image unavailable. Try Refresh or open the original camera.');$('frameStatus').textContent='Image failed to load · '+frameLabel}};
+      const fresh=cleanUrl(d.preview_refresh?.image_url);
+      // The provider supplies the signed fresh URL. Never modify signed URLs.
+      image.src=(fresh&&v.hosted==='openeye'&&new URL(fresh).hostname==='api.openeye.cam')?fresh:url;
+    }else{
+      message(v.render==='link'?'This free camera must be viewed on its original website.':!attributionOK&&v.render==='image'?'The provider did not supply complete image attribution. Open the original camera.':'The provider does not currently offer an embeddable preview. Open the camera on its source page.');
+      $('frameStatus').textContent=v.render==='link'?'External viewing only':'No permitted in-app preview';
+      $('auto').checked=false;
+    }
+  }catch(err){
+    if(seq===detailSeq){$('frameStatus').textContent='Camera metadata request failed. Any previous image may be stale.';if(!$('preview').querySelector('img'))message('Camera temporarily unavailable. Try Refresh or open its source page.')}
+  }finally{
+    clearTimeout(deadline);
+    if(seq===detailSeq){$('refresh').disabled=false;schedule()}
+  }
+}
+function selectCamera(c){if(!c)return;detailController?.abort();detailSeq++;stopTimer();const old=selected;selected=c;markers.get(old?.id)?.setIcon(cameraIcon(false));markers.get(c.id)?.setIcon(cameraIcon(true));$('camTitle').textContent=c.title;$('camMeta').textContent=c.lat.toFixed(4)+', '+c.lon.toFixed(4);$('star').hidden=false;$('showMap').hidden=false;$('refresh').hidden=c.provider!=='openeye';$('autoLabel').hidden=c.provider!=='openeye';$('frameStatus').textContent='';updateStar();link(c.provider==='openeye'?directoryPage(c):cleanUrl(c.sourceUrl));message('Loading camera…');updateList();if(matchMedia('(max-width:760px)').matches)setTab('list');if(c.provider==='directory'){message('This location is from a public camera index. Open the agency website to view the actual feed.');$('camMeta').textContent=c.attribution||'Public location index';link(cleanUrl(c.sourceUrl));$('frameStatus').textContent='Directory coverage is sampled; feed availability has not been verified.'}else{refreshDetail()}}
 $('star').onclick=()=>{if(!selected)return;if(fav.has(selected.id))fav.delete(selected.id);else fav.set(selected.id,selected);saveFavorites();updateStar();render(false)};
 $('favorites').onclick=()=>{favsOnly=!favsOnly;$('favorites').setAttribute('aria-pressed',String(favsOnly));render();if(favsOnly&&shown.length)fitCameras()};
 $('search').addEventListener('input',()=>render());$('road').onchange=()=>render();$('more').onclick=()=>{visibleCount+=PAGE;updateList()};$('refresh').onclick=()=>refreshDetail();$('auto').onchange=schedule;
