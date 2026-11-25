@@ -12,7 +12,7 @@
 <style>
 :root{color-scheme:dark;--bg:#101820;--panel:#17222e;--surface:#202e3c;--border:#354454;--ink:#edf2f7;--muted:#aebdcc;--accent:#8bb9df;--active:#315675}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit;color:inherit}button,select,input{border:1px solid var(--border);background:var(--surface);border-radius:9px;padding:9px 12px;min-height:40px}button{cursor:pointer}button:hover,button[aria-pressed=true]{background:var(--active);border-color:var(--accent)}button:disabled{opacity:.5;cursor:wait}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}button:focus-visible{outline-offset:1px}header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--border)}header a{text-decoration:none;font-weight:600}header h1{font-size:19px;line-height:1.2;margin:0}header p{font-size:12px;color:var(--muted);margin:3px 0 0}header .spacer{flex:1}.layout{height:calc(100dvh - 70px);min-height:400px;display:grid;grid-template-columns:minmax(0,1fr) 370px;grid-template-rows:auto minmax(0,1fr);gap:0}.toolbar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border)}.toolbar input{flex:1;min-width:150px}.toolbar select{max-width:150px}.toolbar .status{color:var(--muted);font-size:12px;flex-basis:100%;min-height:18px}.mapwrap{position:relative;min-height:0;min-width:0}#map{height:100%;width:100%;background:#b7c5c5;color:#17222e}.maptools{position:absolute;z-index:500;top:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:75%}.maptools button{box-shadow:0 2px 8px #0004;background:#17222e;color:white}.side{min-height:0;display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--panel);overflow:auto}.viewer{padding:14px;border-bottom:1px solid var(--border)}.viewer h2{font-size:17px;margin:0;overflow-wrap:anywhere}.muted{color:var(--muted);font-size:12px}.viewer-top{display:flex;align-items:center;gap:8px}.viewer-top h2{flex:1}.preview{margin:10px 0;background:#0b1118;border:1px solid var(--border);border-radius:10px;overflow:hidden;min-height:120px;aspect-ratio:16/9;display:grid;place-items:center;text-align:center;position:relative}.preview img{width:100%;height:100%;object-fit:contain;position:absolute;inset:0}.preview p{padding:14px;margin:0;max-width:95%}.actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.actions a{padding:8px 4px;font-size:13px}.actions label{display:flex;gap:5px;align-items:center;font-size:12px}.actions input{min-height:0}.list-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}.list-head strong{font-size:13px}.list{padding:0 10px 12px;display:grid;gap:5px;align-content:start}.camera{display:flex;align-items:center;gap:8px;border:1px solid transparent;background:var(--surface);border-radius:8px;padding:9px;text-align:left;width:100%;min-height:48px}.camera .title{flex:1;min-width:0;overflow-wrap:anywhere}.camera .star{color:#d9bc7a}.camera[aria-current=true]{border-color:var(--accent);background:var(--active)}.camicon{background:#315b7d;color:white;border:2px solid white;border-radius:50%;display:grid;place-items:center;box-shadow:0 1px 5px #0006}.camicon.selected{background:#b07b30;outline:2px solid #634318}.camicon svg{width:17px;height:17px}.marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:#456f9c55}.marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:#315b7d;color:#fff;font-weight:700}.footer{padding:10px 14px;color:var(--muted);font-size:11px;border-top:1px solid var(--border);margin-top:auto}.mobiletabs{display:none}.notice{padding:10px 14px;color:var(--muted)}[hidden]{display:none!important}.leaflet-control-attribution{color:#334155}
-@media(max-width:760px){header{padding:10px 12px;gap:8px}header h1{font-size:17px}header p{font-size:11px}header .source{font-size:12px}.layout{height:calc(100dvh - 62px);min-height:350px;grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}.toolbar{padding:8px;gap:6px}.toolbar input{min-width:130px}.toolbar button,.toolbar select{padding:7px 9px;font-size:13px}.mobiletabs{display:flex;grid-column:1/-1;gap:5px;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--border)}.mobiletabs button{flex:1;min-height:36px}.side{border-left:0}.layout[data-tab=map] .side{display:none}.layout[data-tab=list] .mapwrap{display:none}.layout[data-tab=list] .viewer{padding:12px}.maptools{top:8px;right:8px}.maptools button{min-height:36px;padding:7px 9px}.preview{max-height:38dvh}.footer{padding-bottom:max(12px,env(safe-area-inset-bottom))}}
+@media(max-width:760px){header{padding:10px 12px;gap:8px}header h1{font-size:17px}header p{font-size:11px}header .source{font-size:12px}.layout{height:calc(100dvh - 62px);min-height:350px;grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}.toolbar{padding:8px;gap:6px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.toolbar input{min-width:0;grid-column:1/-1}.toolbar select{max-width:none;width:100%}.toolbar #loadArea{grid-column:1/-1}.toolbar .status{grid-column:1/-1}.toolbar button,.toolbar select{padding:7px 9px;font-size:13px}.mobiletabs{display:flex;grid-column:1/-1;gap:5px;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--border)}.mobiletabs button{flex:1;min-height:36px}.side{border-left:0}.layout[data-tab=map] .side{display:none}.layout[data-tab=list] .mapwrap{display:none}.layout[data-tab=list] .viewer{padding:12px}.maptools{top:8px;right:8px}.maptools button{min-height:36px;padding:7px 9px}.preview{max-height:38dvh}.footer{padding-bottom:max(12px,env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
@@ -66,9 +66,97 @@ function fitCameras(){if(!shown.length)return;const bounds=L.latLngBounds(shown.
 function coView(){map.fitBounds([[CO[1],CO[0]],[CO[3],CO[2]]],{padding:[10,10]});return load(CO)}
 async function json(url,signal){const response=await fetch(url,{signal,credentials:'omit',cache:'no-cache'});if(!response.ok)throw Error('HTTP '+response.status);return response.json()}
 function splitBox(b){const x=(b[0]+b[2])/2,y=(b[1]+b[3])/2;return [[b[0],b[1],x,y],[x,b[1],b[2],y],[b[0],y,x,b[3]],[x,y,b[2],b[3]]]}
-async function directory(bounds,signal,onProgress){let requests=0,partial=false;const result=new Map(),queue=[bounds];while(queue.length){if(signal.aborted)throw new DOMException('Aborted','AbortError');const b=queue.shift();if(requests>=MAX_REQUESTS){partial=true;break}requests++;const q=new URLSearchParams({category:'traffic',bbox:b.join(','),limit:'500'});const data=await json(API+'/map?'+q,signal);if(!Array.isArray(data.items)){if(data.mode==='clusters'&&requests<MAX_REQUESTS&&(b[2]-b[0])>.04){queue.push(...splitBox(b));continue}throw Error('Unexpected camera directory response')}for(const raw of data.items){const c=camera(raw);if(c)result.set(c.id,c)}if(Number(data.total)>data.items.length||data.items.length>=500){if((b[2]-b[0])>.04&&(b[3]-b[1])>.04)queue.push(...splitBox(b));else partial=true}onProgress(result.size)}return {result,partial}}
+// Each request has its own timeout; completed results survive a failed tile.
+async function boundedJson(url,signal,ms=9000){
+  if(signal.aborted)throw new DOMException('Aborted','AbortError');
+  const ctrl=new AbortController(),abort=()=>ctrl.abort();
+  signal.addEventListener('abort',abort,{once:true});
+  const timer=setTimeout(abort,ms);
+  try{return await json(url,ctrl.signal)}finally{clearTimeout(timer);signal.removeEventListener('abort',abort)}
+}
+async function directory(bounds,signal,onProgress){
+  let requests=0,partial=false,successes=0,lastError=null,totalHint=null;
+  const result=new Map(),queue=[bounds];
+  while(queue.length&&!signal.aborted&&requests<MAX_REQUESTS){
+    const batch=queue.splice(0,Math.min(3,MAX_REQUESTS-requests));
+    requests+=batch.length;
+    await Promise.all(batch.map(async b=>{
+      try{
+        const q=new URLSearchParams({category:'traffic',bbox:b.join(','),limit:'500'});
+        const data=await boundedJson(API+'/map?'+q,signal);
+        if(signal.aborted)return;
+        const total=Number(data.total),free=Number(data.free);
+        if(b===bounds&&Number.isFinite(free))totalHint=free;
+        const canSplit=(b[2]-b[0])>.04&&(b[3]-b[1])>.04;
+        if(!Array.isArray(data.items)){
+          if(data.mode==='clusters'&&canSplit){queue.push(...splitBox(b));return}
+          throw Error('Unexpected camera directory response');
+        }
+        successes++;
+        for(const raw of data.items){const c=camera(raw);if(c)result.set(c.id,c)}
+        if(Number.isFinite(total)?total>data.items.length:data.items.length>=500){
+          if(canSplit)queue.push(...splitBox(b));else partial=true;
+        }
+        onProgress(result,totalHint);
+      }catch(err){partial=true;lastError=err}
+    }));
+  }
+  if(queue.length||signal.aborted)partial=true;
+  if(!result.size&&!successes)throw lastError||Error('Directory request timed out');
+  return {result,partial,totalHint};
+}
 async function fallbackDirectory(bounds,signal){const data=await json(FALLBACK,signal);const result=new Map();for(const f of data.features||[]){if(f.geometry?.type!=='Point')continue;const [lon,lat]=f.geometry.coordinates||[];if(!Number.isFinite(lat)||!Number.isFinite(lon)||lon<bounds[0]||lon>bounds[2]||lat<bounds[1]||lat>bounds[3])continue;const p=f.properties||{};const title=String(p.name||p.title||'Road camera');const url=cleanUrl(p.official_source_url||p.source_url||p.official_url||p.url)||((lat>=CO[1]&&lat<=CO[3]&&lon>=CO[0]&&lon<=CO[2])?'https://www.cotrip.org/':null);const id='directory:'+String(p.id||lat+','+lon+','+title);result.set(id,{id,title,lat,lon,route:String(p.route||''),provider:'directory',sourceUrl:url,attribution:String(p.attribution||p.state||'Traffic camera directory')})}if(!result.size)throw Error('No fallback cameras for this area');return result}
-async function load(bounds){if(bounds[2]-bounds[0]>25||bounds[3]-bounds[1]>18){status('Zoom in to a state or region, then select Search map area.');return}areaController?.abort();const ctrl=new AbortController();areaController=ctrl;const seq=++loadSeq;busy=true;$('loadArea').disabled=true;status('Loading public traffic cameras…');let deadline=setTimeout(()=>ctrl.abort(),25000);try{let output;try{output=await directory(bounds,ctrl.signal,n=>{if(seq===loadSeq)status('Loading directory… '+n.toLocaleString()+' cameras found')})}catch(err){if(seq!==loadSeq)return;if(ctrl.signal.aborted)throw err;status('Primary directory unavailable. Loading public location index…');const fallback=await fallbackDirectory(bounds,ctrl.signal);output={result:fallback,partial:true,fallback:true}}if(seq!==loadSeq)return;catalog=output.result;for(const [id,c] of catalog)if(fav.has(id))fav.set(id,c);coverageNote=output.fallback?' · location index only; open official source for images':output.partial?' · partial coverage; zoom in for more':' · public directory coverage';favsOnly=false;$('favorites').setAttribute('aria-pressed','false');render();status(catalog.size.toLocaleString()+' cameras loaded'+coverageNote+' · zoom or pan, then Search map area')}catch(err){if(seq!==loadSeq)return;status('Camera directory unavailable or timed out. '+(catalog.size?'Previous camera locations retained. ':'')+'Retry Search map area or open COtrip.')}finally{clearTimeout(deadline);if(seq===loadSeq){busy=false;$('loadArea').disabled=false;updateList()}}}
+async function load(bounds){
+  if(bounds.some(v=>!Number.isFinite(v))||bounds[0]>=bounds[2]||bounds[1]>=bounds[3]||bounds[2]-bounds[0]>25||bounds[3]-bounds[1]>18){status('Zoom in to a state or region, then select Search map area.');return}
+  areaController?.abort();
+  const ctrl=new AbortController();areaController=ctrl;const seq=++loadSeq;
+  busy=true;$('loadArea').disabled=true;
+  status('Loading public traffic cameras…');
+  let deadline=setTimeout(()=>ctrl.abort(),55000),lastPaint=0,published=false;
+  function publish(result,force=false){
+    if(seq!==loadSeq||!result.size)return;
+    if(!force&&published&&Date.now()-lastPaint<250)return;
+    lastPaint=Date.now();
+    if(!published){
+      favsOnly=false;$('favorites').setAttribute('aria-pressed','false');
+      published=true;
+    }
+    catalog=new Map(result);
+    for(const [id,c] of catalog)if(fav.has(id))fav.set(id,c);
+    render(false);
+  }
+  try{
+    let output;
+    try{
+      output=await directory(bounds,ctrl.signal,(result,totalHint)=>{
+        if(seq!==loadSeq)return;
+        publish(result);
+        status('Loading · '+result.size.toLocaleString()+' cameras found'+(Number.isFinite(totalHint)&&totalHint>result.size?' of '+totalHint.toLocaleString():'')+' · select pins while loading');
+      });
+    }catch(err){
+      if(seq!==loadSeq)return;
+      clearTimeout(deadline);
+      const fallbackCtrl=new AbortController();areaController=fallbackCtrl;
+      deadline=setTimeout(()=>fallbackCtrl.abort(),12000);
+      status('Primary directory unavailable. Trying public location index…');
+      const fallback=await fallbackDirectory(bounds,fallbackCtrl.signal);
+      output={result:fallback,partial:true,fallback:true};
+    }
+    if(seq!==loadSeq)return;
+    if(output.result.size){publish(output.result,true)}
+    else if(!output.partial){
+      catalog=new Map();favsOnly=false;$('favorites').setAttribute('aria-pressed','false');render();
+    }
+    coverageNote=output.fallback?' · location index only':output.partial?' · partial coverage; retry or zoom in':' · directory loaded';
+    status(output.result.size.toLocaleString()+' cameras'+coverageNote+(output.partial&&!output.result.size&&catalog.size?' · previous locations retained':'')+' · select a pin');
+  }catch(err){
+    if(seq!==loadSeq)return;
+    status('Camera directory temporarily unavailable. '+(catalog.size?catalog.size.toLocaleString()+' previous camera locations retained. ':'')+'Retry Search map area or open COtrip.');
+  }finally{
+    clearTimeout(deadline);
+    if(seq===loadSeq){busy=false;$('loadArea').disabled=false;updateList()}
+  }
+}
 function stopTimer(){clearTimeout(timer);timer=null}
 function schedule(){stopTimer();if(selected&&selected.provider==='openeye'&&$('auto').checked&&!document.hidden){timer=setTimeout(()=>refreshDetail(),autoDelay*1000)}}
 function message(text){$('preview').replaceChildren();const p=document.createElement('p');p.textContent=text;$('preview').append(p)}
